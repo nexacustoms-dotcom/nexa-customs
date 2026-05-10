@@ -46,6 +46,17 @@ export function AppProvider({ children }) {
   const [toast, setToast] = useState(null);
   const [adminAuthed, setAdminAuthed] = useState(() => ls.raw('nxt_admin_auth', '') === 'true');
 
+  // Listen for hash changes — lets /#admin work directly in the URL bar
+  useEffect(() => {
+    function onHash() {
+      const h = window.location.hash.replace('#', '').trim().toLowerCase();
+      setPage(h || 'home');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
   useEffect(() => ls.set('nxt_cart', cart), [cart]);
   useEffect(() => ls.set('nxt_cats', cats), [cats]);
   useEffect(() => ls.set('nxt_prods', prods), [prods]);
