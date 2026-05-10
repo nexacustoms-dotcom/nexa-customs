@@ -28,7 +28,10 @@ function mergeProductPricing(prods) {
 }
 
 export function AppProvider({ children }) {
-  const [page, setPage] = useState('home');
+  const [page, setPage] = useState(() => {
+    const h = window.location.hash.replace('#', '').trim().toLowerCase();
+    return h || 'home';
+  });
   const [cart, setCart] = useState(() => ls.get('nxt_cart', []));
   const [cats, setCats] = useState(() => ls.get('nxt_cats', DEFAULT_CATS));
   const [prods, setProds] = useState(() => {
@@ -51,6 +54,7 @@ export function AppProvider({ children }) {
   useEffect(() => ls.set('nxt_custom_pages', pages), [pages]);
 
   const go = useCallback((p) => {
+    window.location.hash = p === 'home' ? '' : p;
     setPage(p);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
