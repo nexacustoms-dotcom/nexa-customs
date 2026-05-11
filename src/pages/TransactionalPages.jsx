@@ -135,15 +135,45 @@ export function CheckoutPage() {
     if (!form.email.includes('@')) { showToast('Please enter a valid email'); return; }
     if (!form.phone.trim()) { showToast('Please enter your phone'); return; }
     if (cart.length === 0) { showToast('Your cart is empty'); return; }
+
     const no = 'NCX-' + Math.floor(10000 + Math.random() * 90000);
     setPlacing(true);
-    if (payMethod === 'stripe' && stripeRef.current && cardRef.current) {
-      const result = await stripeRef.current.createPaymentMethod({ type: 'card', card: cardRef.current, billing_details: { name: form.fn, email: form.email } });
-      if (result.error) { setStripeErr(result.error.message); setPlacing(false); return; }
-      await saveOrder(no, result.paymentMethod.id);
-    } else { await saveOrder(no); }
-    document.getElementById('suc-no-val').textContent = no;
-    clearCart(); go('success'); showToast('✓ Order placed!'); setPlacing(false);
+
+    try {
+      // Stripe payment
+      if (payMethod === 'stripe') {
+        const pk = ls.raw('nxt_stripe_pk', '');
+        if (pk && pk.length > 10 && stripeRef.current && cardRef.current) {
+          const result = await stripeRef.current.createPaymentMethod({
+            type: 'card', card: cardRef.current,
+            billing_details: { name: form.fn, email: form.email }
+          });
+          if (result.error) {
+            setStripeErr(result.error.message);
+            setPlacing(false);
+            return;
+          }
+          await saveOrder(no, result.paymentMethod.id);
+        } else {
+          // Stripe not configured — fall through to invoice
+          await saveOrder(no);
+        }
+      } else {
+        // Invoice / Pay at pickup
+        await saveOrder(no);
+      }
+
+      // Store order number for success page, navigate
+      sessionStorage.setItem('last_order_no', no);
+      clearCart();
+      go('success');
+      showToast('✓ Order placed!');
+    } catch (err) {
+      console.error('Order error:', err);
+      showToast('Something went wrong — please try again');
+    } finally {
+      setPlacing(false);
+    }
   }
 
   return (
@@ -274,12 +304,13 @@ function CkSection({ n, title, children }) {
 // ── SUCCESS ───────────────────────────────────────────────────────────────────
 export function SuccessPage() {
   const { go } = useApp();
+  const orderNo = sessionStorage.getItem('last_order_no') || 'NCX—';
   return (
     <div style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 20px' }}>
       <div style={{ fontSize: 72, marginBottom: 20 }}>🎉</div>
       <h1 className="D" style={{ fontSize: 'clamp(36px,5vw,60px)', marginBottom: 10, color: 'var(--gr)' }}>Order Confirmed!</h1>
       <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 460, margin: '0 auto 12px', lineHeight: 1.7 }}>Your order has been received. We'll send a confirmation within 1 business day.</p>
-      <div id="suc-no-val" style={{ fontFamily: "'DM Mono',monospace", fontSize: 18, color: 'var(--o)', marginBottom: 28, background: 'rgba(249,115,22,.1)', border: '1px solid rgba(249,115,22,.2)', borderRadius: 8, padding: '10px 24px', display: 'inline-block' }}>NCX—</div>
+      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 18, color: 'var(--o)', marginBottom: 28, background: 'rgba(249,115,22,.1)', border: '1px solid rgba(249,115,22,.2)', borderRadius: 8, padding: '10px 24px', display: 'inline-block' }}>{orderNo}</div>
       <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 14, padding: 22, maxWidth: 440, width: '100%', marginBottom: 28, textAlign: 'left' }}>
         {[['📎 Artwork', 'Email files to info@nexacustoms.ca with your order number'],['📍 Pickup', '6033 Shawson Dr, Unit 40, Mississauga'],['📞 Questions?', 'Call (437) 997-9921']].map(([k, v]) => (
           <div key={k} style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--bd)' }}>
