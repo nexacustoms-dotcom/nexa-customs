@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 
 const TABS = [
+  { id: 'orders',     label: '📦 Orders' },
   { id: 'products',   label: '🖨️ Products' },
   { id: 'categories', label: '📁 Categories' },
   { id: 'appearance', label: '🎨 Appearance' },
@@ -15,17 +16,43 @@ const TABS = [
 async function uploadToSupabase(file, folder, ls) {
   const supaUrl = ls.raw('nxt_supa_url', '');
   const supaKey = ls.raw('nxt_supa_key', '');
+
   if (!supaUrl || !supaKey || supaKey.length < 10)
     return { error: 'Supabase not configured — go to Settings tab first' };
-  const ext = file.name.split('.').pop().toLowerCase();
-  const name = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const res = await fetch(`${supaUrl}/storage/v1/object/nexa-media/${name}`, {
-    method: 'POST',
-    headers: { apikey: supaKey, Authorization: `Bearer ${supaKey}`, 'Content-Type': file.type, 'x-upsert': 'true' },
-    body: file,
-  });
-  if (!res.ok) return { error: await res.text() };
-  return { url: `${supaUrl}/storage/v1/object/public/nexa-media/${name}` };
+
+  // Sanitize filename
+  const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '');
+  const safeName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext || 'jpg'}`;
+
+  try {
+    const res = await fetch(`${supaUrl}/storage/v1/object/nexa-media/${safeName}`, {
+      method: 'POST',
+      headers: {
+        apikey: supaKey,
+        Authorization: `Bearer ${supaKey}`,
+        'Content-Type': file.type || 'image/jpeg',
+        'x-upsert': 'true',
+        'Cache-Control': '3600',
+      },
+      body: file,
+    });
+
+    if (res.status === 404) {
+      return { error: 'Storage bucket "nexa-media" not found. Go to Supabase → Storage → Create bucket named exactly: nexa-media (set to Public)' };
+    }
+    if (res.status === 400) {
+      const body = await res.text();
+      return { error: 'Storage policy error. Run the SQL fix in Supabase SQL Editor. Details: ' + body };
+    }
+    if (!res.ok) {
+      const body = await res.text();
+      return { error: `Upload failed (${res.status}): ${body}` };
+    }
+
+    return { url: `${supaUrl}/storage/v1/object/public/nexa-media/${safeName}` };
+  } catch (e) {
+    return { error: 'Network error: ' + e.message };
+  }
 }
 
 // ── IMAGE UPLOAD COMPONENT ────────────────────────────────────────────────────
@@ -116,6 +143,7 @@ export default function AdminPage() {
         </div>
       </div>
       <div style={{ maxWidth: 1300, margin: '0 auto', padding: '24px 28px 80px' }}>
+        {tab === 'orders'     && <OrdersTab />}
         {tab === 'products'   && <ProductsTab />}
         {tab === 'categories' && <CategoriesTab />}
         {tab === 'appearance' && <AppearanceTab />}
@@ -691,6 +719,229 @@ function PricingTab() {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+// ── ORDERS TAB ────────────────────────────────────────────────────────────────
+function OrdersTab() {
+  const { ls, showToast } = useApp();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [filter, setFilter] = useState('all');
+
+  async function loadOrders() {
+    const url = ls.raw('nxt_supa_url', '');
+    const key = ls.raw('nxt_supa_key', '');
+    if (!url || !key || key.length < 10) {
+      showToast('⚠️ Configure Supabase in Settings tab first');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${url}/rest/v1/orders?order=created_at.desc&limit=200`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        showToast('❌ Error loading orders: ' + res.status);
+        console.error(err);
+        setLoading(false);
+        return;
+      }
+      const data = await res.json();
+      setOrders(data);
+    } catch (e) {
+      showToast('❌ Network error: ' + e.message);
+    }
+    setLoading(false);
+  }
+
+  async function updateStatus(id, status) {
+    const url = ls.raw('nxt_supa_url', '');
+    const key = ls.raw('nxt_supa_key', '');
+    await fetch(`${url}/rest/v1/orders?id=eq.${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ status }),
+    });
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    if (selected?.id === id) setSelected(prev => ({ ...prev, status }));
+    showToast('✅ Status updated to ' + status);
+  }
+
+  const STATUS_COLORS = {
+    'New':        { bg: 'rgba(249,115,22,.15)', color: 'var(--o)',  border: 'rgba(249,115,22,.3)' },
+    'In Progress':{ bg: 'rgba(96,165,250,.15)', color: '#60a5fa',   border: 'rgba(96,165,250,.3)' },
+    'Ready':      { bg: 'rgba(34,197,94,.15)',  color: 'var(--gr)', border: 'rgba(34,197,94,.3)' },
+    'Completed':  { bg: 'rgba(100,100,100,.15)',color: '#888',      border: 'rgba(100,100,100,.3)' },
+    'Cancelled':  { bg: 'rgba(239,68,68,.15)',  color: '#f87171',   border: 'rgba(239,68,68,.3)' },
+  };
+
+  const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
+  const totalRevenue = orders.filter(o => o.status !== 'Cancelled').reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+  const newCount = orders.filter(o => o.status === 'New').length;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 24 }}>Orders</h2>
+        <button className="abtn abtn-add" onClick={loadOrders} disabled={loading}>
+          {loading ? '⏳ Loading…' : '🔄 Load / Refresh Orders'}
+        </button>
+      </div>
+
+      {/* Stats */}
+      {orders.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 20 }} className="ord-stats">
+          {[
+            ['📦', 'Total Orders', orders.length, ''],
+            ['🆕', 'New', newCount, newCount > 0 ? 'var(--o)' : 'var(--mu)'],
+            ['💰', 'Total Revenue', `$${totalRevenue.toFixed(2)}`, 'var(--gr)'],
+            ['✅', 'Completed', orders.filter(o => o.status === 'Completed').length, ''],
+          ].map(([ico, label, val, color]) => (
+            <div key={label} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, padding: '16px 18px' }}>
+              <div style={{ fontSize: 22, marginBottom: 6 }}>{ico}</div>
+              <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 2 }}>{label}</div>
+              <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 24, color: color || 'var(--tx)' }}>{val}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Filter */}
+      {orders.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+          {['all', 'New', 'In Progress', 'Ready', 'Completed', 'Cancelled'].map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", border: `1px solid ${filter === f ? 'var(--o)' : 'var(--bd)'}`, background: filter === f ? 'rgba(249,115,22,.12)' : 'var(--s2)', color: filter === f ? 'var(--o)' : 'var(--mu)' }}>
+              {f === 'all' ? `All (${orders.length})` : `${f} (${orders.filter(o => o.status === f).length})`}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {orders.length === 0 && !loading && (
+        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--mu)' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📦</div>
+          <div style={{ fontWeight: 700, marginBottom: 8 }}>No orders loaded yet</div>
+          <div style={{ fontSize: 13, marginBottom: 20 }}>Click "Load / Refresh Orders" to fetch from Supabase</div>
+          <div style={{ fontSize: 12, background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 10, padding: '14px 18px', maxWidth: 420, margin: '0 auto', textAlign: 'left', lineHeight: 1.7 }}>
+            <strong style={{ color: 'var(--o)' }}>⚠️ No orders showing?</strong><br />
+            Make sure you've:<br />
+            1. Added Supabase URL + key in Settings tab<br />
+            2. Created the <code style={{ background: 'var(--s2)', padding: '1px 4px', borderRadius: 3 }}>orders</code> table (see SQL below)
+          </div>
+        </div>
+      )}
+
+      {/* Orders table */}
+      {filtered.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 380px' : '1fr', gap: 16 }} className="ord-layout">
+          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="atable">
+                <thead>
+                  <tr><th>Order #</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                  {filtered.map(o => {
+                    const sc = STATUS_COLORS[o.status] || STATUS_COLORS['New'];
+                    const date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-CA', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+                    return (
+                      <tr key={o.id} onClick={() => setSelected(selected?.id === o.id ? null : o)} style={{ cursor: 'pointer', background: selected?.id === o.id ? 'rgba(249,115,22,.06)' : 'transparent' }}>
+                        <td style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: 'var(--o)', fontWeight: 700 }}>{o.order_number || o.id}</td>
+                        <td>
+                          <div style={{ fontWeight: 600, fontSize: 13 }}>{o.customer_name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--mu)' }}>{o.customer_email}</div>
+                        </td>
+                        <td style={{ fontSize: 12, color: 'var(--mu)', maxWidth: 180 }}>
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.items}</div>
+                        </td>
+                        <td style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--o)' }}>${parseFloat(o.total || 0).toFixed(2)}</td>
+                        <td><span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 6, background: o.payment_method === 'stripe' ? 'rgba(99,102,241,.15)' : 'rgba(34,197,94,.1)', color: o.payment_method === 'stripe' ? '#818cf8' : 'var(--gr)', border: `1px solid ${o.payment_method === 'stripe' ? 'rgba(99,102,241,.3)' : 'rgba(34,197,94,.2)'}`, fontWeight: 700 }}>{o.payment_method === 'stripe' ? '💳 Card' : '🏪 Pickup'}</span></td>
+                        <td><span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 700, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>{o.status || 'New'}</span></td>
+                        <td style={{ fontSize: 11, color: 'var(--mu)', whiteSpace: 'nowrap' }}>{date}</td>
+                        <td><button className="abtn" onClick={e => { e.stopPropagation(); setSelected(selected?.id === o.id ? null : o); }}>View</button></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Order detail panel */}
+          {selected && (
+            <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 22, position: 'sticky', top: 76, alignSelf: 'start', maxHeight: '85vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 20 }}>Order Detail</div>
+                <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: 'var(--mu)', fontSize: 18, cursor: 'pointer' }}>✕</button>
+              </div>
+
+              {/* Order number */}
+              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 16, color: 'var(--o)', fontWeight: 700, marginBottom: 14, background: 'rgba(249,115,22,.08)', border: '1px solid rgba(249,115,22,.2)', borderRadius: 8, padding: '8px 12px' }}>{selected.order_number || selected.id}</div>
+
+              {/* Customer info */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>Customer</div>
+                {[['Name', selected.customer_name], ['Email', selected.customer_email], ['Phone', selected.customer_phone], ['Company', selected.company]].filter(([,v]) => v).map(([l, v]) => (
+                  <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6, gap: 12 }}>
+                    <span style={{ color: 'var(--mu)', flexShrink: 0 }}>{l}</span>
+                    <span style={{ fontWeight: 600, textAlign: 'right' }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ height: 1, background: 'var(--bd)', margin: '12px 0' }} />
+
+              {/* Order info */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>Order Info</div>
+                <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 8, lineHeight: 1.6 }}><strong style={{ color: 'var(--tx)' }}>Items:</strong> {selected.items}</div>
+                {[['Delivery', selected.delivery], ['Turnaround', selected.turnaround], ['Payment', selected.payment_method], ['Source', selected.source]].filter(([,v]) => v).map(([l, v]) => (
+                  <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
+                    <span style={{ color: 'var(--mu)' }}>{l}</span>
+                    <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{v}</span>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+                  <span style={{ fontWeight: 700, fontSize: 14 }}>Total</span>
+                  <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, color: 'var(--o)' }}>${parseFloat(selected.total || 0).toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div style={{ height: 1, background: 'var(--bd)', margin: '12px 0' }} />
+
+              {/* Update status */}
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}>Update Status</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  {['New', 'In Progress', 'Ready', 'Completed', 'Cancelled'].map(s => {
+                    const sc = STATUS_COLORS[s];
+                    const isActive = selected.status === s;
+                    return (
+                      <button key={s} onClick={() => updateStatus(selected.id, s)} style={{ padding: '10px 14px', borderRadius: 8, border: `1px solid ${isActive ? sc.border : 'var(--bd)'}`, background: isActive ? sc.bg : 'var(--s2)', color: isActive ? sc.color : 'var(--mu)', fontWeight: isActive ? 700 : 500, fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", textAlign: 'left', transition: 'all .15s' }}>
+                        {isActive ? '● ' : '○ '}{s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Quick actions */}
+              <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+                <a href={`mailto:${selected.customer_email}?subject=Your Nexa Customs Order ${selected.order_number}`} style={{ flex: 1, padding: '9px 12px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--tx)', fontSize: 12, fontWeight: 600, textAlign: 'center', cursor: 'pointer', textDecoration: 'none', display: 'block' }}>✉️ Email</a>
+                <a href={`tel:${selected.customer_phone}`} style={{ flex: 1, padding: '9px 12px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--tx)', fontSize: 12, fontWeight: 600, textAlign: 'center', cursor: 'pointer', textDecoration: 'none', display: 'block' }}>📞 Call</a>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      <style>{`
+        .ord-stats { @media(max-width:640px) { grid-template-columns:1fr 1fr !important; } }
+        .ord-layout { @media(max-width:1060px) { grid-template-columns:1fr !important; } }
+      `}</style>
     </div>
   );
 }
