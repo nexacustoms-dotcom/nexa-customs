@@ -465,11 +465,17 @@ function SettingsTab() {
 
   async function testStorage() {
     const url = ls.raw('nxt_supa_url',''); const key = ls.raw('nxt_supa_key','');
-    if (!url || !key) { showToast('Enter URL and key first'); return; }
-    const res = await fetch(`${url}/storage/v1/bucket/nexa-media`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
-    if (res.ok) showToast('✅ Storage bucket "nexa-media" found! Image upload ready.');
-    else if (res.status === 404) showToast('❌ Bucket "nexa-media" not found — create it in Supabase Storage');
-    else showToast('❌ Storage error ' + res.status);
+    if (!url || !key) { showToast('Enter URL and key first, then Save'); return; }
+    // Test by listing objects in bucket (correct endpoint)
+    const res = await fetch(`${url}/storage/v1/object/list/nexa-media`, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit: 1, offset: 0 }),
+    });
+    if (res.ok) showToast('✅ Storage bucket "nexa-media" is working! Image upload ready.');
+    else if (res.status === 404) showToast('❌ Bucket "nexa-media" not found — go to Supabase → Storage → create it (public)');
+    else if (res.status === 400) showToast('⚠️ Bucket exists but needs policy fix — run the SQL in Supabase SQL Editor');
+    else showToast('❌ Storage error ' + res.status + ' — check your Supabase URL and key');
   }
 
   return (

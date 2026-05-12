@@ -33,6 +33,20 @@ export function AppProvider({ children }) {
     return h || 'home';
   });
   const [cart, setCart] = useState(() => ls.get('nxt_cart', []));
+  // Wrap setStore to also save to Supabase
+  const setStoreAndSync = useCallback((newStore) => {
+    setStore(newStore);
+    ls.set('nxt_store', newStore);
+    const supaUrl = ls.raw('nxt_supa_url', '');
+    const supaKey = ls.raw('nxt_supa_key', '');
+    if (!supaUrl || !supaKey || supaKey.length < 10) return;
+    fetch(`${supaUrl}/rest/v1/site_config`, {
+      method: 'POST',
+      headers: { apikey: supaKey, Authorization: `Bearer ${supaKey}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({ id: 'main', data: newStore, updated_at: new Date().toISOString() }),
+    }).catch(() => {});
+  }, []);
+
   const [cats, setCats] = useState(() => ls.get('nxt_cats', DEFAULT_CATS));
   const [prods, setProds] = useState(() => {
     const saved = ls.get('nxt_prods', null);
@@ -40,6 +54,28 @@ export function AppProvider({ children }) {
     return mergeProductPricing(base);
   });
   const [store, setStore] = useState(() => ({ ...DEFAULT_STORE, ...ls.get('nxt_store', {}) }));
+
+  // On first load, fetch store config from Supabase so all browsers stay in sync
+  useEffect(() => {
+    async function fetchStoreConfig() {
+      const supaUrl = ls.raw('nxt_supa_url', '');
+      const supaKey = ls.raw('nxt_supa_key', '');
+      if (!supaUrl || !supaKey || supaKey.length < 10) return;
+      try {
+        const res = await fetch(`${supaUrl}/rest/v1/site_config?id=eq.main&limit=1`, {
+          headers: { apikey: supaKey, Authorization: `Bearer ${supaKey}` }
+        });
+        if (!res.ok) return;
+        const rows = await res.json();
+        if (rows.length > 0 && rows[0].data) {
+          const remote = typeof rows[0].data === 'string' ? JSON.parse(rows[0].data) : rows[0].data;
+          setStore(prev => ({ ...DEFAULT_STORE, ...remote }));
+          ls.set('nxt_store', { ...DEFAULT_STORE, ...remote });
+        }
+      } catch (e) { /* silent fail — use local */ }
+    }
+    fetchStoreConfig();
+  }, []);
   const [pricing, setPricing] = useState(() => ({ ...DEFAULT_PRICING, ...ls.get('nxt_pricing_cfg', {}) }));
   const [pages, setPages] = useState(() => ls.get('nxt_custom_pages', []));
   const [curProd, setCurProd] = useState(null);
@@ -143,7 +179,7 @@ export function AppProvider({ children }) {
       cart, addToCart, removeFromCart, clearCart, cartSubtotal,
       cats, setCats,
       prods, setProds,
-      store, setStore,
+      store, setStore: setStoreAndSync,
       pricing, setPricing,
       pages, setPages,
       curProd, setCurProd, showProduct,
