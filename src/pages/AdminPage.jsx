@@ -335,29 +335,90 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
 
 // ── CATEGORIES TAB ────────────────────────────────────────────────────────────
 function CategoriesTab() {
-  const { cats, setCats, showToast } = useApp();
+  const { cats, setCats, showToast, ls } = useApp();
+  const [editingCat, setEditingCat] = useState(null); // category id being edited
+  const [uploading, setUploading] = useState(null);   // category id being uploaded
+  const fileRefs = useRef({});
+
   function move(i, dir) {
     const arr = [...cats]; const j = i + dir;
     if (j < 0 || j >= arr.length) return;
     [arr[i], arr[j]] = [arr[j], arr[i]]; setCats(arr); showToast('Order updated.');
   }
+
+  async function handleCatImg(e, catId) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('Please select an image'); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('Max 5MB'); return; }
+    setUploading(catId);
+    const result = await uploadToSupabase(file, 'categories', ls);
+    setUploading(null);
+    if (result.error) { showToast('❌ ' + result.error); return; }
+    setCats(prev => prev.map(c => c.id === catId ? { ...c, img: result.url } : c));
+    showToast('✅ Category image uploaded!');
+    e.target.value = '';
+  }
+
+  function removeCatImg(catId) {
+    setCats(prev => prev.map(c => c.id === catId ? { ...c, img: null } : c));
+    showToast('Image removed.');
+  }
+
   return (
     <div>
-      <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 24, marginBottom: 16 }}>Categories ({cats.length})</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 24 }}>Categories ({cats.length})</h2>
+        <div style={{ fontSize: 12, color: 'var(--mu)' }}>Use ↑↓ to reorder · Upload images for each category</div>
+      </div>
       <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', overflow: 'hidden' }}>
         {cats.map((c, i) => (
-          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < cats.length - 1 ? '1px solid var(--bd)' : 'none', opacity: c.hidden ? 0.45 : 1 }}>
-            <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{c.i}</span>
-            <span style={{ flex: 1, fontWeight: 600, fontSize: 13 }}>{c.l}</span>
-            <span style={{ fontSize: 10, color: 'var(--mu)', fontFamily: "'DM Mono',monospace" }}>{c.id}</span>
-            <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 700, background: c.hidden ? 'rgba(239,68,68,.1)' : 'rgba(34,197,94,.1)', color: c.hidden ? '#f87171' : 'var(--gr)', border: `1px solid ${c.hidden ? 'rgba(239,68,68,.2)' : 'rgba(34,197,94,.2)'}` }}>{c.hidden ? 'Hidden' : 'Visible'}</span>
-            <div style={{ display: 'flex', gap: 4 }}>
-              <button className="abtn" onClick={() => move(i, -1)}>↑</button>
-              <button className="abtn" onClick={() => move(i, 1)}>↓</button>
-              <button className="abtn" onClick={() => setCats(prev => prev.map(x => x.id === c.id ? { ...x, hidden: !x.hidden } : x))} style={{ color: c.hidden ? 'var(--gr)' : '#f87171', borderColor: c.hidden ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)' }}>{c.hidden ? 'Show' : 'Hide'}</button>
+          <div key={c.id} style={{ borderBottom: i < cats.length - 1 ? '1px solid var(--bd)' : 'none', opacity: c.hidden ? 0.45 : 1 }}>
+            {/* Main row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
+              {/* Category image thumbnail */}
+              <div style={{ width: 48, height: 48, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--bd)', background: 'var(--s2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+                onClick={() => fileRefs.current[c.id]?.click()}
+                title="Click to upload category image"
+              >
+                {c.img
+                  ? <img src={c.img} alt={c.l} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontSize: 22 }}>{uploading === c.id ? '⏳' : c.i}</span>}
+              </div>
+              <input ref={el => fileRefs.current[c.id] = el} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleCatImg(e, c.id)} />
+
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{c.l}</div>
+                <div style={{ fontSize: 10, color: 'var(--mu)', fontFamily: "'DM Mono',monospace" }}>{c.id}</div>
+              </div>
+
+              {/* Status badge */}
+              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 700, background: c.hidden ? 'rgba(239,68,68,.1)' : 'rgba(34,197,94,.1)', color: c.hidden ? '#f87171' : 'var(--gr)', border: `1px solid ${c.hidden ? 'rgba(239,68,68,.2)' : 'rgba(34,197,94,.2)'}` }}>{c.hidden ? 'Hidden' : 'Visible'}</span>
+              {c.img && <span className="badge-green" style={{ fontSize: 9 }}>Has Image</span>}
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button className="abtn" onClick={() => move(i, -1)}>↑</button>
+                <button className="abtn" onClick={() => move(i, 1)}>↓</button>
+                <button className="abtn" onClick={() => fileRefs.current[c.id]?.click()} style={{ color: 'var(--o)', borderColor: 'rgba(249,115,22,.3)' }} title="Upload image">📁</button>
+                {c.img && <button className="abtn" onClick={() => removeCatImg(c.id)} style={{ color: '#f87171', borderColor: 'rgba(239,68,68,.3)' }} title="Remove image">✕</button>}
+                <button className="abtn" onClick={() => setCats(prev => prev.map(x => x.id === c.id ? { ...x, hidden: !x.hidden } : x))} style={{ color: c.hidden ? 'var(--gr)' : '#f87171', borderColor: c.hidden ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)' }}>{c.hidden ? 'Show' : 'Hide'}</button>
+              </div>
             </div>
+            {/* Image URL input (expanded) */}
+            {editingCat === c.id && (
+              <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8 }}>
+                <input className="ainp" style={{ flex: 1, fontSize: 12 }} placeholder="Or paste image URL here" defaultValue={c.img || ''}
+                  onKeyDown={e => { if (e.key === 'Enter') { setCats(prev => prev.map(x => x.id === c.id ? { ...x, img: e.target.value } : x)); setEditingCat(null); showToast('✅ Image URL saved!'); }}}
+                />
+                <button className="abtn" onClick={() => setEditingCat(null)}>✕</button>
+              </div>
+            )}
           </div>
         ))}
+      </div>
+      <div style={{ marginTop: 12, fontSize: 12, color: 'var(--mu)' }}>
+        💡 Click the emoji/thumbnail to upload a photo, or click 📁 button. Images show on the category grid on the homepage and products page. Recommended: square images, min 400×400px.
       </div>
     </div>
   );
