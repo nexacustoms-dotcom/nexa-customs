@@ -70,3 +70,40 @@ img{max-width:100%}
 @media(max-width:1060px){.frow{grid-template-columns:1fr}.aform-row{grid-template-columns:1fr}}
 @media(max-width:640px){.W{padding:0 16px}}
 @media(max-width:400px){.W{padding:0 10px}}
+
+/* ── Responsive grid classes (replacing inline @media in JSX) ─────────────── */
+@media(max-width:1060px){
+  .hero-grid{grid-template-columns:1fr !important}
+  .hero-right{display:none !important}
+  .cat-grid{grid-template-columns:repeat(4,1fr) !important}
+  .prod-grid-4,.feat-grid{grid-template-columns:repeat(2,1fr) !important}
+  .pl-layout{grid-template-columns:1fr !important}
+  .pl-sidebar{position:static !important}
+  .det-layout{grid-template-columns:1fr !important}
+  .det-img{position:static !important}
+  .cart-layout{grid-template-columns:1fr !important}
+  .cart-sum{position:static !important}
+  .ck-layout{grid-template-columns:1fr !important}
+  .ck-sum{position:static !important}
+  .qp-layout{grid-template-columns:1fr !important}
+  .ap-grid{grid-template-columns:1fr !important}
+  .st-grid{grid-template-columns:1fr !important}
+  .ed-grid{grid-template-columns:1fr !important}
+  .aform-row{grid-template-columns:1fr !important}
+  .ord-layout{grid-template-columns:1fr !important}
+  .footer-grid,.ft-grid{grid-template-columns:1fr 1fr !important;gap:28px !important}
+  .ord-stats{grid-template-columns:1fr 1fr !important}
+}
+@media(max-width:640px){
+  .cat-grid{grid-template-columns:repeat(3,1fr) !important}
+  .prod-grid-4,.feat-grid{grid-template-columns:1fr !important}
+  .related-grid{grid-template-columns:repeat(2,1fr) !important}
+  .testi-row{flex-direction:column !important}
+  .footer-grid,.ft-grid{grid-template-columns:1fr !important}
+  .ta-grid{grid-template-columns:1fr !important}
+  .ct-grid{grid-template-columns:1fr !important}
+}
+@media(max-width:480px){
+  .prod-grid-4,.feat-grid{grid-template-columns:1fr !important}
+  .ord-stats{grid-template-columns:1fr 1fr !important}
+}

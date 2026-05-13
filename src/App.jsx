@@ -1,88 +1,147 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import { Topbar, Navbar, Footer, Toast } from './components/Layout';
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import ProductCard from './components/ProductCard';
 import AdminPage from './pages/AdminPage';
 import { CartPage, CheckoutPage, SuccessPage, QuotePage, ContactPage } from './pages/TransactionalPages';
 
-// ── POLICY PAGES ──────────────────────────────────────────────────────────────
+// ── POLICY DATA ───────────────────────────────────────────────────────────────
 const POLICY = {
   faq: {
     title: 'Frequently Asked Questions',
     faqs: [
-      { q: 'What file formats do you accept?', a: 'We accept PDF, AI, EPS, PSD, PNG (300dpi+), and high-res JPG. PDF is preferred for print-ready files. If you need design help, we offer that too — just ask.' },
-      { q: 'Do you offer design services?', a: 'Yes! We offer free basic layout adjustments and affordable custom design. Email info@nexacustoms.ca with your project details.' },
-      { q: 'What is your standard turnaround time?', a: 'Standard is 5–7 business days from proof approval. Rush (2–3 days) and Express (same/next day) options are available at a surcharge. Turnaround begins after artwork approval.' },
-      { q: 'Do you ship across Canada?', a: 'Yes. We ship via Canada Post and courier across Ontario and Canada. Local pickup is always free at our Mississauga location.' },
-      { q: 'What is your reprint/quality guarantee?', a: 'If there is a print defect or error on our end, we reprint at no charge. We cannot reprint for customer-supplied artwork errors — this is why we always send a proof first.' },
-      { q: 'Can I get a proof before printing?', a: 'Absolutely. A digital PDF proof is included free with every order. We only go to press after you approve it.' },
-      { q: 'What is your minimum order quantity?', a: 'It depends on the product. Business cards start at 100, banners at 1 piece, stickers at 10, and so on. Check the product page for specific minimums.' },
-      { q: 'Do you do rush same-day orders?', a: 'Yes! Express same-day or next-day service is available. Call us at (437) 997-9921 to confirm availability before placing your order.' },
-      { q: 'Can you match my brand colours (Pantone)?', a: 'We print in CMYK. We will do our best to match your brand colours — provide your Pantone or hex codes and we will adjust your proof accordingly.' },
-      { q: 'How do I submit my artwork after ordering?', a: 'After placing your order, email your files to info@nexacustoms.ca with your order number in the subject line.' },
+      { q: 'What file formats do you accept?', a: 'We accept PDF, AI, EPS, PSD, PNG (300dpi+), and high-res JPG. PDF is preferred for print-ready files.' },
+      { q: 'Do you offer design services?', a: 'Yes! Free basic layout adjustments and affordable custom design. Email info@nexacustoms.ca with details.' },
+      { q: 'What is your standard turnaround time?', a: 'Standard is 5–7 business days from proof approval. Rush (2–3 days) and Express (same/next day) available at a surcharge.' },
+      { q: 'Do you ship across Canada?', a: 'Yes. We ship via Canada Post and courier. Local pickup is always free at our Mississauga location.' },
+      { q: 'What is your quality guarantee?', a: 'If there is a print defect on our end, we reprint at no charge. We send a free proof before every order.' },
+      { q: 'Can I get a proof before printing?', a: 'Absolutely — a digital PDF proof is free with every order. We print only after you approve it.' },
+      { q: 'What is the minimum order?', a: 'Business cards start at 100. Banners at 1 piece. Stickers at 10. Check each product page for specifics.' },
+      { q: 'Do you do same-day rush orders?', a: 'Yes! Call (437) 997-9921 to confirm availability before ordering.' },
+      { q: 'Can you match Pantone colours?', a: 'We print in CMYK. Provide your Pantone or hex codes and we adjust your proof accordingly.' },
+      { q: 'How do I send my artwork?', a: 'After placing your order, email files to info@nexacustoms.ca with your order number in the subject line.' },
     ],
   },
-  turnaround: {
-    title: 'Turnaround Times',
-    body: `Standard turnaround is 5–7 business days from proof approval.\n\nRush (2–3 business days) and Express (same/next day) options are available at an additional fee applied at checkout.\n\nTurnaround begins after artwork approval, not order placement. Complex projects (vehicle wraps, large-format murals) may require additional time — we'll confirm your timeline when you order.\n\nSame-day pickup is available for orders placed before 10:30 AM with artwork approved by noon.`,
-  },
-  shipping: {
-    title: 'Shipping Policy',
-    body: `We ship across Ontario and Canada via Canada Post and FedEx/UPS courier.\n\nFree local pickup at 6033 Shawson Dr, Unit 40, Mississauga (Mon–Fri 9AM–6PM, Sat by appointment).\n\nFlat-rate shipping: Canada Post $18 · Courier $45\n\nOrders are packaged carefully to prevent transit damage. Nexa Customs is not responsible for carrier delays once the package is in transit. If your order arrives damaged, contact us within 5 business days with photos and we will work to resolve it.`,
-  },
-  returns: {
-    title: 'Return Policy',
-    body: `Due to the custom-printed nature of our products, we do not accept returns or exchanges.\n\nHowever, if there is a manufacturing defect or an error on our part (colour shift, wrong size, printing fault), we will reprint at no charge.\n\nClaims must be made within 5 business days of delivery. Please email info@nexacustoms.ca with your order number and photos of the issue.\n\nWe are unable to reprint orders where the error originates from customer-supplied artwork (wrong bleed, low resolution, incorrect colours). This is why we always send a free proof before printing.`,
-  },
-  terms: {
-    title: 'Terms & Conditions',
-    body: `By placing an order with Nexa Customs Inc., you agree to the following:\n\n1. Artwork Rights: You confirm you own or have rights to all artwork submitted. Nexa Customs is not responsible for copyright or trademark infringement from customer-provided files.\n\n2. Colour Accuracy: Colours may vary slightly from screen previews due to monitor calibration and the CMYK printing process. We always send a proof — please review carefully.\n\n3. Payment: All prices are in CAD and include applicable taxes. Orders are confirmed once payment is received or invoice is approved.\n\n4. Turnaround: Production begins after proof approval. Rush fees apply for accelerated timelines.\n\n5. Liability: Nexa Customs' liability is limited to the value of the order. We are not responsible for consequential damages arising from delays or errors.`,
-  },
+  turnaround: { title: 'Turnaround Times', body: 'Standard turnaround is 5–7 business days from proof approval.\n\nRush (2–3 business days) and Express (same/next day) options are available at an additional fee applied at checkout.\n\nTurnaround begins after artwork approval, not order placement. Complex projects may require additional time.\n\nSame-day pickup available for orders placed before 10:30 AM with artwork approved by noon.' },
+  shipping: { title: 'Shipping Policy', body: 'We ship across Ontario and Canada via Canada Post and FedEx/UPS courier.\n\nFree local pickup at 6033 Shawson Dr, Unit 40, Mississauga (Mon–Fri 9AM–6PM).\n\nFlat-rate shipping: Canada Post $18 · Courier $45\n\nNexa Customs is not responsible for carrier delays once the package is in transit. Contact us within 5 business days if your order arrives damaged.' },
+  returns: { title: 'Return Policy', body: 'Due to the custom-printed nature of our products, we do not accept returns or exchanges.\n\nIf there is a manufacturing defect or error on our part, we will reprint at no charge.\n\nClaims must be made within 5 business days of delivery. Email info@nexacustoms.ca with photos.\n\nWe cannot reprint for customer-supplied artwork errors — this is why we always send a free proof first.' },
+  terms: { title: 'Terms & Conditions', body: 'By placing an order with Nexa Customs Inc., you agree to the following:\n\n1. Artwork Rights: You confirm you own or have rights to all artwork submitted.\n\n2. Colour Accuracy: Colours may vary slightly from screen due to CMYK printing. Review your proof carefully.\n\n3. Payment: All prices are in CAD. Orders are confirmed once payment is received or invoice is approved.\n\n4. Turnaround: Production begins after proof approval.\n\n5. Liability: Nexa Customs liability is limited to the value of the order.' },
 };
 
+// ── COMPONENTS ────────────────────────────────────────────────────────────────
 function FAQItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ borderBottom: '1px solid var(--bd)' }}>
       <button className="faq-q" onClick={() => setOpen(o => !o)}>
         <span>{q}</span>
-        <span style={{ fontSize: 18, color: 'var(--o)', flexShrink: 0, transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none', lineHeight: 1 }}>⌄</span>
+        <span style={{ fontSize: 18, color: 'var(--o)', flexShrink: 0, transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none' }}>⌄</span>
       </button>
-      {open && <div style={{ padding: '0 4px 16px', fontSize: 13, color: 'var(--mu)', lineHeight: 1.82 }}>{a}</div>}
+      {open && <div style={{ padding: '0 4px 16px', fontSize: 14, color: 'var(--mu)', lineHeight: 1.82 }}>{a}</div>}
     </div>
   );
 }
 
 function PolicyPage({ slug }) {
   const p = POLICY[slug];
-  if (!p) return null;
+  if (!p) return <NotFoundPage />;
   return (
     <div className="W" style={{ padding: '40px 28px 76px', maxWidth: 820 }}>
       <h1 className="D" style={{ fontSize: 'clamp(28px,4vw,50px)', marginBottom: 28 }}>{p.title}</h1>
       {p.body && p.body.split('\n\n').map((para, i) => (
         <p key={i} style={{ fontSize: 14, color: 'var(--mu)', lineHeight: 1.85, marginBottom: 16, whiteSpace: 'pre-line' }}>{para}</p>
       ))}
-      {p.faqs && (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {p.faqs.map((item, i) => <FAQItem key={i} q={item.q} a={item.a} />)}
-        </div>
-      )}
+      {p.faqs && p.faqs.map((item, i) => <FAQItem key={i} q={item.q} a={item.a} />)}
     </div>
   );
 }
 
-// Custom page renderer
-function CustomPage({ slug }) {
-  const { pages } = useApp();
-  const pg = pages.find(p => p.slug === slug);
-  if (!pg) return (
-    <div className="W" style={{ padding: '60px 28px', textAlign: 'center', color: 'var(--mu)' }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-      <div style={{ fontWeight: 700, marginBottom: 8 }}>Page not found</div>
+function NotFoundPage() {
+  const navigate = useNavigate();
+  return (
+    <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 16, padding: 40 }}>
+      <div style={{ fontSize: 64 }}>🔍</div>
+      <h1 className="D" style={{ fontSize: 48 }}>Page Not Found</h1>
+      <p style={{ fontSize: 14, color: 'var(--mu)' }}>The page you are looking for does not exist.</p>
+      <button className="btn btn-primary" onClick={() => navigate('/')}>← Back to Home</button>
     </div>
   );
+}
+
+// ── CATEGORY PAGE ─────────────────────────────────────────────────────────────
+function CategoryPage() {
+  const { catSlug } = useParams();
+  const { cats, prods } = useApp();
+  const navigate = useNavigate();
+  const cat = cats.find(c => c.id === catSlug);
+  const catProds = prods.filter(p => p.cat === catSlug && !p.disabled);
+
+  if (!cat) return <NotFoundPage />;
+
+  return (
+    <div>
+      <div style={{ background: 'var(--dk)', borderBottom: '1px solid var(--bd)', padding: '44px 0', textAlign: 'center' }}>
+        <div className="W">
+          <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 10 }}>
+            <span onClick={() => navigate('/products')} style={{ cursor: 'pointer', color: 'var(--o)' }}>All Products</span>
+            <span style={{ margin: '0 6px' }}>›</span>
+            <span>{cat.l}</span>
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            {cat.img
+              ? <img src={cat.img} alt={cat.l} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--bd)' }} />
+              : <span style={{ fontSize: 52 }}>{cat.i}</span>}
+          </div>
+          <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,58px)', marginBottom: 8 }}>{cat.l}</h1>
+          <p style={{ fontSize: 13, color: 'var(--mu)' }}>{catProds.length} products available</p>
+        </div>
+      </div>
+      <div className="W" style={{ padding: '28px 28px 72px' }}>
+        {catProds.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--mu)' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🖨️</div>
+            <div>No products in this category yet.</div>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 14 }}>
+            {catProds.map(p => (
+              <ProductCard key={p.id} prod={p} onOpen={() => navigate(`/products/${catSlug}/${p.id}`)} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── PRODUCT DETAIL PAGE WRAPPER ───────────────────────────────────────────────
+function ProductPageWrapper() {
+  const { productSlug } = useParams();
+  const { prods, setCurProd } = useApp();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const prod = prods.find(p => p.id === productSlug);
+    if (prod) {
+      setCurProd(prod);
+    } else if (prods.length > 0) {
+      navigate('/products', { replace: true });
+    }
+  }, [productSlug, prods.length]);
+
+  return <ProductDetailPage />;
+}
+
+// ── CUSTOM PAGE ───────────────────────────────────────────────────────────────
+function CustomPageRoute() {
+  const { slug } = useParams();
+  const { pages } = useApp();
+  const pg = pages.find(p => p.slug === slug);
+  if (!pg) return <NotFoundPage />;
   return (
     <div className="W" style={{ padding: '40px 28px 76px', maxWidth: 860 }}>
       <h1 className="D" style={{ fontSize: 'clamp(28px,4vw,50px)', marginBottom: 28 }}>{pg.title}</h1>
@@ -91,44 +150,67 @@ function CustomPage({ slug }) {
   );
 }
 
-const POLICY_SLUGS = ['faq', 'turnaround', 'shipping', 'returns', 'terms'];
+// ── SCROLL TO TOP ON ROUTE CHANGE ─────────────────────────────────────────────
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [pathname]);
+  return null;
+}
 
-function AppInner() {
-  const { page, pages } = useApp();
-
-  const isAdmin = page === 'admin';
-  const isPolicy = POLICY_SLUGS.includes(page);
-  const isCustom = !isAdmin && !isPolicy && pages.some(p => p.slug === page);
-
+// ── LAYOUT ────────────────────────────────────────────────────────────────────
+function Layout({ children, noNav }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {!isAdmin && <Topbar />}
-      {!isAdmin && <Navbar />}
-
-      <main style={{ flex: 1 }}>
-        {page === 'home'     && <HomePage />}
-        {page === 'products' && <ProductsPage />}
-        {page === 'detail'   && <ProductDetailPage />}
-        {page === 'cart'     && <CartPage />}
-        {page === 'checkout' && <CheckoutPage />}
-        {page === 'success'  && <SuccessPage />}
-        {page === 'quote'    && <QuotePage />}
-        {page === 'contact'  && <ContactPage />}
-        {page === 'admin'    && <AdminPage />}
-        {isPolicy            && <PolicyPage slug={page} />}
-        {isCustom            && <CustomPage slug={page} />}
-      </main>
-
-      {!isAdmin && <Footer />}
+      {!noNav && <Topbar />}
+      {!noNav && <Navbar />}
+      <main style={{ flex: 1 }}>{children}</main>
+      {!noNav && <Footer />}
       <Toast />
     </div>
+  );
+}
+
+// ── ROUTES ────────────────────────────────────────────────────────────────────
+function AppRoutes() {
+  return (
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* Admin — no nav */}
+        <Route path="/admin" element={<Layout noNav><AdminPage /></Layout>} />
+
+        {/* Main pages */}
+        <Route path="/" element={<Layout><HomePage /></Layout>} />
+        <Route path="/products" element={<Layout><ProductsPage /></Layout>} />
+        <Route path="/products/:catSlug" element={<Layout><CategoryPage /></Layout>} />
+        <Route path="/products/:catSlug/:productSlug" element={<Layout><ProductPageWrapper /></Layout>} />
+        <Route path="/cart" element={<Layout><CartPage /></Layout>} />
+        <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
+        <Route path="/order-confirmed" element={<Layout><SuccessPage /></Layout>} />
+        <Route path="/quote" element={<Layout><QuotePage /></Layout>} />
+        <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
+
+        {/* Policy pages */}
+        <Route path="/faq" element={<Layout><PolicyPage slug="faq" /></Layout>} />
+        <Route path="/shipping" element={<Layout><PolicyPage slug="shipping" /></Layout>} />
+        <Route path="/returns" element={<Layout><PolicyPage slug="returns" /></Layout>} />
+        <Route path="/terms" element={<Layout><PolicyPage slug="terms" /></Layout>} />
+        <Route path="/turnaround" element={<Layout><PolicyPage slug="turnaround" /></Layout>} />
+
+        {/* Admin-created custom pages */}
+        <Route path="/p/:slug" element={<Layout><CustomPageRoute /></Layout>} />
+
+        {/* 404 */}
+        <Route path="*" element={<Layout><NotFoundPage /></Layout>} />
+      </Routes>
+    </>
   );
 }
 
 export default function App() {
   return (
     <AppProvider>
-      <AppInner />
+      <AppRoutes />
     </AppProvider>
   );
 }

@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
 
 export default function ProductsPage() {
-  const { cats, prods, showProduct } = useApp();
+  const { cats, prods } = useApp();
+  const navigate = useNavigate();
   const [activeCat, setActiveCat] = useState('all');
   const [search, setSearch] = useState('');
 
@@ -41,7 +43,7 @@ export default function ProductsPage() {
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mu)', padding: '4px 8px 10px', borderBottom: '1px solid var(--bd)', marginBottom: 4 }}>Categories</div>
               <SidebarItem label="All Products" count={prods.length} active={activeCat === 'all'} onClick={() => setActiveCat('all')} />
               {cats.map(c => (
-                <SidebarItem key={c.id} label={`${c.i} ${c.l}`} count={prods.filter(p => p.cat === c.id).length} active={activeCat === c.id} onClick={() => setActiveCat(c.id)} />
+                <SidebarItem key={c.id} label={c.l} emoji={c.i} img={c.img} count={prods.filter(p => p.cat === c.id).length} active={activeCat === c.id} onClick={() => setActiveCat(c.id)} />
               ))}
             </div>
           </div>
@@ -63,7 +65,7 @@ export default function ProductsPage() {
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(196px,1fr))', gap: 12 }}>
-                {filtered.map(p => <ProductCard key={p.id} prod={p} onOpen={() => showProduct(p.id)} />)}
+                {filtered.map(p => <ProductCard key={p.id} prod={p} onOpen={() => navigate(`/products/${p.cat}/${p.id}`)} />)}
               </div>
             )}
           </div>
@@ -78,14 +80,19 @@ export default function ProductsPage() {
   );
 }
 
-function SidebarItem({ label, count, active, onClick }) {
+function SidebarItem({ label, emoji, img, count, active, onClick }) {
   return (
-    <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 8px', borderRadius: 6, fontSize: 12, cursor: 'pointer', transition: 'all .15s', color: active ? 'var(--o)' : 'var(--mu)', background: active ? 'rgba(249,115,22,.09)' : 'transparent', fontWeight: active ? 600 : 400 }}
+    <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 7, justifyContent: 'space-between', padding: '7px 8px', borderRadius: 6, fontSize: 12, cursor: 'pointer', transition: 'all .15s', color: active ? 'var(--o)' : 'var(--mu)', background: active ? 'rgba(249,115,22,.09)' : 'transparent', fontWeight: active ? 600 : 400 }}
       onMouseEnter={e => !active && (e.currentTarget.style.color = 'var(--tx)')}
       onMouseLeave={e => !active && (e.currentTarget.style.color = 'var(--mu)')}
     >
-      <span>{label}</span>
-      <span style={{ fontSize: 10, background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 10, padding: '1px 5px', color: 'var(--mu)' }}>{count}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {img
+          ? <img src={img} alt={label} style={{ width: 20, height: 20, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
+          : <span style={{ fontSize: 14 }}>{emoji}</span>}
+        <span>{label}</span>
+      </div>
+      <span style={{ fontSize: 10, background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 10, padding: '1px 5px', color: 'var(--mu)', flexShrink: 0 }}>{count}</span>
     </div>
   );
 }

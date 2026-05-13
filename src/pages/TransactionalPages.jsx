@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 
 // ── CART ──────────────────────────────────────────────────────────────────────
 export function CartPage() {
-  const { cart, removeFromCart, go, pricing, cartSubtotal } = useApp();
+  const { cart, removeFromCart, pricing, cartSubtotal } = useApp();
+  const navigate = useNavigate();
   const hst = +(cartSubtotal * pricing.hst).toFixed(2);
   const total = +(cartSubtotal + hst).toFixed(2);
 
@@ -12,7 +14,7 @@ export function CartPage() {
       <div style={{ fontSize: 64 }}>🛒</div>
       <div className="D" style={{ fontSize: 28 }}>Your Cart is Empty</div>
       <p style={{ fontSize: 13, color: 'var(--mu)' }}>Browse our products and add items to get started.</p>
-      <button className="btn btn-primary" onClick={() => go('products')}>Shop All Products →</button>
+      <button className="btn btn-primary" onClick={() => navigate('/products')}>Shop All Products →</button>
     </div>
   );
 
@@ -52,9 +54,9 @@ export function CartPage() {
               <span style={{ fontWeight: 700, fontSize: 14 }}>Est. Total</span>
               <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, color: 'var(--o)' }}>${total.toFixed(2)}</span>
             </div>
-            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: 15, padding: 14, marginTop: 18, borderRadius: 'var(--r)' }} onClick={() => go('checkout')}>Proceed to Checkout →</button>
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: 15, padding: 14, marginTop: 18, borderRadius: 'var(--r)' }} onClick={() => navigate('/checkout')}>Proceed to Checkout →</button>
             <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--mu)', marginTop: 10 }}>🔒 Secure checkout · SSL encrypted</div>
-            <button onClick={() => go('products')} style={{ display: 'block', width: '100%', textAlign: 'center', fontSize: 12, color: 'var(--mu)', marginTop: 10, cursor: 'pointer' }}>← Continue Shopping</button>
+            <button onClick={() => navigate('/products')} style={{ display: 'block', width: '100%', textAlign: 'center', fontSize: 12, color: 'var(--mu)', marginTop: 10, cursor: 'pointer' }}>← Continue Shopping</button>
           </div>
         </div>
       </div>
@@ -65,13 +67,17 @@ export function CartPage() {
 
 // ── CHECKOUT ──────────────────────────────────────────────────────────────────
 export function CheckoutPage() {
-  const { cart, cartSubtotal, pricing, go, clearCart, showToast, ls } = useApp();
+  const { cart, cartSubtotal, pricing, clearCart, showToast, ls, cfg } = useApp();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ fn: '', email: '', phone: '', company: '', notes: '' });
   const [delivery, setDelivery] = useState('pickup');
   const [turnaround, setTurnaround] = useState('standard');
   const [payMethod, setPayMethod] = useState('invoice');
   const [stripeErr, setStripeErr] = useState('');
   const [placing, setPlacing] = useState(false);
+  const [artworkFiles, setArtworkFiles] = useState([]); // { name, url, size }
+  const [artworkUploading, setArtworkUploading] = useState(false);
+  const artworkRef = useRef(null);
   const stripeRef = useRef(null);
   const cardRef = useRef(null);
 
@@ -84,7 +90,7 @@ export function CheckoutPage() {
 
   useEffect(() => {
     if (payMethod !== 'stripe') return;
-    const pk = ls.raw('nxt_stripe_pk', '');
+    const pk = cfg.stripePk();
     if (!pk || pk.length < 10 || typeof window.Stripe === 'undefined') return;
     try {
       const stripe = window.Stripe(pk);
@@ -98,31 +104,82 @@ export function CheckoutPage() {
 
   const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
-  async function saveOrder(no, pmId = '') {
+  async function uploadArtwork(file, orderNo) {
     const supaUrl = ls.raw('nxt_supa_url', '');
     const supaKey = ls.raw('nxt_supa_key', '');
+    if (!supaUrl || !supaKey || supaKey.length < 10) return null;
+    const ext = file.name.split('.').pop().toLowerCase();
+    const safeName = `artwork/${orderNo}-${Date.now()}.${ext}`;
+    try {
+      const res = await fetch(`${supaUrl}/storage/v1/object/nexa-media/${safeName}`, {
+        method: 'POST',
+        headers: { apikey: supaKey, Authorization: `Bearer ${supaKey}`, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' },
+        body: file,
+      });
+      if (!res.ok) return null;
+      return `${supaUrl}/storage/v1/object/public/nexa-media/${safeName}`;
+    } catch { return null; }
+  }
+
+  async function handleArtworkSelect(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const allowed = ['pdf','ai','eps','psd','png','jpg','jpeg','svg','tiff','tif','zip'];
+    const invalid = files.filter(f => !allowed.includes(f.name.split('.').pop().toLowerCase()));
+    if (invalid.length) { showToast('❌ Unsupported file: ' + invalid[0].name); return; }
+    const tooBig = files.filter(f => f.size > 50 * 1024 * 1024);
+    if (tooBig.length) { showToast('❌ Max file size is 50MB per file'); return; }
+
+    const supaUrl = ls.raw('nxt_supa_url', '');
+    const supaKey = ls.raw('nxt_supa_key', '');
+    if (!supaUrl || !supaKey) {
+      // No Supabase — store locally for email instructions
+      setArtworkFiles(prev => [...prev, ...files.map(f => ({ name: f.name, size: f.size, url: null, file: f }))]);
+      showToast('✓ ' + files.length + ' file(s) selected — will upload after order');
+      return;
+    }
+
+    setArtworkUploading(true);
+    const tempNo = 'TEMP-' + Date.now();
+    const uploaded = [];
+    for (const file of files) {
+      const url = await uploadArtwork(file, tempNo);
+      uploaded.push({ name: file.name, size: file.size, url, file });
+    }
+    setArtworkUploading(false);
+    setArtworkFiles(prev => [...prev, ...uploaded]);
+    const ok = uploaded.filter(x => x.url).length;
+    if (ok > 0) showToast(`✅ ${ok} file(s) uploaded to Supabase!`);
+    else showToast('⚠️ Upload failed — files noted, email separately');
+    e.target.value = '';
+  }
+
+  async function saveOrder(no, pmId = '') {
+    const supaUrl = cfg.supaUrl();
+    const supaKey = cfg.supaKey();
     const itemsStr = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
     if (supaUrl && supaKey && supaKey.length > 10) {
       fetch(supaUrl + '/rest/v1/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey, 'Prefer': 'return=minimal,resolution=merge-duplicates' },
-        body: JSON.stringify({ id: 'WEB-' + no, order_number: no, customer_name: form.fn, customer_email: form.email, customer_phone: form.phone, company: form.company, items: itemsStr, total, delivery, turnaround, status: 'New', source: 'Website', payment_method: payMethod, stripe_pm_id: pmId, created_at: new Date().toISOString() }),
+        body: JSON.stringify({ id: 'WEB-' + no, order_number: no, customer_name: form.fn, customer_email: form.email, customer_phone: form.phone, company: form.company, items: itemsStr, total, delivery, turnaround, status: 'New', source: 'Website', payment_method: payMethod, stripe_pm_id: pmId, artwork_urls: artworkFiles.filter(f => f.url).map(f => f.url).join(', '), artwork_files: artworkFiles.map(f => f.name).join(', '), notes: form.notes, created_at: new Date().toISOString() }),
       }).catch(() => {});
     }
     // Telegram
-    const tok = ls.raw('nxt_tg_token', ''); const cid = ls.raw('nxt_tg_chatid', '');
+    const tok = cfg.tgToken(); const cid = cfg.tgChat();
     if (tok && cid) {
-      const msg = `🛒 NEW ORDER ${no} | ${form.fn} | ${form.email} | ${form.phone} | ${itemsStr} | $${total.toFixed(2)} | ${payMethod}`;
+      const artworkInfo = artworkFiles.length > 0 ? ' | 📎 ' + artworkFiles.map(f=>f.name).join(', ') : '';
+      const msg = `🛒 NEW ORDER ${no} | ${form.fn} | ${form.email} | ${form.phone} | ${itemsStr} | $${total.toFixed(2)} | ${payMethod}${artworkInfo}`;
       fetch(`https://api.telegram.org/bot${tok}/sendMessage?chat_id=${cid}&text=${encodeURIComponent(msg)}`).catch(() => {});
     }
     // EmailJS
-    const ejsSvc = ls.raw('nxt_ejs_svc', ''); const ejsTpl = ls.raw('nxt_ejs_tpl', ''); const ejsKey = ls.raw('nxt_ejs_key', ''); const ejsTo = ls.raw('nxt_ejs_to', '');
+    const ejsSvc = cfg.ejsSvc(); const ejsTpl = cfg.ejsTpl(); const ejsKey = cfg.ejsKey(); const ejsTo = cfg.ejsTo();
     if (ejsSvc && ejsTpl && ejsKey) {
       const loadAndSend = () => {
         window.emailjs.init(ejsKey);
         const p = { order_id: no, customer_name: form.fn, customer_email: form.email, customer_phone: form.phone, order_items: itemsStr, total: '$' + total.toFixed(2), to_email: ejsTo, reply_to: form.email, payment_method: payMethod };
         if (ejsTo) window.emailjs.send(ejsSvc, ejsTpl, p).catch(() => {});
-        if (ls.raw('nxt_send_cust', '') === '1' && form.email) window.emailjs.send(ejsSvc, ejsTpl, { ...p, to_email: form.email }).catch(() => {});
+        if (ls.raw('nxt_send_cust','') === '1' && form.email) window.emailjs.send(ejsSvc, ejsTpl, { ...p, to_email: form.email }).catch(() => {});
       };
       if (window.emailjs) { loadAndSend(); } else {
         const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js'; sc.onload = loadAndSend; document.head.appendChild(sc);
@@ -142,7 +199,7 @@ export function CheckoutPage() {
     try {
       // Stripe payment
       if (payMethod === 'stripe') {
-        const pk = ls.raw('nxt_stripe_pk', '');
+        const pk = cfg.stripePk();
         if (pk && pk.length > 10 && stripeRef.current && cardRef.current) {
           const result = await stripeRef.current.createPaymentMethod({
             type: 'card', card: cardRef.current,
@@ -166,7 +223,7 @@ export function CheckoutPage() {
       // Store order number for success page, navigate
       sessionStorage.setItem('last_order_no', no);
       clearCart();
-      go('success');
+      navigate('/order-confirmed');
       showToast('✓ Order placed!');
     } catch (err) {
       console.error('Order error:', err);
@@ -227,11 +284,72 @@ export function CheckoutPage() {
               </div>
             </CkSection>
 
-            {/* Artwork */}
-            <CkSection n={4} title="Artwork Submission">
-              <div style={{ background: 'rgba(249,115,22,.06)', border: '1px solid rgba(249,115,22,.15)', borderRadius: 9, padding: '12px 15px', fontSize: 13, color: 'var(--mu)' }}>
-                📎 After placing your order, email artwork to <strong style={{ color: 'var(--o)' }}>info@nexacustoms.ca</strong> with your order number. We accept PDF, AI, EPS, PNG/JPG (300dpi+).
+            {/* Artwork Upload */}
+            <CkSection n={4} title="Artwork Upload (Optional)">
+              <p style={{ fontSize: 13, color: 'var(--mu)', marginBottom: 14, lineHeight: 1.65 }}>
+                Upload your print-ready files now, or email them after ordering to <strong style={{ color: 'var(--o)' }}>info@nexacustoms.ca</strong> with your order number.
+              </p>
+
+              {/* Accepted formats */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                {['PDF','AI','EPS','PSD','PNG','JPG','SVG','TIFF','ZIP'].map(f => (
+                  <span key={f} style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: 'var(--s2)', border: '1px solid var(--bd)', color: 'var(--mu)', fontFamily: "'DM Mono',monospace" }}>{f}</span>
+                ))}
+                <span style={{ fontSize: 10, color: 'var(--mu)', alignSelf: 'center' }}>· Max 50MB per file</span>
               </div>
+
+              {/* Upload zone */}
+              <div
+                onClick={() => artworkRef.current?.click()}
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--o)'; e.currentTarget.style.background = 'rgba(249,115,22,.06)'; }}
+                onDragLeave={e => { e.currentTarget.style.borderColor = 'var(--bd)'; e.currentTarget.style.background = 'transparent'; }}
+                onDrop={e => {
+                  e.preventDefault();
+                  e.currentTarget.style.borderColor = 'var(--bd)';
+                  e.currentTarget.style.background = 'transparent';
+                  const fakeEvent = { target: { files: e.dataTransfer.files, value: '' } };
+                  handleArtworkSelect(fakeEvent);
+                }}
+                style={{ border: '2px dashed var(--bd)', borderRadius: 10, padding: '24px 20px', textAlign: 'center', cursor: 'pointer', transition: 'all .2s', marginBottom: 12 }}
+              >
+                <div style={{ fontSize: 32, marginBottom: 8 }}>📁</div>
+                <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
+                  {artworkUploading ? '⏳ Uploading files…' : 'Click or drag & drop your artwork here'}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--mu)' }}>PDF, AI, EPS, PSD, PNG, JPG, ZIP accepted</div>
+                <input ref={artworkRef} type="file" multiple accept=".pdf,.ai,.eps,.psd,.png,.jpg,.jpeg,.svg,.tiff,.tif,.zip" style={{ display: 'none' }} onChange={handleArtworkSelect} />
+              </div>
+
+              {/* Uploaded files list */}
+              {artworkFiles.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {artworkFiles.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: f.url ? 'rgba(34,197,94,.06)' : 'var(--s2)', border: `1px solid ${f.url ? 'rgba(34,197,94,.2)' : 'var(--bd)'}`, borderRadius: 8, padding: '10px 13px' }}>
+                      <span style={{ fontSize: 18 }}>
+                        {f.name.endsWith('.pdf') ? '📄' : f.name.endsWith('.zip') ? '🗜️' : f.name.match(/\.(png|jpg|jpeg)$/i) ? '🖼️' : '📎'}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--mu)' }}>
+                          {(f.size / 1024 / 1024).toFixed(1)}MB
+                          {f.url ? <span style={{ color: 'var(--gr)', marginLeft: 8 }}>✅ Uploaded</span> : <span style={{ color: 'var(--mu)', marginLeft: 8 }}>⏳ Pending</span>}
+                        </div>
+                      </div>
+                      <button onClick={() => setArtworkFiles(prev => prev.filter((_, idx) => idx !== i))} style={{ color: 'var(--mu)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: '2px 6px', borderRadius: 4 }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'var(--mu)'}
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* No Supabase notice */}
+              {!ls.raw('nxt_supa_url','') && (
+                <div style={{ marginTop: 12, fontSize: 12, color: 'var(--mu)', background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 8, padding: '10px 13px' }}>
+                  💡 Files will be recorded but not uploaded (Supabase not connected). Email artwork to <strong>info@nexacustoms.ca</strong> after ordering.
+                </div>
+              )}
             </CkSection>
           </div>
 
@@ -271,7 +389,7 @@ export function CheckoutPage() {
                   <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 7 }}>Card Details</div>
                   <div id="stripe-card-el" style={{ background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 9, padding: 13 }} />
                   {stripeErr && <div style={{ color: '#f87171', fontSize: 12, marginTop: 5 }}>{stripeErr}</div>}
-                  {!ls.raw('nxt_stripe_pk', '') && <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 5 }}>Stripe key not set — order will use invoice mode.</div>}
+                  {!cfg.stripePk() && <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 5 }}>Stripe key not set — order will use invoice mode.</div>}
                 </div>
               )}
 
@@ -279,7 +397,7 @@ export function CheckoutPage() {
                 {placing ? 'Placing Order…' : 'Place Order →'}
               </button>
               <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--mu)', marginBottom: 10 }}>🔒 Secured by Stripe · SSL encrypted</div>
-              <span onClick={() => go('cart')} style={{ display: 'block', textAlign: 'center', fontSize: 12, color: 'var(--mu)', cursor: 'pointer' }}>← Edit Cart</span>
+              <span onClick={() => navigate('/cart')} style={{ display: 'block', textAlign: 'center', fontSize: 12, color: 'var(--mu)', cursor: 'pointer' }}>← Edit Cart</span>
             </div>
           </div>
         </div>
@@ -303,7 +421,7 @@ function CkSection({ n, title, children }) {
 
 // ── SUCCESS ───────────────────────────────────────────────────────────────────
 export function SuccessPage() {
-  const { go } = useApp();
+  const navigate = useNavigate();
   const orderNo = sessionStorage.getItem('last_order_no') || 'NCX—';
   return (
     <div style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 20px' }}>
@@ -320,8 +438,8 @@ export function SuccessPage() {
         ))}
       </div>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button className="btn btn-primary" onClick={() => go('products')}>Continue Shopping</button>
-        <button className="btn btn-ghost" onClick={() => go('home')}>Back to Home</button>
+        <button className="btn btn-primary" onClick={() => navigate('/products')}>Continue Shopping</button>
+        <button className="btn btn-ghost" onClick={() => navigate('/')}>Back to Home</button>
       </div>
     </div>
   );
@@ -329,7 +447,8 @@ export function SuccessPage() {
 
 // ── QUOTE ─────────────────────────────────────────────────────────────────────
 export function QuotePage() {
-  const { go, showToast, ls, cats } = useApp();
+  const { showToast, ls, cats } = useApp();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ fname: '', lname: '', email: '', phone: '', cat: 'Business Cards', qty: '', deadline: '', desc: '' });
   const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
@@ -342,7 +461,7 @@ export function QuotePage() {
     }
     const tok = ls.raw('nxt_tg_token', ''); const cid = ls.raw('nxt_tg_chatid', '');
     if (tok && cid) fetch(`https://api.telegram.org/bot${tok}/sendMessage?chat_id=${cid}&text=${encodeURIComponent(`📋 QUOTE REQUEST | ${form.fname} ${form.lname} | ${form.email} | ${form.phone} | ${form.cat} | ${form.desc.slice(0,100)}`)}`).catch(() => {});
-    showToast('✓ Quote request sent! We\'ll respond within 1 business day.'); go('home');
+    showToast('✓ Quote request sent! We\'ll respond within 1 business day.'); navigate('/');
   }
 
   return (
@@ -406,6 +525,7 @@ export function QuotePage() {
 // ── CONTACT ───────────────────────────────────────────────────────────────────
 export function ContactPage() {
   const { store, showToast } = useApp();
+  // no navigation needed
   const [form, setForm] = useState({ name: '', email: '', msg: '' });
   const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 

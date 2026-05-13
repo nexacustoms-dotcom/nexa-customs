@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
 
@@ -10,7 +11,8 @@ const TESTIMONIALS = [
 ];
 
 export default function HomePage() {
-  const { cats, prods, go, showProduct, store } = useApp();
+  const { cats, prods, store } = useApp();
+  const navigate = useNavigate();
   const [slide, setSlide] = useState(0);
   const [tIdx, setTIdx] = useState(0);
 
@@ -45,8 +47,8 @@ export default function HomePage() {
               </h1>
               <p style={{ fontSize: 15, color: 'var(--mu)', maxWidth: 460, marginBottom: 32, lineHeight: 1.78 }}>{store.hero_sub}</p>
               <div style={{ display: 'flex', gap: 10, marginBottom: 44, flexWrap: 'wrap' }}>
-                <button className="btn btn-primary" onClick={() => go('products')}>Shop All Products →</button>
-                <button className="btn btn-ghost" onClick={() => go('quote')}>Get a Free Quote</button>
+                <button className="btn btn-primary" onClick={() => navigate('/products')}>Shop All Products →</button>
+                <button className="btn btn-ghost" onClick={() => navigate('/quote')}>Get a Free Quote</button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
                 {[['10K+', 'Orders Completed'], ['500+', 'Happy Clients'], ['24hr', 'Rush Available'], ['4.9★', 'Google Rating']].map(([n, l], i, arr) => (
@@ -86,15 +88,17 @@ export default function HomePage() {
         <div className="W">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
             <h2 className="D" style={{ fontSize: 'clamp(26px,3.5vw,42px)' }}>Shop By Category</h2>
-            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => go('products')}>View All →</button>
+            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => navigate('/products')}>View All →</button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10 }} className="cat-grid">
             {cats.slice(0, 12).map(c => (
-              <div key={c.id} onClick={() => go('products')} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: '18px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 8, transition: 'all .2s', cursor: 'pointer' }}
+              <div key={c.id} onClick={() => navigate('/products')} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: '18px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 8, transition: 'all .2s', cursor: 'pointer' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--o)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--bd)'; e.currentTarget.style.transform = ''; }}
               >
-                <span style={{ fontSize: 28 }}>{c.i}</span>
+                {c.img
+                  ? <img src={c.img} alt={c.l} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, marginBottom: 2 }} />
+                  : <span style={{ fontSize: 28 }}>{c.i}</span>}
                 <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.3 }}>{c.l}</span>
               </div>
             ))}
@@ -110,7 +114,7 @@ export default function HomePage() {
               <div className="badge-orange" style={{ marginBottom: 10 }}>Top Sellers</div>
               <h2 className="D" style={{ fontSize: 'clamp(26px,3.5vw,42px)' }}>Most Popular Products</h2>
             </div>
-            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => go('products')}>All Products →</button>
+            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => navigate('/products')}>All Products →</button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }} className="prod-grid-4">
             {displayProds.map(p => <ProductCard key={p.id} prod={p} onOpen={() => showProduct(p.id)} />)}
@@ -165,8 +169,8 @@ export default function HomePage() {
           <h2 className="D" style={{ fontSize: 'clamp(32px,5vw,60px)', marginBottom: 14 }}>Ready To Print?</h2>
           <p style={{ fontSize: 15, color: 'var(--mu)', marginBottom: 28, maxWidth: 480, margin: '0 auto 28px' }}>Fast turnaround, free proof, quality guaranteed. Let's build something great together.</p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={() => go('products')}>Shop All Products →</button>
-            <button className="btn btn-ghost" onClick={() => go('quote')}>Get a Free Quote</button>
+            <button className="btn btn-primary" onClick={() => navigate('/products')}>Shop All Products →</button>
+            <button className="btn btn-ghost" onClick={() => navigate('/quote')}>Get a Free Quote</button>
           </div>
         </div>
       </section>

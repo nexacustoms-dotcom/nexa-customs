@@ -12,7 +12,9 @@ export default function ProductCard({ prod, onOpen }) {
       <div style={{ height: 118, background: CAT_BG[prod.cat] || 'var(--s2)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid var(--bd)', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
         {firstImg
           ? <img src={firstImg} alt={prod.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <span style={{ fontSize: 42 }}>{cat?.i || '🖨️'}</span>
+          : cat?.img
+            ? <img src={cat.img} alt={cat.l} style={{ width: '60%', height: '60%', objectFit: 'cover', borderRadius: 8, opacity: 0.6 }} />
+            : <span style={{ fontSize: 42 }}>{cat?.i || '🖨️'}</span>
         }
         {prod.badge && (
           <div className="badge-orange" style={{ position: 'absolute', top: 8, left: 8 }}>{prod.badge}</div>

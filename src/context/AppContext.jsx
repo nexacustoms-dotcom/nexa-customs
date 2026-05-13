@@ -122,11 +122,7 @@ export function AppProvider({ children }) {
   useEffect(() => ls.set('nxt_cart', cart), [cart]);
   useEffect(() => ls.set('nxt_custom_pages', pages), [pages]);
 
-  useEffect(() => {
-    function onHash() { const h = window.location.hash.replace('#','').trim().toLowerCase(); setPage(h || 'home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, []);
+  // Hash routing removed — using React Router now
 
   const setStore = useCallback((s) => {
     setStoreState(s); ls.set('nxt_store', s);
@@ -159,7 +155,22 @@ export function AppProvider({ children }) {
     supaUpsert('site_config', { id: 'pricing_cfg', data: p, updated_at: new Date().toISOString() });
   }, []);
 
-  const go = useCallback((p) => { window.location.hash = p === 'home' ? '' : p; setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }, []);
+  // navigate is injected by useRouterSync below
+  const navigateRef = { current: null };
+  const go = useCallback((p) => {
+    // Map internal page names to URL paths
+    const URL_MAP = {
+      'home': '/', 'products': '/products', 'cart': '/cart',
+      'checkout': '/checkout', 'success': '/order-confirmed',
+      'quote': '/quote', 'contact': '/contact', 'admin': '/admin',
+      'faq': '/faq', 'shipping': '/shipping', 'returns': '/returns',
+      'terms': '/terms', 'turnaround': '/turnaround',
+    };
+    const url = URL_MAP[p] || `/${p}`;
+    if (navigateRef.current) navigateRef.current(url);
+    else window.location.href = url;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   const showToast = useCallback((msg) => { setToast(msg); setTimeout(() => setToast(null), 3200); }, []);
   const addToCart = useCallback((item) => { setCart(prev => [...prev, { ...item, cartId: Date.now() + Math.random() }]); showToast('✓ ' + item.name + ' added to cart'); }, [showToast]);
   const removeFromCart = useCallback((cartId) => setCart(prev => prev.filter(i => i.cartId !== cartId)), []);
@@ -189,7 +200,7 @@ export function AppProvider({ children }) {
   const cartSubtotal = cart.reduce((s, i) => s + (i.price || 0), 0);
 
   return (
-    <AppContext.Provider value={{ page, go, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
+    <AppContext.Provider value={{ navigateRef, page: typeof window !== 'undefined' ? window.location.pathname.replace('/','') || 'home' : 'home', go, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
       {children}
     </AppContext.Provider>
   );

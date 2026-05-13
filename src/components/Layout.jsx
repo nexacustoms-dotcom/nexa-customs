@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 
 // ── TOPBAR ────────────────────────────────────────────────────────────────────
@@ -28,11 +29,14 @@ const NAV = [
 ];
 
 export function Navbar() {
-  const { page, go, cart, store } = useApp();
+  const { cart, store } = useApp();
+  const navigate = useNavigate();
+  const location = useLocation ? require('react-router-dom').useLocation() : { pathname: '/' };
   const [open, setOpen] = useState(false);
   const count = cart.length;
 
-  function navGo(p) { setOpen(false); document.body.style.overflow = ''; go(p); }
+  const URL_MAP = { 'home':'/', 'products':'/products', 'cart':'/cart', 'checkout':'/checkout', 'success':'/order-confirmed', 'quote':'/quote', 'contact':'/contact', 'admin':'/admin', 'faq':'/faq', 'shipping':'/shipping', 'returns':'/returns', 'terms':'/terms', 'turnaround':'/turnaround' };
+  function navGo(p) { setOpen(false); document.body.style.overflow = ''; navigate(URL_MAP[p] || '/'+p); }
   function toggleHam() { setOpen(o => { document.body.style.overflow = !o ? 'hidden' : ''; return !o; }); }
 
   const Logo = () => (
@@ -63,8 +67,8 @@ export function Navbar() {
             {NAV.map(l => (
               <span key={l.id} onClick={() => navGo(l.id)} style={{
                 padding: '8px 13px', fontSize: 13, fontWeight: 500, borderRadius: 7, transition: 'all .15s', cursor: 'pointer',
-                color: page === l.id ? 'var(--tx)' : 'var(--mu)',
-                background: page === l.id ? 'var(--s2)' : 'transparent',
+                color: location.pathname === (l.id === 'home' ? '/' : '/'+l.id) ? 'var(--tx)' : 'var(--mu)',
+                background: location.pathname === (l.id === 'home' ? '/' : '/'+l.id) ? 'var(--s2)' : 'transparent',
               }}>{l.label}</span>
             ))}
           </div>
@@ -124,7 +128,10 @@ const QUICK_LINKS = [
 ];
 
 export function Footer() {
-  const { store, cats, go } = useApp();
+  const { store, cats } = useApp();
+  const navigate = useNavigate();
+  const URL_MAP_F = { 'home':'/', 'products':'/products', 'cart':'/cart', 'checkout':'/checkout', 'quote':'/quote', 'contact':'/contact', 'admin':'/admin', 'faq':'/faq', 'shipping':'/shipping', 'returns':'/returns', 'terms':'/terms', 'turnaround':'/turnaround' };
+  function go(p) { navigate(URL_MAP_F[p] || '/'+p); }
   return (
     <footer style={{ background: 'var(--dk)', borderTop: '1px solid var(--bd)', padding: '54px 0 0' }}>
       <div className="W">

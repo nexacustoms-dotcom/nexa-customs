@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
 import { CAT_BG } from '../data/products';
 
 export default function ProductDetailPage() {
-  const { curProd, cats, prods, go, addToCart, showProduct, calcPrice, showToast } = useApp();
+  const { curProd, cats, prods, addToCart, calcPrice, showToast, store } = useApp();
+  const navigate = useNavigate();
   const [selOpts, setSelOpts] = useState({});
   const [selQty, setSelQty] = useState(null);
   const [imgIdx, setImgIdx] = useState(0);
@@ -26,7 +28,7 @@ export default function ProductDetailPage() {
     <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 14, textAlign: 'center', padding: 40 }}>
       <div style={{ fontSize: 56 }}>🖨️</div>
       <div style={{ color: 'var(--mu)' }}>No product selected.</div>
-      <button className="btn btn-primary" onClick={() => go('products')}>Browse Products</button>
+      <button className="btn btn-primary" onClick={() => navigate('/products')}>Browse Products</button>
     </div>
   );
 
@@ -57,7 +59,7 @@ export default function ProductDetailPage() {
           {[['Home','home'],['Products','products'],[cat?.l,null],[prod.name,null]].map(([label, pg], i) => (
             <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               {i > 0 && <span>›</span>}
-              <span onClick={pg ? () => go(pg) : undefined} style={{ cursor: pg ? 'pointer' : 'default', color: pg ? 'inherit' : 'var(--tx)' }}
+              <span onClick={pg ? () => navigate(pg === 'home' ? '/' : '/'+pg) : undefined} style={{ cursor: pg ? 'pointer' : 'default', color: pg ? 'inherit' : 'var(--tx)' }}
                 onMouseEnter={e => pg && (e.currentTarget.style.color = 'var(--o)')}
                 onMouseLeave={e => pg && (e.currentTarget.style.color = '')}
               >{label}</span>
@@ -175,7 +177,7 @@ export default function ProductDetailPage() {
               onMouseLeave={e => e.currentTarget.style.background = 'var(--o)'}
             >Add to Cart — ${price.toFixed(2)}</button>
             <div style={{ fontSize: 11, color: 'var(--mu)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <span>🔒 Secure checkout</span><span>·</span><span>✅ Free proof</span><span>·</span><span>📞 {useApp().store.phone}</span>
+              <span>🔒 Secure checkout</span><span>·</span><span>✅ Free proof</span><span>·</span><span>📞 {store.phone}</span>
             </div>
           </div>
         </div>
@@ -185,7 +187,7 @@ export default function ProductDetailPage() {
           <div style={{ paddingBottom: 60 }}>
             <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, marginBottom: 18 }}>More in {cat?.l}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }} className="related-grid">
-              {related.map(r => <ProductCard key={r.id} prod={r} onOpen={() => showProduct(r.id)} />)}
+              {related.map(r => <ProductCard key={r.id} prod={r} onOpen={() => navigate(`/products/${r.cat}/${r.id}`)} />)}
             </div>
           </div>
         )}
