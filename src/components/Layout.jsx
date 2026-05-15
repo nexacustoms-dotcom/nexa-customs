@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 
 // ── TOPBAR ────────────────────────────────────────────────────────────────────
@@ -31,7 +31,7 @@ const NAV = [
 export function Navbar() {
   const { cart, store } = useApp();
   const navigate = useNavigate();
-  const location = useLocation ? require('react-router-dom').useLocation() : { pathname: '/' };
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const count = cart.length;
 

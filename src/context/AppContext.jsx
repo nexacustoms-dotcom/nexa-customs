@@ -72,7 +72,8 @@ function mergeCatOverrides(cats, overrides) {
 }
 
 export function AppProvider({ children }) {
-  const [page, setPage] = useState(() => { const h = window.location.hash.replace('#','').trim().toLowerCase(); return h || 'home'; });
+  // page state kept for backwards compat but routing is handled by React Router
+  const [page, setPage] = useState('home');
   const [store, setStoreState]     = useState(() => ({ ...DEFAULT_STORE, ...ls.get('nxt_store', {}) }));
   const [cats,  setCatsState]      = useState(() => mergeCatOverrides(DEFAULT_CATS, ls.get('nxt_cats_overrides', null)));
   const [prods, setProdsState]     = useState(() => mergeOverrides(DEFAULT_PRODS, ls.get('nxt_pricing', null)));
@@ -122,7 +123,7 @@ export function AppProvider({ children }) {
   useEffect(() => ls.set('nxt_cart', cart), [cart]);
   useEffect(() => ls.set('nxt_custom_pages', pages), [pages]);
 
-  // Hash routing removed — using React Router now
+
 
   const setStore = useCallback((s) => {
     setStoreState(s); ls.set('nxt_store', s);
@@ -155,17 +156,9 @@ export function AppProvider({ children }) {
     supaUpsert('site_config', { id: 'pricing_cfg', data: p, updated_at: new Date().toISOString() });
   }, []);
 
-  // navigate is injected by useRouterSync below
   const navigateRef = { current: null };
   const go = useCallback((p) => {
-    // Map internal page names to URL paths
-    const URL_MAP = {
-      'home': '/', 'products': '/products', 'cart': '/cart',
-      'checkout': '/checkout', 'success': '/order-confirmed',
-      'quote': '/quote', 'contact': '/contact', 'admin': '/admin',
-      'faq': '/faq', 'shipping': '/shipping', 'returns': '/returns',
-      'terms': '/terms', 'turnaround': '/turnaround',
-    };
+    const URL_MAP = { 'home':'/', 'products':'/products', 'cart':'/cart', 'checkout':'/checkout', 'success':'/order-confirmed', 'quote':'/quote', 'contact':'/contact', 'admin':'/admin', 'faq':'/faq', 'shipping':'/shipping', 'returns':'/returns', 'terms':'/terms', 'turnaround':'/turnaround' };
     const url = URL_MAP[p] || `/${p}`;
     if (navigateRef.current) navigateRef.current(url);
     else window.location.href = url;
@@ -200,7 +193,7 @@ export function AppProvider({ children }) {
   const cartSubtotal = cart.reduce((s, i) => s + (i.price || 0), 0);
 
   return (
-    <AppContext.Provider value={{ navigateRef, page: typeof window !== 'undefined' ? window.location.pathname.replace('/','') || 'home' : 'home', go, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
+    <AppContext.Provider value={{ page, go, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
       {children}
     </AppContext.Provider>
   );
