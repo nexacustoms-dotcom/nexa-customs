@@ -14,17 +14,17 @@ const TABS = [
 
 // ── SUPABASE UPLOAD ───────────────────────────────────────────────────────────
 async function uploadToSupabase(file, folder, ls) {
-  const supaUrl = ls.raw('nxt_supa_url', '');
-  const supaKey = ls.raw('nxt_supa_key', '');
+  const supaUrl = ls.raw('nxt_supa_url', '') || (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPA_URL : '') || '';
+  const supaKey = ls.raw('nxt_supa_key', '') || (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPA_KEY : '') || '';
 
   if (!supaUrl || !supaKey || supaKey.length < 10)
     return { error: 'Supabase not configured — go to Settings tab first' };
 
-  // Sanitize filename
-  const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '');
-  const safeName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext || 'jpg'}`;
+  const ext = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+  const safeName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   try {
+    // Try with auth header first
     const res = await fetch(`${supaUrl}/storage/v1/object/nexa-media/${safeName}`, {
       method: 'POST',
       headers: {
@@ -32,24 +32,35 @@ async function uploadToSupabase(file, folder, ls) {
         Authorization: `Bearer ${supaKey}`,
         'Content-Type': file.type || 'image/jpeg',
         'x-upsert': 'true',
-        'Cache-Control': '3600',
       },
       body: file,
     });
 
-    if (res.status === 404) {
-      return { error: 'Storage bucket "nexa-media" not found. Go to Supabase → Storage → Create bucket named exactly: nexa-media (set to Public)' };
-    }
-    if (res.status === 400) {
-      const body = await res.text();
-      return { error: 'Storage policy error. Run the SQL fix in Supabase SQL Editor. Details: ' + body };
-    }
-    if (!res.ok) {
-      const body = await res.text();
-      return { error: `Upload failed (${res.status}): ${body}` };
+    if (res.ok) {
+      return { url: `${supaUrl}/storage/v1/object/public/nexa-media/${safeName}` };
     }
 
-    return { url: `${supaUrl}/storage/v1/object/public/nexa-media/${safeName}` };
+    // If auth failed, try without auth (fully public bucket)
+    const res2 = await fetch(`${supaUrl}/storage/v1/object/nexa-media/${safeName}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': file.type || 'image/jpeg',
+        'x-upsert': 'true',
+      },
+      body: file,
+    });
+
+    if (res2.ok) {
+      return { url: `${supaUrl}/storage/v1/object/public/nexa-media/${safeName}` };
+    }
+
+    const errText = await res2.text();
+    let friendlyError = `Upload failed (${res2.status})`;
+    if (res2.status === 400) friendlyError = 'Bucket policy error — go to Supabase → Storage → nexa-media → Edit → enable Public bucket';
+    if (res2.status === 404) friendlyError = 'Bucket "nexa-media" not found — create it in Supabase Storage and set to Public';
+    if (res2.status === 403) friendlyError = 'Permission denied — go to Supabase → Storage → nexa-media → Edit → enable Public bucket';
+    return { error: friendlyError };
+
   } catch (e) {
     return { error: 'Network error: ' + e.message };
   }

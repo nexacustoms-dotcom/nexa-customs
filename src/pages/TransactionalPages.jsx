@@ -105,19 +105,27 @@ export function CheckoutPage() {
   const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   async function uploadArtwork(file, orderNo) {
-    const supaUrl = ls.raw('nxt_supa_url', '');
-    const supaKey = ls.raw('nxt_supa_key', '');
+    const supaUrl = cfg.supaUrl();
+    const supaKey = cfg.supaKey();
     if (!supaUrl || !supaKey || supaKey.length < 10) return null;
-    const ext = file.name.split('.').pop().toLowerCase();
+    const ext = file.name.split('.').pop().toLowerCase() || 'pdf';
     const safeName = `artwork/${orderNo}-${Date.now()}.${ext}`;
     try {
+      // Try with auth
       const res = await fetch(`${supaUrl}/storage/v1/object/nexa-media/${safeName}`, {
         method: 'POST',
         headers: { apikey: supaKey, Authorization: `Bearer ${supaKey}`, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' },
         body: file,
       });
-      if (!res.ok) return null;
-      return `${supaUrl}/storage/v1/object/public/nexa-media/${safeName}`;
+      if (res.ok) return `${supaUrl}/storage/v1/object/public/nexa-media/${safeName}`;
+      // Try without auth (public bucket)
+      const res2 = await fetch(`${supaUrl}/storage/v1/object/nexa-media/${safeName}`, {
+        method: 'POST',
+        headers: { 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' },
+        body: file,
+      });
+      if (res2.ok) return `${supaUrl}/storage/v1/object/public/nexa-media/${safeName}`;
+      return null;
     } catch { return null; }
   }
 
