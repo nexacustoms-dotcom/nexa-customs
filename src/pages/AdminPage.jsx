@@ -14,8 +14,8 @@ const TABS = [
 
 // ── SUPABASE UPLOAD ───────────────────────────────────────────────────────────
 async function uploadToSupabase(file, folder, ls) {
-  const supaUrl = ls.raw('nxt_supa_url', '') || (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPA_URL : '') || '';
-  const supaKey = ls.raw('nxt_supa_key', '') || (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SUPA_KEY : '') || '';
+  const supaUrl = import.meta.env.VITE_SUPA_URL || ls.raw('nxt_supa_url', '');
+  const supaKey = import.meta.env.VITE_SUPA_KEY || ls.raw('nxt_supa_key', '');
 
   if (!supaUrl || !supaKey || supaKey.length < 10)
     return { error: 'Supabase not configured — go to Settings tab first' };
@@ -515,7 +515,15 @@ function AppearanceTab() {
 // ── SETTINGS TAB ──────────────────────────────────────────────────────────────
 function SettingsTab() {
   const { showToast, ls } = useApp();
-  const [v, setV] = useState({ supaUrl: ls.raw('nxt_supa_url',''), supaKey: ls.raw('nxt_supa_key',''), stripePk: ls.raw('nxt_stripe_pk',''), adminPw: '' });
+  const [v, setV] = useState({
+    supaUrl: ls.raw('nxt_supa_url',''),
+    supaKey: ls.raw('nxt_supa_key',''),
+    stripePk: ls.raw('nxt_stripe_pk',''),
+    adminPw: ''
+  });
+  const envSupaUrl = import.meta.env.VITE_SUPA_URL;
+  const envSupaKey = import.meta.env.VITE_SUPA_KEY;
+  const envStripePk = import.meta.env.VITE_STRIPE_PK;
   const upd = k => e => setV(prev => ({ ...prev, [k]: e.target.value }));
 
   function save() {
@@ -527,7 +535,8 @@ function SettingsTab() {
   }
 
   async function testSupabase() {
-    const url = ls.raw('nxt_supa_url',''); const key = ls.raw('nxt_supa_key','');
+    const url = import.meta.env.VITE_SUPA_URL || ls.raw('nxt_supa_url','');
+    const key = import.meta.env.VITE_SUPA_KEY || ls.raw('nxt_supa_key','');
     if (!url || !key) { showToast('Enter URL and key first, then Save'); return; }
     const res = await fetch(`${url}/rest/v1/orders?limit=1`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
     if (res.ok) showToast('✅ Supabase connected! orders table found.');
@@ -536,7 +545,8 @@ function SettingsTab() {
   }
 
   async function testStorage() {
-    const url = ls.raw('nxt_supa_url',''); const key = ls.raw('nxt_supa_key','');
+    const url = import.meta.env.VITE_SUPA_URL || ls.raw('nxt_supa_url','');
+    const key = import.meta.env.VITE_SUPA_KEY || ls.raw('nxt_supa_key','');
     if (!url || !key) { showToast('Enter URL and key first, then Save'); return; }
     // Test by listing objects in bucket (correct endpoint)
     const res = await fetch(`${url}/storage/v1/object/list/nexa-media`, {
@@ -556,20 +566,38 @@ function SettingsTab() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }} className="st-grid">
         <div className="aform-section">
           <div className="aform-title">🗄️ Supabase</div>
-          <p style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 14, lineHeight: 1.65 }}>Powers order saving AND image uploads (logo, favicon, product photos). Needs one storage bucket called <code style={{ background: 'var(--s2)', padding: '1px 5px', borderRadius: 4, fontSize: 11 }}>nexa-media</code>.</p>
-          <div className="afg"><label className="aflbl">Project URL</label><input className="ainp" placeholder="https://xxxx.supabase.co" value={v.supaUrl} onChange={upd('supaUrl')} /></div>
-          <div className="afg"><label className="aflbl">Anon / Public Key</label><input className="ainp" placeholder="eyJhbGci…" value={v.supaKey} onChange={upd('supaKey')} /></div>
+          {envSupaUrl ? (
+            <div style={{ background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 12 }}>
+              <div style={{ color: 'var(--gr)', fontWeight: 700, marginBottom: 4 }}>✅ Connected via Vercel Environment Variable</div>
+              <div style={{ color: 'var(--mu)', fontSize: 11 }}>URL: {envSupaUrl.replace('https://','').slice(0,20)}…</div>
+            </div>
+          ) : (
+            <div style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#f87171' }}>
+              ⚠️ Not connected via env vars — add VITE_SUPA_URL and VITE_SUPA_KEY in Vercel dashboard
+            </div>
+          )}
+          <p style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 14, lineHeight: 1.65 }}>If not using Vercel env vars, enter keys manually below:</p>
+          <div className="afg"><label className="aflbl">Project URL (manual fallback)</label><input className="ainp" placeholder="https://xxxx.supabase.co" value={v.supaUrl} onChange={upd('supaUrl')} /></div>
+          <div className="afg"><label className="aflbl">Anon / Public Key (manual fallback)</label><input className="ainp" placeholder="eyJhbGci…" value={v.supaKey} onChange={upd('supaKey')} /></div>
           <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
-            <button className="abtn abtn-add" onClick={save}>💾 Save</button>
+            <button className="abtn abtn-add" onClick={save}>💾 Save Manual Keys</button>
             <button className="abtn" onClick={testSupabase} style={{ color: 'var(--gr)', borderColor: 'rgba(34,197,94,.3)' }}>🔌 Test Orders DB</button>
             <button className="abtn" onClick={testStorage} style={{ color: '#60a5fa', borderColor: 'rgba(96,165,250,.3)' }}>🗂️ Test Storage</button>
           </div>
         </div>
         <div className="aform-section">
           <div className="aform-title">💳 Stripe</div>
-          <p style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 14, lineHeight: 1.65 }}>Enables card payments at checkout. Get your key from stripe.com → Developers → API keys.</p>
-          <div className="afg"><label className="aflbl">Publishable Key</label><input className="ainp" placeholder="pk_live_… or pk_test_…" value={v.stripePk} onChange={upd('stripePk')} /></div>
-          <div style={{ fontSize: 11, color: '#f87171', marginBottom: 10 }}>⚠️ Only use the publishable key here, never the secret key.</div>
+          {envStripePk ? (
+            <div style={{ background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 12 }}>
+              <div style={{ color: 'var(--gr)', fontWeight: 700 }}>✅ Connected via Vercel Environment Variable</div>
+            </div>
+          ) : (
+            <div style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#f87171' }}>
+              ⚠️ Not connected — add VITE_STRIPE_PK in Vercel dashboard
+            </div>
+          )}
+          <div className="afg"><label className="aflbl">Publishable Key (manual fallback)</label><input className="ainp" placeholder="pk_live_… or pk_test_…" value={v.stripePk} onChange={upd('stripePk')} /></div>
+          <div style={{ fontSize: 11, color: '#f87171', marginBottom: 10 }}>⚠️ Only use the publishable key, never the secret key.</div>
           <button className="abtn abtn-add" onClick={save}>💾 Save</button>
         </div>
         <div className="aform-section">
@@ -810,10 +838,10 @@ function OrdersTab() {
   const [filter, setFilter] = useState('all');
 
   async function loadOrders() {
-    const url = ls.raw('nxt_supa_url', '');
-    const key = ls.raw('nxt_supa_key', '');
+    const url = import.meta.env.VITE_SUPA_URL || ls.raw('nxt_supa_url', '');
+    const key = import.meta.env.VITE_SUPA_KEY || ls.raw('nxt_supa_key', '');
     if (!url || !key || key.length < 10) {
-      showToast('⚠️ Configure Supabase in Settings tab first');
+      showToast('⚠️ Configure Supabase in Settings tab or Vercel env vars');
       return;
     }
     setLoading(true);
@@ -837,8 +865,8 @@ function OrdersTab() {
   }
 
   async function updateStatus(id, status) {
-    const url = ls.raw('nxt_supa_url', '');
-    const key = ls.raw('nxt_supa_key', '');
+    const url = import.meta.env.VITE_SUPA_URL || ls.raw('nxt_supa_url', '');
+    const key = import.meta.env.VITE_SUPA_KEY || ls.raw('nxt_supa_key', '');
     await fetch(`${url}/rest/v1/orders?id=eq.${encodeURIComponent(id)}`, {
       method: 'PATCH',
       headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
