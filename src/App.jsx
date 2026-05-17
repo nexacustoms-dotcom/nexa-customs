@@ -60,6 +60,16 @@ function PolicyPage({ slug }) {
   );
 }
 
+function LoadingSpinner({ text = 'Loading…' }) {
+  return (
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 14, color: 'var(--mu)' }}>
+      <div style={{ width: 40, height: 40, border: '3px solid var(--bd)', borderTop: '3px solid var(--o)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <div style={{ fontSize: 13 }}>{text}</div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
 function NotFoundPage() {
   const navigate = useNavigate();
   return (
@@ -75,11 +85,13 @@ function NotFoundPage() {
 // ── CATEGORY PAGE ─────────────────────────────────────────────────────────────
 function CategoryPage() {
   const { catSlug } = useParams();
-  const { cats, prods } = useApp();
+  const { cats, prods, syncing } = useApp();
   const navigate = useNavigate();
   const cat = cats.find(c => c.id === catSlug);
   const catProds = prods.filter(p => p.cat === catSlug && !p.disabled);
 
+  // Still syncing from Supabase — show spinner instead of 404
+  if (!cat && syncing) return <LoadingSpinner text="Loading category…" />;
   if (!cat) return <NotFoundPage />;
 
   return (
@@ -121,7 +133,7 @@ function CategoryPage() {
 // ── PRODUCT DETAIL PAGE WRAPPER ───────────────────────────────────────────────
 function ProductPageWrapper() {
   const { productSlug } = useParams();
-  const { prods, setCurProd } = useApp();
+  const { prods, setCurProd, syncing, curProd: existingProd } = useApp();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -129,9 +141,16 @@ function ProductPageWrapper() {
     if (prod) {
       setCurProd(prod);
     } else if (prods.length > 0) {
+      // Products loaded but this ID not found - go to products
       navigate('/products', { replace: true });
     }
+    // If prods.length === 0, still loading from Supabase - wait
   }, [productSlug, prods.length]);
+
+  const { curProd } = useApp();
+
+  // Show spinner while syncing from Supabase on refresh
+  if (!curProd && syncing) return <LoadingSpinner text="Loading product…" />;
 
   return <ProductDetailPage />;
 }

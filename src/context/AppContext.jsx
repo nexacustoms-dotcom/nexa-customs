@@ -83,10 +83,12 @@ export function AppProvider({ children }) {
   const [curProd, setCurProd]      = useState(null);
   const [toast,   setToast]        = useState(null);
   const [adminAuthed, setAdminAuthed] = useState(() => ls.raw('nxt_admin_auth','') === 'true');
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     async function syncAll() {
       if (!isSupaReady()) return;
+      setSyncing(true);
       // store config
       const cr = await supaGet('site_config', 'id=eq.main&limit=1');
       if (cr?.length > 0 && cr[0].data) {
@@ -115,6 +117,7 @@ export function AppProvider({ children }) {
         const m = { ...DEFAULT_PRICING, ...d };
         setPricingState(m); ls.set('nxt_pricing_cfg', m);
       }
+      setSyncing(false);
     }
     syncAll();
   }, []);
@@ -193,7 +196,7 @@ export function AppProvider({ children }) {
   const cartSubtotal = cart.reduce((s, i) => s + (i.price || 0), 0);
 
   return (
-    <AppContext.Provider value={{ page, go, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
+    <AppContext.Provider value={{ page, go, syncing, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
       {children}
     </AppContext.Provider>
   );
