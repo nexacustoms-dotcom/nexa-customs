@@ -757,74 +757,214 @@ function EmailsTab() {
 
 // ── PRICING TAB ───────────────────────────────────────────────────────────────
 function PricingTab() {
-  const { prods, setProds, pricing, setPricing, showToast, ls } = useApp();
+  const { prods, setProds, pricing, setPricing, showToast } = useApp();
   const [cfg, setCfg] = useState({ ...pricing });
-  const [pp, setPp] = useState(() => prods.map(p => ({ id:p.id, name:p.name, pricing:p.pricing.map(t=>({...t})), sqft:p.sqft?{...p.sqft}:null })));
+  const [editingId, setEditingId] = useState(null);
+  const [search, setSearch] = useState('');
 
   function saveCfg() { setPricing(cfg); showToast('✅ Global config saved!'); }
 
-  function saveAll() {
-    const updated = prods.map(p => { const o = pp.find(x=>x.id===p.id); return o ? {...p, pricing:o.pricing, sqft:o.sqft||p.sqft} : p; });
-    setProds(updated);
-    ls.set('nxt_pricing', pp.map(p => ({ id:p.id, pricing:p.pricing, sqft:p.sqft })));
-    showToast('✅ All prices saved!');
+  const filtered = prods.filter(p =>
+    !search.trim() || p.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (editingId) {
+    const prod = prods.find(p => p.id === editingId);
+    if (!prod) return null;
+    return (
+      <FullProductEditor
+        prod={prod}
+        onSave={updated => {
+          setProds(prev => prev.map(p => p.id === updated.id ? updated : p));
+          setEditingId(null);
+          showToast('✅ Product saved!');
+        }}
+        onCancel={() => setEditingId(null)}
+      />
+    );
   }
 
   return (
     <div>
-      <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:24, marginBottom:20 }}>Pricing Configuration</h2>
+      <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:24, marginBottom:20 }}>Pricing & Options Editor</h2>
       <div className="aform-section" style={{ maxWidth:560, marginBottom:28 }}>
-        <div className="aform-title">Global Settings</div>
+        <div className="aform-title">⚙️ Global Settings</div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-          {[['hst','HST Rate','0.13 = 13%'],['shipping_post','Canada Post ($)','flat rate'],['shipping_courier','Courier ($)','FedEx/UPS'],['rush_pct','Rush Surcharge','0.25 = 25%'],['express_pct','Express Surcharge','0.50 = 50%']].map(([k,l,n]) => (
+          {[['hst','HST Rate','0.13 = 13%'],['shipping_post','Canada Post ($)','flat'],['shipping_courier','Courier ($)','FedEx/UPS'],['rush_pct','Rush Surcharge','0.25=25%'],['express_pct','Express Surcharge','0.50=50%']].map(([k,l,n]) => (
             <div key={k} className="afg">
               <label className="aflbl">{l} <span style={{ color:'var(--mu)', fontWeight:400, textTransform:'none' }}>({n})</span></label>
               <input type="number" step="0.01" className="ainp" value={cfg[k]} onChange={e => setCfg(c=>({...c,[k]:parseFloat(e.target.value)||0}))} />
             </div>
           ))}
         </div>
-        <button className="abtn abtn-add" style={{ marginTop:8 }} onClick={saveCfg}>💾 Save Config</button>
+        <button className="abtn abtn-add" style={{ marginTop:8 }} onClick={saveCfg}>💾 Save Global Config</button>
       </div>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
-        <div><div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:20 }}>Quick Price Editor — All {prods.length} Products</div><div style={{ fontSize:11, color:'var(--mu)', marginTop:2 }}>Edit base prices directly. Option multipliers still apply on top at checkout.</div></div>
-        <button className="abtn abtn-add" onClick={saveAll}>💾 Save All Prices</button>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, gap:12, flexWrap:'wrap' }}>
+        <div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:20 }}>Product Pricing & Options — {prods.length} Products</div>
+          <div style={{ fontSize:11, color:'var(--mu)', marginTop:2 }}>Click Full Edit on any product to control prices, qty tiers, options and multipliers.</div>
+        </div>
+        <input className="finp" style={{ width:220, fontSize:12 }} placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
-      {pp.map(p => (
-        <div key={p.id} style={{ background:'var(--sf)', border:'1px solid var(--bd)', borderRadius:12, padding:'14px 16px', marginBottom:10 }}>
-          <div style={{ marginBottom:10 }}>
-            <div style={{ fontWeight:700, fontSize:13 }}>{p.name}</div>
-            <div style={{ fontSize:10, color:'var(--mu)', marginTop:2, fontFamily:"'DM Mono',monospace" }}>{p.id}{p.sqft?' · sq-ft pricing':''}</div>
+      <div style={{ background:'var(--sf)', border:'1px solid var(--bd)', borderRadius:'var(--rl)', overflow:'hidden' }}>
+        <div style={{ overflowX:'auto' }}>
+          <table className="atable">
+            <thead><tr><th>Product</th><th>Qty Tiers</th><th>Option Groups</th><th>Base Price</th><th>Type</th><th>Action</th></tr></thead>
+            <tbody>
+              {filtered.map(p => (
+                <tr key={p.id}>
+                  <td style={{ fontWeight:600 }}>{p.name}</td>
+                  <td style={{ color:'var(--mu)', fontSize:12 }}>{p.pricing.length} tiers</td>
+                  <td style={{ color:'var(--mu)', fontSize:12 }}>{(p.opts||[]).length} groups · {(p.opts||[]).reduce((s,g)=>s+(g.opts||[]).length,0)} total options</td>
+                  <td style={{ color:'var(--o)', fontFamily:"'DM Mono',monospace" }}>${p.pricing[0]?.p.toFixed(2)}</td>
+                  <td><span style={{ fontSize:10, padding:'2px 7px', borderRadius:6, background:p.sqft?.enabled?'rgba(96,165,250,.1)':'rgba(249,115,22,.1)', color:p.sqft?.enabled?'#60a5fa':'var(--o)', border:`1px solid ${p.sqft?.enabled?'rgba(96,165,250,.3)':'rgba(249,115,22,.3)'}`, fontWeight:700 }}>{p.sqft?.enabled?'Sq Ft':'Tiered'}</span></td>
+                  <td><button className="abtn abtn-add" onClick={() => setEditingId(p.id)}>✏️ Full Edit</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── FULL PRODUCT EDITOR ────────────────────────────────────────────────────────
+function FullProductEditor({ prod, onSave, onCancel }) {
+  const [p, setP] = useState(JSON.parse(JSON.stringify(prod)));
+  const upd = k => v => setP(prev => ({ ...prev, [k]: v }));
+
+  function updTierPrice(ti, val) { const np=[...p.pricing]; np[ti]={...np[ti],p:parseFloat(val)||0}; upd('pricing')(np); }
+  function updTierQty(ti, val) { const np=[...p.pricing]; np[ti]={...np[ti],q:parseInt(val)||0}; upd('pricing')(np); }
+  function addTier() { upd('pricing')([...p.pricing, { q:0, p:0 }]); }
+  function removeTier(ti) { upd('pricing')(p.pricing.filter((_,i)=>i!==ti)); }
+
+  function addGroup() { upd('opts')([...(p.opts||[]), { key:'group-'+Date.now(), label:'New Group', opts:[{id:'opt1',l:'Option 1',m:1.0}] }]); }
+  function removeGroup(gi) { upd('opts')((p.opts||[]).filter((_,i)=>i!==gi)); }
+  function updGroup(gi, field, val) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],[field]:val}; upd('opts')(ng); }
+  function addOption(gi) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],opts:[...ng[gi].opts,{id:'opt-'+Date.now(),l:'New Choice',m:1.0}]}; upd('opts')(ng); }
+  function removeOption(gi, oi) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],opts:ng[gi].opts.filter((_,i)=>i!==oi)}; upd('opts')(ng); }
+  function updOption(gi, oi, field, val) { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],[field]:field==='m'?(parseFloat(val)||1.0):val}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }
+
+  const inp = { width:'100%', background:'var(--s2)', border:'1px solid var(--bd)', color:'var(--tx)', padding:'7px 10px', borderRadius:6, fontSize:12, outline:'none', fontFamily:"'DM Sans',sans-serif" };
+
+  return (
+    <div>
+      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:22 }}>
+        <button className="abtn" onClick={onCancel}>← Back to List</button>
+        <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:22 }}>Editing: {prod.name}</h2>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18 }} className="ed-grid">
+
+        {/* Left — qty tiers */}
+        <div>
+          <div className="aform-section">
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+              <div className="aform-title" style={{ marginBottom:0 }}>📦 Quantity Tiers & Prices</div>
+              <button className="abtn abtn-add" style={{ fontSize:11 }} onClick={addTier}>+ Add Tier</button>
+            </div>
+            <p style={{ fontSize:11, color:'var(--mu)', marginBottom:14, lineHeight:1.65 }}>
+              Base price per quantity. Option multipliers stack on top at checkout.<br/>
+              Example: $49.92 base × Double Sided (1.22) = $60.90
+            </p>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:8, marginBottom:6 }}>
+              <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700, letterSpacing:'.06em' }}>Quantity</div>
+              <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700, letterSpacing:'.06em' }}>Base Price ($)</div>
+              <div></div>
+            </div>
+            {p.pricing.map((tier, ti) => (
+              <div key={ti} style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:8, marginBottom:8, alignItems:'center' }}>
+                <input type="number" min="1" value={tier.q} onChange={e => updTierQty(ti, e.target.value)} style={inp} placeholder="e.g. 100" />
+                <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
+                  <span style={{ padding:'0 8px', color:'var(--mu)', fontSize:12 }}>$</span>
+                  <input type="number" step="0.01" min="0" value={tier.p} onChange={e => updTierPrice(ti, e.target.value)} style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'7px 5px', fontSize:12, outline:'none' }} />
+                </div>
+                <button onClick={() => removeTier(ti)} style={{ padding:'6px 9px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12 }}>✕</button>
+              </div>
+            ))}
           </div>
-          {p.sqft ? (
-            <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-              {[['rate','Rate ($/sq ft)'],['min','Min Sq Ft']].map(([field,lbl]) => (
-                <div key={field} style={{ minWidth:140 }}>
-                  <div style={{ fontSize:10, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:4 }}>{lbl}</div>
-                  <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:7, overflow:'hidden', background:'var(--dk)' }}>
+
+          {p.sqft?.enabled && (
+            <div className="aform-section" style={{ marginTop:14 }}>
+              <div className="aform-title">📐 Sq Ft Pricing</div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                <div className="afg">
+                  <label className="aflbl">Rate per Sq Ft ($)</label>
+                  <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
                     <span style={{ padding:'0 8px', color:'var(--mu)', fontSize:12 }}>$</span>
-                    <input type="number" step="0.25" min="0.5" value={p.sqft[field]} onChange={e => setPp(prev=>prev.map(x=>x.id!==p.id?x:{...x,sqft:{...x.sqft,[field]:parseFloat(e.target.value)||x.sqft[field]}}))} style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'8px 6px', fontSize:13, outline:'none' }} />
+                    <input type="number" step="0.25" value={p.sqft.rate} onChange={e => upd('sqft')({...p.sqft, rate:parseFloat(e.target.value)||p.sqft.rate})} style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'7px 5px', fontSize:12, outline:'none' }} />
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-              {p.pricing.map((tier,ti) => {
-                const disp = tier.q>=1000?(tier.q/1000).toFixed(tier.q%1000?1:0)+'K':String(tier.q);
-                return (
-                  <div key={ti} style={{ minWidth:90 }}>
-                    <div style={{ fontSize:10, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:4 }}>Qty {disp}</div>
-                    <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:7, overflow:'hidden', background:'var(--dk)' }}>
-                      <span style={{ padding:'0 7px', color:'var(--mu)', fontSize:12 }}>$</span>
-                      <input type="number" step="0.01" min="0" value={tier.p.toFixed(2)} onChange={e => setPp(prev=>prev.map(x=>x.id!==p.id?x:{...x,pricing:x.pricing.map((t,i)=>i===ti?{...t,p:parseFloat(e.target.value)||0}:t)}))} style={{ width:72, background:'transparent', border:'none', color:'var(--tx)', padding:'7px 5px', fontSize:12, outline:'none' }} />
-                    </div>
-                  </div>
-                );
-              })}
+                <div className="afg">
+                  <label className="aflbl">Min Sq Ft</label>
+                  <input type="number" step="0.5" value={p.sqft.min} onChange={e => upd('sqft')({...p.sqft, min:parseFloat(e.target.value)||p.sqft.min})} style={inp} />
+                </div>
+              </div>
             </div>
           )}
         </div>
-      ))}
+
+        {/* Right — option groups */}
+        <div>
+          <div className="aform-section">
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+              <div className="aform-title" style={{ marginBottom:0 }}>🎛️ Option Groups</div>
+              <button className="abtn abtn-add" style={{ fontSize:11 }} onClick={addGroup}>+ Add Group</button>
+            </div>
+            <p style={{ fontSize:11, color:'var(--mu)', marginBottom:14, lineHeight:1.65 }}>
+              Each group = choices shown to customer (Coating, Size, Sides, etc.).<br/>
+              Multiplier: 1.0 = no change · 1.22 = +22% · 0.95 = -5%
+            </p>
+
+            {(p.opts||[]).length === 0 && (
+              <div style={{ textAlign:'center', padding:'20px 0', color:'var(--mu)', fontSize:13 }}>No option groups. Click "+ Add Group" to create one.</div>
+            )}
+
+            {(p.opts||[]).map((g, gi) => (
+              <div key={gi} style={{ background:'var(--dk)', border:'1px solid var(--bd)', borderRadius:10, padding:14, marginBottom:12 }}>
+                <div style={{ display:'flex', gap:8, marginBottom:10, alignItems:'flex-end' }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:9, color:'var(--mu)', marginBottom:3, textTransform:'uppercase', letterSpacing:'.05em', fontWeight:700 }}>Group Label</div>
+                    <input value={g.label} onChange={e => updGroup(gi,'label',e.target.value)} style={inp} placeholder="e.g. Coating" />
+                  </div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:9, color:'var(--mu)', marginBottom:3, textTransform:'uppercase', letterSpacing:'.05em', fontWeight:700 }}>Key (no spaces)</div>
+                    <input value={g.key} onChange={e => updGroup(gi,'key',e.target.value.toLowerCase().replace(/\s+/g,'-'))} style={{...inp, fontFamily:"'DM Mono',monospace"}} placeholder="e.g. coat" />
+                  </div>
+                  <button onClick={() => removeGroup(gi)} style={{ padding:'7px 10px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12, flexShrink:0 }}>✕ Remove</button>
+                </div>
+                <div style={{ marginBottom:8 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 70px auto', gap:5, marginBottom:5, padding:'0 2px' }}>
+                    <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>Option Label</div>
+                    <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>ID Key</div>
+                    <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>Mult</div>
+                    <div></div>
+                  </div>
+                  {g.opts.map((o, oi) => (
+                    <div key={oi} style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 70px auto', gap:5, marginBottom:6, alignItems:'center' }}>
+                      <input value={o.l} onChange={e => updOption(gi,oi,'l',e.target.value)} style={{...inp,fontSize:11}} placeholder="UV Gloss" />
+                      <input value={o.id} onChange={e => updOption(gi,oi,'id',e.target.value.toLowerCase().replace(/\s+/g,'-'))} style={{...inp,fontSize:10,fontFamily:"'DM Mono',monospace"}} placeholder="uv" />
+                      <input type="number" step="0.01" value={o.m} onChange={e => updOption(gi,oi,'m',e.target.value)} style={{...inp,fontSize:11,textAlign:'center'}} />
+                      <button onClick={() => removeOption(gi,oi)} style={{ padding:'5px 7px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+                <button className="abtn" style={{ fontSize:11, padding:'4px 12px' }} onClick={() => addOption(gi)}>+ Add Choice</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ background:'var(--sf)', border:'1px solid var(--bd)', borderRadius:10, padding:'12px 16px', marginTop:14, fontSize:11, color:'var(--mu)', lineHeight:1.7 }}>
+        <strong style={{ color:'var(--tx)' }}>💡 Multiplier Reference:</strong>{" "}
+        1.0 = no change · 1.05 = +5% · 1.10 = +10% · 1.15 = +15% · 1.22 = +22% · 1.25 = +25% · 1.50 = +50% · 0.95 = -5% · 0.90 = -10%
+      </div>
+
+      <div style={{ display:'flex', gap:10, marginTop:18 }}>
+        <button className="abtn abtn-add" onClick={() => onSave(p)} style={{ fontSize:14, padding:'10px 24px' }}>💾 Save All Changes</button>
+        <button className="abtn" onClick={onCancel}>Cancel</button>
+      </div>
     </div>
   );
 }

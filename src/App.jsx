@@ -87,11 +87,18 @@ function CategoryPage() {
   const { catSlug } = useParams();
   const { cats, prods, syncing } = useApp();
   const navigate = useNavigate();
+  const [waited, setWaited] = useState(false);
+
+  // Give Supabase sync time to load before showing 404
+  useEffect(() => {
+    const t = setTimeout(() => setWaited(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
+
   const cat = cats.find(c => c.id === catSlug);
   const catProds = prods.filter(p => p.cat === catSlug && !p.disabled);
 
-  // Still syncing from Supabase — show spinner instead of 404
-  if (!cat && syncing) return <LoadingSpinner text="Loading category…" />;
+  if (!cat && !waited) return <LoadingSpinner text="Loading category…" />;
   if (!cat) return <NotFoundPage />;
 
   return (
@@ -133,24 +140,25 @@ function CategoryPage() {
 // ── PRODUCT DETAIL PAGE WRAPPER ───────────────────────────────────────────────
 function ProductPageWrapper() {
   const { productSlug } = useParams();
-  const { prods, setCurProd, syncing, curProd: existingProd } = useApp();
+  const { prods, setCurProd, curProd } = useApp();
   const navigate = useNavigate();
+  const [waited, setWaited] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setWaited(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     const prod = prods.find(p => p.id === productSlug);
     if (prod) {
       setCurProd(prod);
-    } else if (prods.length > 0) {
-      // Products loaded but this ID not found - go to products
+    } else if (waited) {
       navigate('/products', { replace: true });
     }
-    // If prods.length === 0, still loading from Supabase - wait
-  }, [productSlug, prods.length]);
+  }, [productSlug, prods.length, waited]);
 
-  const { curProd } = useApp();
-
-  // Show spinner while syncing from Supabase on refresh
-  if (!curProd && syncing) return <LoadingSpinner text="Loading product…" />;
+  if (!curProd && !waited) return <LoadingSpinner text="Loading product…" />;
 
   return <ProductDetailPage />;
 }
