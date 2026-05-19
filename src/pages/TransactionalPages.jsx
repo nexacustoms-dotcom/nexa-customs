@@ -41,7 +41,7 @@ export function CartPage() {
               </div>
             ))}
             <div style={{ background: 'rgba(249,115,22,.06)', border: '1px solid rgba(249,115,22,.15)', borderRadius: 10, padding: '13px 17px', fontSize: 13, color: 'var(--mu)' }}>
-              <strong style={{ color: 'var(--tx)' }}>📎 Artwork:</strong> Email files to <strong style={{ color: 'var(--o)' }}>info@nexacustoms.ca</strong> with your order number. PDF, AI, EPS, or high-res PNG/JPG (300dpi+).
+              <strong style={{ color: 'var(--tx)' }}>📎 Artwork:</strong> You can upload your files at checkout, or email them to <strong style={{ color: 'var(--o)' }}>info@nexacustoms.ca</strong> after ordering. We accept PDF, AI, EPS, PNG/JPG (300dpi+).
             </div>
           </div>
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 22, position: 'sticky', top: 76 }} className="cart-sum">
@@ -81,6 +81,13 @@ export function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [artworkFiles, setArtworkFiles] = useState([]);
   const [artworkUploading, setArtworkUploading] = useState(false);
+  const [billing, setBilling] = useState({
+    sameAsContact: true,
+    name: '',
+    fn: '', ln: '',
+    address: '', city: 'Mississauga',
+    province: 'ON', postal: '', country: 'Canada',
+  });
   const artworkRef = useRef(null);
   const stripeRef = useRef(null);
   const cardRef = useRef(null);
@@ -171,7 +178,7 @@ export function CheckoutPage() {
       fetch(supaUrl + '/rest/v1/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: supaKey, Authorization: 'Bearer ' + supaKey, Prefer: 'return=minimal,resolution=merge-duplicates' },
-        body: JSON.stringify({ id: 'WEB-' + no, order_number: no, customer_name: (form.fn + ' ' + form.ln).trim(), customer_email: form.email, customer_phone: form.phone, company: form.company, items: itemsStr, total, delivery, turnaround, status: 'New', source: 'Website', payment_method: payMethod, stripe_pm_id: pmId, artwork_urls: artworkFiles.filter(f => f.url).map(f => f.url).join(', '), artwork_files: artworkFiles.map(f => f.name).join(', '), notes: form.notes, created_at: new Date().toISOString() }),
+        body: JSON.stringify({ id: 'WEB-' + no, order_number: no, customer_name: (form.fn + ' ' + form.ln).trim(), billing_name: billing.sameAsContact ? (form.fn + ' ' + form.ln).trim() : (billing.fn + ' ' + billing.ln).trim(), billing_address: billing.sameAsContact ? '' : `${billing.address}, ${billing.city}, ${billing.province} ${billing.postal}, ${billing.country}`, customer_email: form.email, customer_phone: form.phone, company: form.company, items: itemsStr, total, delivery, turnaround, status: 'New', source: 'Website', payment_method: payMethod, stripe_pm_id: pmId, artwork_urls: artworkFiles.filter(f => f.url).map(f => f.url).join(', '), artwork_files: artworkFiles.map(f => f.name).join(', '), notes: form.notes, created_at: new Date().toISOString() }),
       }).catch(() => {});
     }
     const tok = cfg.tgToken(); const cid = cfg.tgChat();
@@ -200,7 +207,24 @@ export function CheckoutPage() {
       if (payMethod === 'stripe') {
         const pk = cfg.stripePk();
         if (pk && pk.length > 10 && stripeRef.current && cardRef.current) {
-          const result = await stripeRef.current.createPaymentMethod({ type: 'card', card: cardRef.current, billing_details: { name: (form.fn + ' ' + form.ln).trim(), email: form.email } });
+          const billingName = billing.sameAsContact ? (form.fn + ' ' + form.ln).trim() : (billing.fn + ' ' + billing.ln).trim() || (form.fn + ' ' + form.ln).trim();
+          const billingAddress = billing.sameAsContact ? null : {
+            line1: billing.address,
+            city: billing.city,
+            state: billing.province,
+            postal_code: billing.postal,
+            country: billing.country === 'Canada' ? 'CA' : 'US',
+          };
+          const result = await stripeRef.current.createPaymentMethod({
+            type: 'card',
+            card: cardRef.current,
+            billing_details: {
+              name: billingName,
+              email: form.email,
+              phone: form.phone,
+              ...(billingAddress ? { address: billingAddress } : {}),
+            }
+          });
           if (result.error) { setStripeErr(result.error.message); setPlacing(false); return; }
           await saveOrder(no, result.paymentMethod.id);
         } else { await saveOrder(no); }
@@ -411,9 +435,13 @@ export function CheckoutPage() {
             {/* STEP 4 — Payment */}
             {step === 4 && (
               <div>
-                {/* Order review card */}
+                {/* Order review */}
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 22, marginBottom: 14 }}>
-                  <div className="D" style={{ fontSize: 20, marginBottom: 14 }}>Order Review</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                    <div className="D" style={{ fontSize: 20 }}>Order Review</div>
+                    <button onClick={() => setStep(1)} style={{ fontSize: 11, color: 'var(--o)', background: 'none', border: 'none', cursor: 'pointer' }}>✏️ Edit Info</button>
+                  </div>
+                  {/* Items */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
                     {cart.map(item => (
                       <div key={item.cartId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--s2)', borderRadius: 8, padding: '10px 14px' }}>
@@ -425,64 +453,166 @@ export function CheckoutPage() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}><span>Delivery</span><span style={{ color: 'var(--tx)', fontWeight: 600 }}>{delivery === 'pickup' ? 'Free Pickup — Mississauga' : delivery === 'post' ? `Canada Post — $${shipCost.toFixed(2)}` : `Courier — $${shipCost.toFixed(2)}`}</span></div>
-                    <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}><span>Turnaround</span><span style={{ color: 'var(--tx)', fontWeight: 600, textTransform: 'capitalize' }}>{turnaround}{rushFee > 0 ? ` (+$${rushFee.toFixed(2)})` : ''}</span></div>
-                    {artworkFiles.length > 0 && <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}><span>Artwork</span><span style={{ color: 'var(--gr)', fontWeight: 600 }}>✅ {artworkFiles.length} file(s) ready</span></div>}
-                    {artworkFiles.length === 0 && <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}><span>Artwork</span><span style={{ color: '#f59e0b', fontWeight: 600 }}>📧 Email after ordering</span></div>}
+                  {/* Summary rows */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 0', borderTop: '1px solid var(--bd)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>📍 Delivery</span>
+                      <span style={{ color: 'var(--tx)', fontWeight: 600 }}>
+                        {delivery === 'pickup' ? '🏪 Free Pickup — Mississauga' : delivery === 'post' ? `📬 Canada Post — $${shipCost.toFixed(2)}` : `🚀 Courier — $${shipCost.toFixed(2)}`}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>⏱ Turnaround</span>
+                      <span style={{ color: 'var(--tx)', fontWeight: 600, textTransform: 'capitalize' }}>{turnaround}{rushFee > 0 ? ` (+$${rushFee.toFixed(2)})` : ''}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>📎 Artwork</span>
+                      {artworkFiles.length > 0
+                        ? <span style={{ color: 'var(--gr)', fontWeight: 600 }}>✅ {artworkFiles.length} file(s) uploaded</span>
+                        : <span style={{ color: '#f59e0b', fontWeight: 600 }}>📧 Will email after ordering</span>}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>👤 Customer</span>
+                      <span style={{ color: 'var(--tx)', fontWeight: 600 }}>{form.fn} {form.ln} · {form.phone}</span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Payment method */}
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 22, marginBottom: 14 }}>
                   <div className="D" style={{ fontSize: 20, marginBottom: 14 }}>Payment Method</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 16 }} className="pay-grid">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 18 }} className="pay-grid">
                     {[
-                      { id: 'invoice', ico: '🏪', label: 'Pay at Pickup', sub: 'Cash or card in store' },
-                      { id: 'stripe',  ico: '💳', label: 'Credit Card', sub: 'Powered by Stripe' },
-                      { id: 'net30',   ico: '📄', label: 'Net 30', sub: 'Approved accounts only' },
+                      { id: 'invoice', ico: '🏪', label: 'Pay at Pickup', sub: 'Cash or card in store', color: 'var(--gr)' },
+                      { id: 'stripe',  ico: '💳', label: 'Credit / Debit Card', sub: 'Visa, MC, Amex · Stripe', color: '#818cf8' },
+                      { id: 'net30',   ico: '📄', label: 'Net 30 Invoice', sub: 'Approved accounts only', color: '#60a5fa' },
                     ].map(opt => (
-                      <div key={opt.id} onClick={() => setPayMethod(opt.id)} style={{ border: `2px solid ${payMethod === opt.id ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 12, padding: '16px 10px', textAlign: 'center', cursor: 'pointer', transition: 'all .18s', background: payMethod === opt.id ? 'rgba(249,115,22,.08)' : 'var(--s2)' }}>
-                        <div style={{ fontSize: 24, marginBottom: 7 }}>{opt.ico}</div>
+                      <div key={opt.id} onClick={() => setPayMethod(opt.id)} style={{ border: `2px solid ${payMethod === opt.id ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 12, padding: '16px 10px', textAlign: 'center', cursor: 'pointer', transition: 'all .18s', background: payMethod === opt.id ? 'rgba(249,115,22,.08)' : 'var(--s2)', position: 'relative' }}>
+                        {payMethod === opt.id && <div style={{ position: 'absolute', top: 8, right: 8, width: 16, height: 16, borderRadius: '50%', background: 'var(--o)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#000' }}>✓</div>}
+                        <div style={{ fontSize: 26, marginBottom: 8 }}>{opt.ico}</div>
                         <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 3 }}>{opt.label}</div>
                         <div style={{ fontSize: 10, color: 'var(--mu)', lineHeight: 1.3 }}>{opt.sub}</div>
                       </div>
                     ))}
                   </div>
 
+                  {/* Stripe card + billing address */}
                   {payMethod === 'stripe' && (
-                    <div style={{ marginBottom: 4 }}>
-                      <label className="flbl" style={{ marginBottom: 8 }}>Card Details</label>
-                      <div id="stripe-card-el" style={{ background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 9, padding: 14, minHeight: 44 }} />
-                      {stripeErr && <div style={{ color: '#f87171', fontSize: 12, marginTop: 6 }}>* {stripeErr}</div>}
-                      {!cfg.stripePk() && <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 8, background: 'rgba(249,115,22,.06)', border: '1px solid rgba(249,115,22,.15)', borderRadius: 7, padding: '8px 12px' }}>Stripe not configured — your order will be processed as an invoice.</div>}
+                    <div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }} className="bill-grid">
+                        <div className="fgrp" style={{ gridColumn: '1/-1' }}>
+                          <label className="flbl">Cardholder Name</label>
+                          <input className="finp" placeholder={`${form.fn} ${form.ln}`.trim() || 'Full name on card'} value={billing.name} onChange={e => setBilling(b => ({...b, name: e.target.value}))} />
+                        </div>
+                        <div className="fgrp" style={{ gridColumn: '1/-1' }}>
+                          <label className="flbl">Card Details</label>
+                          <div id="stripe-card-el" style={{ background: 'var(--s2)', border: `1px solid ${stripeErr ? '#ef4444' : 'var(--bd)'}`, borderRadius: 9, padding: 14, minHeight: 44, transition: 'border-color .2s' }} />
+                          {stripeErr && <div style={{ color: '#f87171', fontSize: 11, marginTop: 5 }}>⚠ {stripeErr}</div>}
+                          {!cfg.stripePk() && <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 8, background: 'rgba(249,115,22,.06)', border: '1px solid rgba(249,115,22,.15)', borderRadius: 7, padding: '8px 12px' }}>💡 Stripe not configured — order will be processed as invoice.</div>}
+                        </div>
+                      </div>
+
+                      {/* Billing address */}
+                      <div style={{ borderTop: '1px solid var(--bd)', paddingTop: 14 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                          <label className="flbl" style={{ margin: 0 }}>Billing Address</label>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <input type="checkbox" id="same-addr" checked={billing.sameAsContact} onChange={e => setBilling(b => ({...b, sameAsContact: e.target.checked}))} style={{ width: 14, height: 14, cursor: 'pointer' }} />
+                            <label htmlFor="same-addr" style={{ fontSize: 12, color: 'var(--mu)', cursor: 'pointer' }}>Same as contact info</label>
+                          </div>
+                        </div>
+                        {!billing.sameAsContact && (
+                          <div>
+                            <div className="frow" style={{ marginBottom: 0 }}>
+                              <div className="fgrp">
+                                <label className="flbl">First Name</label>
+                                <input className="finp" value={billing.fn} onChange={e => setBilling(b => ({...b, fn: e.target.value}))} placeholder="First name" />
+                              </div>
+                              <div className="fgrp">
+                                <label className="flbl">Last Name</label>
+                                <input className="finp" value={billing.ln} onChange={e => setBilling(b => ({...b, ln: e.target.value}))} placeholder="Last name" />
+                              </div>
+                            </div>
+                            <div className="fgrp">
+                              <label className="flbl">Street Address</label>
+                              <input className="finp" value={billing.address} onChange={e => setBilling(b => ({...b, address: e.target.value}))} placeholder="123 Main Street, Unit 4" />
+                            </div>
+                            <div className="frow">
+                              <div className="fgrp">
+                                <label className="flbl">City</label>
+                                <input className="finp" value={billing.city} onChange={e => setBilling(b => ({...b, city: e.target.value}))} placeholder="Mississauga" />
+                              </div>
+                              <div className="fgrp">
+                                <label className="flbl">Province</label>
+                                <select className="fsel" value={billing.province} onChange={e => setBilling(b => ({...b, province: e.target.value}))}>
+                                  {['ON','QC','BC','AB','MB','SK','NS','NB','NL','PE','YT','NT','NU'].map(p => <option key={p}>{p}</option>)}
+                                </select>
+                              </div>
+                            </div>
+                            <div className="frow">
+                              <div className="fgrp">
+                                <label className="flbl">Postal Code</label>
+                                <input className="finp" value={billing.postal} onChange={e => setBilling(b => ({...b, postal: e.target.value.toUpperCase()}))} placeholder="L5T 1J6" maxLength={7} />
+                              </div>
+                              <div className="fgrp">
+                                <label className="flbl">Country</label>
+                                <select className="fsel" value={billing.country} onChange={e => setBilling(b => ({...b, country: e.target.value}))}>
+                                  <option>Canada</option>
+                                  <option>United States</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {billing.sameAsContact && (
+                          <div style={{ background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--mu)' }}>
+                            ✅ Billing name: <strong style={{ color: 'var(--tx)' }}>{form.fn} {form.ln}</strong> · Contact info used for billing
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
+
                   {payMethod === 'invoice' && (
-                    <div style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)', borderRadius: 9, padding: '12px 14px', fontSize: 12, color: 'var(--mu)', lineHeight: 1.6 }}>
-                      ✅ Pay when you pick up your order at our Mississauga location. We will contact you when it is ready.
+                    <div style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', borderRadius: 10, padding: '14px 16px', fontSize: 13 }}>
+                      <div style={{ fontWeight: 700, color: 'var(--gr)', marginBottom: 6 }}>✅ Pay at Pickup — No payment needed now</div>
+                      <div style={{ color: 'var(--mu)', fontSize: 12, lineHeight: 1.65 }}>
+                        Pay by cash or card when you pick up your order at our Mississauga location.<br/>
+                        📍 6033 Shawson Dr, Unit 40 · Mon–Fri 9AM–6PM<br/>
+                        We will call or email you when your order is ready.
+                      </div>
                     </div>
                   )}
+
                   {payMethod === 'net30' && (
-                    <div style={{ background: 'rgba(96,165,250,.06)', border: '1px solid rgba(96,165,250,.15)', borderRadius: 9, padding: '12px 14px', fontSize: 12, color: 'var(--mu)', lineHeight: 1.6 }}>
-                      📄 Net 30 invoicing available for approved business accounts. We will send your invoice by email. Contact us to apply.
+                    <div style={{ background: 'rgba(96,165,250,.06)', border: '1px solid rgba(96,165,250,.2)', borderRadius: 10, padding: '14px 16px', fontSize: 13 }}>
+                      <div style={{ fontWeight: 700, color: '#60a5fa', marginBottom: 6 }}>📄 Net 30 Invoice</div>
+                      <div style={{ color: 'var(--mu)', fontSize: 12, lineHeight: 1.65 }}>
+                        Available for approved business accounts only. An invoice will be emailed to <strong style={{ color: 'var(--tx)' }}>{form.email}</strong> within 1 business day.<br/>
+                        Contact us at <a href="tel:+14379979921" style={{ color: 'var(--o)' }}>(437) 997-9921</a> to set up a Net 30 account.
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Trust badges */}
-                <div style={{ display: 'flex', gap: 18, justifyContent: 'center', marginBottom: 16, flexWrap: 'wrap' }}>
-                  {[['🔒','SSL Secured'],['✅','Free Proof'],['🛡️','Quality Guarantee'],['📞','Support']].map(([ico, l]) => (
-                    <div key={l} style={{ fontSize: 11, color: 'var(--mu)', display: 'flex', alignItems: 'center', gap: 4 }}><span>{ico}</span>{l}</div>
+                <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginBottom: 16, flexWrap: 'wrap', padding: '6px 0' }}>
+                  {[['🔒','SSL Encrypted'],['✅','Free Proof Included'],['🛡️','Quality Guaranteed'],['📞','(437) 997-9921']].map(([ico, l]) => (
+                    <div key={l} style={{ fontSize: 11, color: 'var(--mu)', display: 'flex', alignItems: 'center', gap: 5 }}><span>{ico}</span>{l}</div>
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={goBack} className="btn btn-ghost" style={{ flex: 1, justifyContent: 'center' }}>← Back</button>
-                  <button onClick={handlePlace} disabled={placing} style={{ flex: 2, background: placing ? 'var(--bd)' : 'var(--o)', color: placing ? 'var(--mu)' : '#000', border: 'none', borderRadius: 'var(--r)', padding: '15px 20px', fontSize: 15, fontWeight: 800, cursor: placing ? 'not-allowed' : 'pointer', fontFamily: "'DM Sans',sans-serif", transition: 'all .2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                    {placing ? '⏳ Placing Order…' : `Place Order — $${total.toFixed(2)}`}
-                  </button>
+                {/* Place order */}
+                <button onClick={handlePlace} disabled={placing} style={{ width: '100%', background: placing ? 'var(--bd)' : 'var(--o)', color: placing ? 'var(--mu)' : '#000', border: 'none', borderRadius: 'var(--r)', padding: '16px 20px', fontSize: 16, fontWeight: 800, cursor: placing ? 'not-allowed' : 'pointer', fontFamily: "'DM Sans',sans-serif", transition: 'all .2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
+                  {placing
+                    ? <><span style={{ display: 'inline-block', animation: 'spin 0.8s linear infinite' }}>⏳</span> Placing Order…</>
+                    : <>Place Order — ${total.toFixed(2)} <span style={{ fontSize: 13, opacity: 0.7 }}>({payMethod === 'stripe' ? '💳 Card' : payMethod === 'invoice' ? '🏪 Pickup' : '📄 Net 30'})</span></>}
+                </button>
+                <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--mu)' }}>
+                  By placing this order you agree to our <span onClick={() => window.open('/terms','_blank')} style={{ color: 'var(--o)', cursor: 'pointer' }}>Terms & Conditions</span>
                 </div>
+
+                <button onClick={goBack} style={{ display: 'block', width: '100%', textAlign: 'center', marginTop: 12, fontSize: 12, color: 'var(--mu)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back to Artwork</button>
               </div>
             )}
           </div>
