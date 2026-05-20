@@ -61,7 +61,17 @@ function mergeOverrides(prods, overrides) {
   return prods.map(p => {
     const o = overrides.find(x => x.id === p.id);
     if (!o) return p;
-    return { ...p, pricing: o.pricing || p.pricing, sqft: o.sqft ? { ...p.sqft, ...o.sqft } : p.sqft, imgs: o.imgs?.length ? o.imgs : p.imgs, badge: o.badge !== undefined ? o.badge : p.badge, name: o.name || p.name, desc: o.desc || p.desc, disabled: o.disabled || false };
+    return {
+      ...p,
+      pricing:  o.pricing  || p.pricing,
+      sqft:     o.sqft     ? { ...p.sqft, ...o.sqft } : p.sqft,
+      imgs:     o.imgs?.length ? o.imgs : p.imgs,
+      badge:    o.badge    !== undefined ? o.badge    : p.badge,
+      name:     o.name     || p.name,
+      desc:     o.desc     || p.desc,
+      disabled: o.disabled || false,
+      opts:     o.opts     !== undefined ? o.opts     : p.opts,
+    };
   });
 }
 
@@ -147,7 +157,7 @@ export function AppProvider({ children }) {
   const setProds = useCallback((updater) => {
     setProdsState(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
-      const overrides = next.map(p => ({ id: p.id, name: p.name, desc: p.desc, badge: p.badge, disabled: p.disabled || false, imgs: p.imgs || [], pricing: p.pricing, sqft: p.sqft || null }));
+      const overrides = next.map(p => ({ id: p.id, name: p.name, desc: p.desc, badge: p.badge, disabled: p.disabled || false, imgs: p.imgs || [], pricing: p.pricing, sqft: p.sqft || null, opts: p.opts || [] }));
       ls.set('nxt_pricing', overrides);
       supaUpsert('site_config', { id: 'products', data: overrides, updated_at: new Date().toISOString() });
       return next;
