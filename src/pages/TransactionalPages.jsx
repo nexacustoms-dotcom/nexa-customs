@@ -76,7 +76,7 @@ export function CheckoutPage() {
   const [errors, setErrors] = useState({});
   const [delivery, setDelivery] = useState('pickup');
   const [turnaround, setTurnaround] = useState('standard');
-  const [payMethod, setPayMethod] = useState('invoice');
+  const [payMethod, setPayMethod] = useState('stripe');
   const [stripeErr, setStripeErr] = useState('');
   const [placing, setPlacing] = useState(false);
   const [artworkFiles, setArtworkFiles] = useState([]);
@@ -481,19 +481,14 @@ export function CheckoutPage() {
                 {/* Payment method */}
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 22, marginBottom: 14 }}>
                   <div className="D" style={{ fontSize: 20, marginBottom: 14 }}>Payment Method</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 18 }} className="pay-grid">
-                    {[
-                      { id: 'invoice', ico: '🏪', label: 'Pay at Pickup', sub: 'Cash or card in store', color: 'var(--gr)' },
-                      { id: 'stripe',  ico: '💳', label: 'Credit / Debit Card', sub: 'Visa, MC, Amex · Stripe', color: '#818cf8' },
-                      { id: 'net30',   ico: '📄', label: 'Net 30 Invoice', sub: 'Approved accounts only', color: '#60a5fa' },
-                    ].map(opt => (
-                      <div key={opt.id} onClick={() => setPayMethod(opt.id)} style={{ border: `2px solid ${payMethod === opt.id ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 12, padding: '16px 10px', textAlign: 'center', cursor: 'pointer', transition: 'all .18s', background: payMethod === opt.id ? 'rgba(249,115,22,.08)' : 'var(--s2)', position: 'relative' }}>
-                        {payMethod === opt.id && <div style={{ position: 'absolute', top: 8, right: 8, width: 16, height: 16, borderRadius: '50%', background: 'var(--o)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, color: '#000' }}>✓</div>}
-                        <div style={{ fontSize: 26, marginBottom: 8 }}>{opt.ico}</div>
-                        <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 3 }}>{opt.label}</div>
-                        <div style={{ fontSize: 10, color: 'var(--mu)', lineHeight: 1.3 }}>{opt.sub}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(99,102,241,.08)', border: '2px solid rgba(99,102,241,.3)', borderRadius: 12, padding: '14px 18px', marginBottom: 18 }}>
+                    <span style={{ fontSize: 28 }}>💳</span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>Credit / Debit Card</div>
+                      <div style={{ fontSize: 11, color: 'var(--mu)', display: 'flex', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
+                        <span>Visa</span><span>·</span><span>Mastercard</span><span>·</span><span>Amex</span><span>·</span><span>Interac</span><span>·</span><span style={{ color: '#818cf8' }}>🔒 Powered by Stripe</span>
                       </div>
-                    ))}
+                    </div>
                   </div>
 
                   {/* Stripe card + billing address */}
@@ -573,26 +568,9 @@ export function CheckoutPage() {
                     </div>
                   )}
 
-                  {payMethod === 'invoice' && (
-                    <div style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', borderRadius: 10, padding: '14px 16px', fontSize: 13 }}>
-                      <div style={{ fontWeight: 700, color: 'var(--gr)', marginBottom: 6 }}>✅ Pay at Pickup — No payment needed now</div>
-                      <div style={{ color: 'var(--mu)', fontSize: 12, lineHeight: 1.65 }}>
-                        Pay by cash or card when you pick up your order at our Mississauga location.<br/>
-                        📍 6033 Shawson Dr, Unit 40 · Mon–Fri 9AM–6PM<br/>
-                        We will call or email you when your order is ready.
-                      </div>
-                    </div>
-                  )}
 
-                  {payMethod === 'net30' && (
-                    <div style={{ background: 'rgba(96,165,250,.06)', border: '1px solid rgba(96,165,250,.2)', borderRadius: 10, padding: '14px 16px', fontSize: 13 }}>
-                      <div style={{ fontWeight: 700, color: '#60a5fa', marginBottom: 6 }}>📄 Net 30 Invoice</div>
-                      <div style={{ color: 'var(--mu)', fontSize: 12, lineHeight: 1.65 }}>
-                        Available for approved business accounts only. An invoice will be emailed to <strong style={{ color: 'var(--tx)' }}>{form.email}</strong> within 1 business day.<br/>
-                        Contact us at <a href="tel:+14379979921" style={{ color: 'var(--o)' }}>(437) 997-9921</a> to set up a Net 30 account.
-                      </div>
-                    </div>
-                  )}
+
+
                 </div>
 
                 {/* Trust badges */}
@@ -606,7 +584,8 @@ export function CheckoutPage() {
                 <button onClick={handlePlace} disabled={placing} style={{ width: '100%', background: placing ? 'var(--bd)' : 'var(--o)', color: placing ? 'var(--mu)' : '#000', border: 'none', borderRadius: 'var(--r)', padding: '16px 20px', fontSize: 16, fontWeight: 800, cursor: placing ? 'not-allowed' : 'pointer', fontFamily: "'DM Sans',sans-serif", transition: 'all .2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
                   {placing
                     ? <><span style={{ display: 'inline-block', animation: 'spin 0.8s linear infinite' }}>⏳</span> Placing Order…</>
-                    : <>Place Order — ${total.toFixed(2)} <span style={{ fontSize: 13, opacity: 0.7 }}>({payMethod === 'stripe' ? '💳 Card' : payMethod === 'invoice' ? '🏪 Pickup' : '📄 Net 30'})</span></>}
+                    : <>🔒 Place Order — ${total.toFixed(2)}</>
+                  }
                 </button>
                 <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--mu)' }}>
                   By placing this order you agree to our <span onClick={() => window.open('/terms','_blank')} style={{ color: 'var(--o)', cursor: 'pointer' }}>Terms & Conditions</span>
