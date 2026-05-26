@@ -831,6 +831,7 @@ function PricingTab() {
 
 // ── FULL PRODUCT EDITOR ────────────────────────────────────────────────────────
 function FullProductEditor({ prod, onSave, onCancel }) {
+  const { pricing } = useApp();
   const [p, setP] = useState(JSON.parse(JSON.stringify(prod)));
   const upd = k => v => setP(prev => ({ ...prev, [k]: v }));
 
