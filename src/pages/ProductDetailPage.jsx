@@ -5,13 +5,14 @@ import ProductCard from '../components/ProductCard';
 import { CAT_BG } from '../data/products';
 
 export default function ProductDetailPage() {
-  const { curProd, cats, prods, addToCart, calcPrice, showToast, store } = useApp();
+  const { curProd, cats, prods, addToCart, calcPrice, showToast, store, pricing } = useApp();
   const navigate = useNavigate();
   const [selOpts, setSelOpts] = useState({});
   const [selQty, setSelQty] = useState(null);
   const [imgIdx, setImgIdx] = useState(0);
   const [custW, setCustW] = useState('');
   const [custH, setCustH] = useState('');
+  const [turnaround, setTurnaround] = useState('standard');
 
   const prod = curProd;
 
@@ -22,6 +23,7 @@ export default function ProductDetailPage() {
     setSelOpts(defaults);
     setSelQty(prod.pricing?.length > 1 ? prod.pricing[1].q : prod.pricing?.[0]?.q ?? 1);
     setImgIdx(0); setCustW(''); setCustH('');
+    setTurnaround('standard');
   }, [prod?.id]);
 
   if (!prod) return (
@@ -37,7 +39,18 @@ export default function ProductDetailPage() {
   const isSqft = prod.sqft?.enabled;
   const isCustomSize = isSqft && selOpts?.size === 'custom';
   const priceOpts = isCustomSize ? { ...selOpts, _custW: custW, _custH: custH } : selOpts;
-  const { total: price, unit: unitPrice } = calcPrice(prod, selQty, priceOpts);
+  const { total: basePrice, unit: unitPrice } = calcPrice(prod, selQty, priceOpts);
+
+  // Rush/express availability flags (default true if not set)
+  const rushOk    = prod.rush_ok    !== false;
+  const expressOk = prod.express_ok !== false;
+
+  // Turnaround multiplier
+  const rushMult    = (pricing?.rush_pct    ?? 0.25);
+  const expressMult = (pricing?.express_pct ?? 0.50);
+  const taMult = turnaround === 'rush' ? rushMult : turnaround === 'express' ? expressMult : 0;
+  const taFee  = +(basePrice * taMult).toFixed(2);
+  const price  = +(basePrice + taFee).toFixed(2);
 
   function handleAdd() {
     if (price === 0) { showToast('Please configure your order'); return; }
@@ -46,7 +59,7 @@ export default function ProductDetailPage() {
       return g?.opts?.find(o => o.id === val)?.l || val;
     }).filter(Boolean);
     if (isCustomSize && custW && custH) optLabels.push(`${custW}′ × ${custH}′`);
-    addToCart({ id: prod.id, name: prod.name, qty: selQty, opts: optLabels, price, unitPrice });
+    addToCart({ id: prod.id, name: prod.name, qty: selQty, opts: optLabels, price, unitPrice, turnaround });
   }
 
   const related = prods.filter(p => p.cat === prod.cat && p.id !== prod.id).slice(0, 4);
@@ -157,6 +170,44 @@ export default function ProductDetailPage() {
               )}
             </div>
 
+            {/* Turnaround */}
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--mu)', marginBottom: 7 }}>Turnaround Time</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
+                {[
+                  { id: 'standard', ico: '📦', label: 'Standard',  sub: '5–7 business days', fee: 0,             ok: true },
+                  { id: 'rush',     ico: '⚡', label: 'Rush',      sub: '2–3 business days', fee: rushMult,      ok: rushOk },
+                  { id: 'express',  ico: '🚀', label: 'Express',   sub: 'Same / next day',   fee: expressMult,   ok: expressOk },
+                ].map(opt => {
+                  const sel = turnaround === opt.id;
+                  const feeAmt = +(basePrice * opt.fee).toFixed(2);
+                  return (
+                    <div key={opt.id}
+                      onClick={() => opt.ok && setTurnaround(opt.id)}
+                      style={{
+                        border: `2px solid ${sel ? 'var(--o)' : 'var(--bd)'}`,
+                        borderRadius: 10, padding: '12px 10px', textAlign: 'center',
+                        cursor: opt.ok ? 'pointer' : 'not-allowed',
+                        background: sel ? 'rgba(249,115,22,.08)' : opt.ok ? 'var(--s2)' : 'var(--sf)',
+                        opacity: opt.ok ? 1 : 0.45,
+                        transition: 'all .15s', position: 'relative',
+                      }}>
+                      {!opt.ok && <div style={{ position: 'absolute', top: 5, right: 7, fontSize: 9, color: 'var(--mu)', fontWeight: 700, letterSpacing: '.04em' }}>N/A</div>}
+                      <div style={{ fontSize: 20, marginBottom: 3 }}>{opt.ico}</div>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{opt.label}</div>
+                      <div style={{ fontSize: 10, color: 'var(--mu)', marginTop: 2 }}>{opt.sub}</div>
+                      {opt.fee > 0 && opt.ok && (
+                        <div style={{ fontSize: 11, color: sel ? 'var(--o)' : 'var(--mu)', fontWeight: 700, marginTop: 4 }}>
+                          +${feeAmt.toFixed(2)} ({Math.round(opt.fee * 100)}%)
+                        </div>
+                      )}
+                      {opt.fee === 0 && <div style={{ fontSize: 11, color: 'var(--gr)', fontWeight: 700, marginTop: 4 }}>Included</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Price box */}
             <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: '17px 22px', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -165,17 +216,27 @@ export default function ProductDetailPage() {
               </div>
               <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 42, color: 'var(--o)', lineHeight: 1 }}>${price.toFixed(2)}</div>
               {selQty > 1 && unitPrice > 0 && !isSqft && (
-                <div style={{ fontSize: 12, color: 'var(--tx)', fontFamily: "'DM Mono',monospace", marginTop: 3 }}>${(price / selQty).toFixed(3)} each</div>
+                <div style={{ fontSize: 12, color: 'var(--tx)', fontFamily: "'DM Mono',monospace", marginTop: 3 }}>${(basePrice / selQty).toFixed(3)} each</div>
               )}
               {isSqft && custW && custH && (
                 <div style={{ fontSize: 12, color: 'var(--mu)', marginTop: 3 }}>{custW}ft × {custH}ft = {(parseFloat(custW) * parseFloat(custH)).toFixed(1)} sq ft</div>
+              )}
+              {taFee > 0 && (
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--bd)', display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                  <span style={{ color: 'var(--mu)' }}>Base price</span><span>${basePrice.toFixed(2)}</span>
+                </div>
+              )}
+              {taFee > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--o)', fontWeight: 700 }}>
+                  <span>{turnaround === 'rush' ? '⚡ Rush' : '🚀 Express'} surcharge ({Math.round(taMult * 100)}%)</span><span>+${taFee.toFixed(2)}</span>
+                </div>
               )}
             </div>
 
             <button onClick={handleAdd} style={{ width: '100%', fontSize: 15, padding: 15, borderRadius: 'var(--r)', background: 'var(--o)', color: '#000', border: 'none', fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", transition: 'background .18s', marginBottom: 8 }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--od)'}
               onMouseLeave={e => e.currentTarget.style.background = 'var(--o)'}
-            >Add to Cart — ${price.toFixed(2)}</button>
+            >Add to Cart — ${price.toFixed(2)}{turnaround !== 'standard' ? ` (${turnaround})` : ''}</button>
             <div style={{ fontSize: 11, color: 'var(--mu)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
               <span>🔒 Secure checkout</span><span>·</span><span>✅ Free proof</span><span>·</span><span>📞 {store.phone}</span>
             </div>

@@ -93,9 +93,9 @@ export function CheckoutPage() {
   const cardRef = useRef(null);
 
   const shipCost = delivery === 'post' ? pricing.shipping_post : delivery === 'courier' ? pricing.shipping_courier : 0;
-  const rushMult = turnaround === 'rush' ? pricing.rush_pct : turnaround === 'express' ? pricing.express_pct : 0;
-  const rushFee = +(cartSubtotal * rushMult).toFixed(2);
-  const subtotal = +(cartSubtotal + shipCost + rushFee).toFixed(2);
+  // Rush/express fee is now baked into item prices at the product configurator — no global surcharge
+  const rushFee = 0;
+  const subtotal = +(cartSubtotal + shipCost).toFixed(2);
   const hst = +(subtotal * pricing.hst).toFixed(2);
   const total = +(subtotal + hst).toFixed(2);
 
@@ -203,11 +203,15 @@ export function CheckoutPage() {
     if (cart.length === 0) { showToast('Your cart is empty'); return; }
     const no = 'NCX-' + Math.floor(10000 + Math.random() * 90000);
     setPlacing(true);
+    setStripeErr('');
     try {
       if (payMethod === 'stripe') {
         const pk = cfg.stripePk();
         if (pk && pk.length > 10 && stripeRef.current && cardRef.current) {
-          const billingName = billing.sameAsContact ? (form.fn + ' ' + form.ln).trim() : (billing.fn + ' ' + billing.ln).trim() || (form.fn + ' ' + form.ln).trim();
+          // Step 1 — tokenize the card
+          const billingName = billing.sameAsContact
+            ? (form.fn + ' ' + form.ln).trim()
+            : (billing.fn + ' ' + billing.ln).trim() || (form.fn + ' ' + form.ln).trim();
           const billingAddress = billing.sameAsContact ? null : {
             line1: billing.address,
             city: billing.city,
@@ -223,35 +227,80 @@ export function CheckoutPage() {
               email: form.email,
               phone: form.phone,
               ...(billingAddress ? { address: billingAddress } : {}),
-            }
+            },
           });
           if (pmError) { setStripeErr(pmError.message); setPlacing(false); return; }
+
+          // Step 2 — actually charge via Edge Function
           const amountInCents = Math.round(total * 100);
-          const itemsStr = cart.map(i => i.qty + 'x ' + i.name).join(', ');
-          const edgeUrl = cfg.supaUrl() + '/functions/v1/process-stripe-payment';
+          const itemsStr = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
+          const edgeUrl = `${cfg.supaUrl()}/functions/v1/process-stripe-payment`;
           let chargeData = {};
           try {
             const res = await fetch(edgeUrl, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'apikey': cfg.supaKey(), 'Authorization': 'Bearer ' + cfg.supaKey() },
-              body: JSON.stringify({ payment_method_id: paymentMethod.id, amount: amountInCents, currency: 'cad', customer_name: (form.fn + ' ' + form.ln).trim(), customer_email: form.email, order_number: no, description: 'Nexa Customs ' + no }),
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': cfg.supaKey(),
+                'Authorization': `Bearer ${cfg.supaKey()}`,
+              },
+              body: JSON.stringify({
+                payment_method_id: paymentMethod.id,
+                amount: amountInCents,
+                currency: 'cad',
+                customer_name: (form.fn + ' ' + form.ln).trim(),
+                customer_email: form.email,
+                order_number: no,
+                description: `Nexa Customs ${no} — ${itemsStr.slice(0, 100)}`,
+                billing_details: {
+                  name: billingName,
+                  email: form.email,
+                  ...(billingAddress ? { address: billingAddress } : {}),
+                },
+              }),
             });
             chargeData = await res.json();
-          } catch (fetchErr) { showToast('Payment server error — please call us at (437) 997-9921'); setPlacing(false); return; }
-          if (chargeData.requires_action && chargeData.payment_intent_client_secret) {
-            const { error: actionErr } = await stripeRef.current.handleNextAction({ clientSecret: chargeData.payment_intent_client_secret });
-            if (actionErr) { setStripeErr(actionErr.message || '3D Secure failed.'); setPlacing(false); return; }
+          } catch (fetchErr) {
+            console.error('Edge function unreachable:', fetchErr);
+            showToast('Payment server error — please call us at (437) 997-9921');
+            setPlacing(false);
+            return;
           }
-          if (chargeData.error) { setStripeErr(chargeData.error); setPlacing(false); return; }
+
+          // Step 3 — handle 3D Secure if required
+          if (chargeData.requires_action && chargeData.payment_intent_client_secret) {
+            const { error: actionErr } = await stripeRef.current.handleNextAction({
+              clientSecret: chargeData.payment_intent_client_secret,
+            });
+            if (actionErr) {
+              setStripeErr(actionErr.message || '3D Secure verification failed. Please try again.');
+              setPlacing(false);
+              return;
+            }
+          }
+
+          // Step 4 — surface any charge error with the bank's exact message
+          if (chargeData.error) {
+            setStripeErr(chargeData.error);
+            setPlacing(false);
+            return;
+          }
+
+          // Step 5 — payment confirmed, now save order
           await saveOrder(no, chargeData.payment_intent_id || paymentMethod.id);
-        } else { await saveOrder(no); }
-      } else { await saveOrder(no); }
+        } else {
+          // Stripe not configured — save as invoice/quote
+          await saveOrder(no);
+        }
+      } else {
+        await saveOrder(no);
+      }
       sessionStorage.setItem('last_order_no', no);
       clearCart();
       navigate('/order-confirmed');
     } catch (err) {
-      console.error('Order error:', err);
-      showToast('Something went wrong — please try again');
+      console.error('Checkout error:', err);
+      showToast('Something went wrong — please try again or call us at (437) 997-9921');
     } finally { setPlacing(false); }
   }
 
@@ -356,21 +405,24 @@ export function CheckoutPage() {
                 </div>
 
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 26, marginBottom: 14 }}>
-                  <div className="D" style={{ fontSize: 22, marginBottom: 4 }}>Turnaround Time</div>
-                  <p style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 20, lineHeight: 1.6 }}>Production starts after your artwork proof is approved.</p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }} className="ta-grid">
-                    {[
-                      { id: 'standard', ico: '📦', label: 'Standard', sub: '5–7 business days', extra: null },
-                      { id: 'rush',     ico: '⚡', label: 'Rush',     sub: '2–3 business days', extra: `+${Math.round(pricing.rush_pct * 100)}% fee` },
-                      { id: 'express',  ico: '🚀', label: 'Express',  sub: 'Same / next day',   extra: `+${Math.round(pricing.express_pct * 100)}% fee` },
-                    ].map(opt => (
-                      <div key={opt.id} onClick={() => setTurnaround(opt.id)} style={{ border: `2px solid ${turnaround === opt.id ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 12, padding: '18px 12px', textAlign: 'center', cursor: 'pointer', transition: 'all .18s', background: turnaround === opt.id ? 'rgba(249,115,22,.08)' : 'var(--s2)' }}>
-                        <div style={{ fontSize: 28, marginBottom: 8 }}>{opt.ico}</div>
-                        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{opt.label}</div>
-                        <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: opt.extra ? 6 : 0, lineHeight: 1.4 }}>{opt.sub}</div>
-                        {opt.extra && <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--o)' }}>{opt.extra}</div>}
-                      </div>
-                    ))}
+                  <div className="D" style={{ fontSize: 22, marginBottom: 4 }}>Turnaround Summary</div>
+                  <p style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 14, lineHeight: 1.6 }}>Turnaround was selected per item on the product page. Production starts after your artwork proof is approved.</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {cart.map((item, i) => {
+                      const ta = item.turnaround || 'standard';
+                      const ico = ta === 'express' ? '🚀' : ta === 'rush' ? '⚡' : '📦';
+                      const sub = ta === 'express' ? 'Same / next day' : ta === 'rush' ? '2–3 business days' : '5–7 business days';
+                      return (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--s2)', borderRadius: 8, border: '1px solid var(--bd)' }}>
+                          <div style={{ fontSize: 13, fontWeight: 600 }}>{item.name}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+                            <span>{ico}</span>
+                            <span style={{ fontWeight: 700, textTransform: 'capitalize', color: ta !== 'standard' ? 'var(--o)' : 'var(--tx)' }}>{ta}</span>
+                            <span style={{ color: 'var(--mu)' }}>· {sub}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -480,7 +532,9 @@ export function CheckoutPage() {
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
                       <span>⏱ Turnaround</span>
-                      <span style={{ color: 'var(--tx)', fontWeight: 600, textTransform: 'capitalize' }}>{turnaround}{rushFee > 0 ? ` (+$${rushFee.toFixed(2)})` : ''}</span>
+                      <span style={{ color: 'var(--tx)', fontWeight: 600, textTransform: 'capitalize' }}>
+                        {[...new Set(cart.map(i => i.turnaround || 'standard'))].join(', ')}
+                      </span>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
                       <span>📎 Artwork</span>
