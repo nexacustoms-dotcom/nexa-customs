@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -21,7 +22,7 @@ serve(async (req) => {
 
     const {
       payment_method_id,
-      amount,
+      amount,          // in cents, e.g. 5999 for $59.99
       currency = 'cad',
       customer_name,
       customer_email,
@@ -37,11 +38,13 @@ serve(async (req) => {
       );
     }
 
+    // Create + confirm a PaymentIntent in one call
     const params = new URLSearchParams({
       amount: String(amount),
       currency,
       payment_method: payment_method_id,
       confirm: 'true',
+      // Return a client_secret so the frontend can handle 3DS if needed
       'automatic_payment_methods[enabled]': 'true',
       'automatic_payment_methods[allow_redirects]': 'never',
       description: description || `Order ${order_number}`,
@@ -50,6 +53,7 @@ serve(async (req) => {
       'metadata[customer_email]': customer_email || '',
     });
 
+    // Attach billing details if provided
     if (billing_details?.name) {
       params.set('payment_method_data[billing_details][name]', billing_details.name);
     }
@@ -75,6 +79,7 @@ serve(async (req) => {
 
     const intent = await stripeRes.json();
 
+    // Stripe error (card declined, etc.)
     if (intent.error) {
       return new Response(
         JSON.stringify({ error: intent.error.message || 'Card was declined.' }),
@@ -82,6 +87,7 @@ serve(async (req) => {
       );
     }
 
+    // 3D Secure required — send client_secret back so frontend can handle it
     if (intent.status === 'requires_action') {
       return new Response(
         JSON.stringify({
@@ -93,6 +99,7 @@ serve(async (req) => {
       );
     }
 
+    // Payment succeeded
     if (intent.status === 'succeeded') {
       return new Response(
         JSON.stringify({
@@ -105,6 +112,7 @@ serve(async (req) => {
       );
     }
 
+    // Unexpected status
     return new Response(
       JSON.stringify({ error: `Unexpected payment status: ${intent.status}` }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

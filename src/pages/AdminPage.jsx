@@ -965,20 +965,48 @@ function FullProductEditor({ prod, onSave, onCancel }) {
                   <button onClick={() => removeGroup(gi)} style={{ padding:'7px 10px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12, flexShrink:0 }}>✕ Remove</button>
                 </div>
                 <div style={{ marginBottom:8 }}>
-                  <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 70px auto', gap:5, marginBottom:5, padding:'0 2px' }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 120px 80px auto', gap:5, marginBottom:5, padding:'0 2px' }}>
                     <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>Option Label</div>
                     <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>ID Key</div>
-                    <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>Mult</div>
+                    <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>Price Type</div>
+                    <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>Value</div>
                     <div></div>
                   </div>
-                  {g.opts.map((o, oi) => (
-                    <div key={oi} style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 70px auto', gap:5, marginBottom:6, alignItems:'center' }}>
-                      <input value={o.l} onChange={e => updOption(gi,oi,'l',e.target.value)} style={{...inp,fontSize:11}} placeholder="UV Gloss" />
-                      <input value={o.id} onChange={e => updOption(gi,oi,'id',e.target.value.toLowerCase().replace(/\s+/g,'-'))} style={{...inp,fontSize:10,fontFamily:"'DM Mono',monospace"}} placeholder="uv" />
-                      <input type="number" step="0.01" value={o.m} onChange={e => updOption(gi,oi,'m',e.target.value)} style={{...inp,fontSize:11,textAlign:'center'}} />
-                      <button onClick={() => removeOption(gi,oi)} style={{ padding:'5px 7px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>✕</button>
-                    </div>
-                  ))}
+                  {g.opts.map((o, oi) => {
+                    const pt = o.price_type || 'multiplier';
+                    const pv = o.price_val ?? o.m ?? 1;
+                    const ptLabel = pt === 'multiplier' ? '×' : pt === 'percent' ? '%' : pt === 'fixed' ? '$' : '$/ft';
+                    return (
+                      <div key={oi} style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 120px 80px auto', gap:5, marginBottom:6, alignItems:'center' }}>
+                        <input value={o.l} onChange={e => updOption(gi,oi,'l',e.target.value)} style={{...inp,fontSize:11}} placeholder="UV Gloss" />
+                        <input value={o.id} onChange={e => updOption(gi,oi,'id',e.target.value.toLowerCase().replace(/\s+/g,'-'))} style={{...inp,fontSize:10,fontFamily:"'DM Mono',monospace"}} placeholder="uv" />
+                        <select value={pt} onChange={e => {
+                          const ng=[...(p.opts||[])]; const no=[...ng[gi].opts];
+                          const defaults = { multiplier:1.0, percent:10, fixed:5, linear_ft:2.5 };
+                          no[oi]={...no[oi], price_type:e.target.value, price_val: defaults[e.target.value], m: e.target.value==='multiplier' ? (no[oi].price_val||1) : 1 };
+                          ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
+                        }} style={{...inp,fontSize:11,padding:'6px 7px'}}>
+                          <option value="multiplier">Multiplier (×)</option>
+                          <option value="percent">Percentage (%)</option>
+                          <option value="fixed">Fixed Add-on ($)</option>
+                          <option value="linear_ft">Linear Footage ($/ft)</option>
+                        </select>
+                        <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
+                          <span style={{ padding:'0 5px', color:'var(--mu)', fontSize:11, borderRight:'1px solid var(--bd)' }}>{ptLabel}</span>
+                          <input type="number" step={pt==='multiplier'?'0.01':pt==='fixed'||pt==='linear_ft'?'0.25':'1'} min={pt==='multiplier'?'0.1':'0'}
+                            value={pv}
+                            onChange={e => {
+                              const ng=[...(p.opts||[])]; const no=[...ng[gi].opts];
+                              const v = parseFloat(e.target.value)||0;
+                              no[oi]={...no[oi], price_val:v, m: pt==='multiplier'?v:1, price_type:pt };
+                              ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
+                            }}
+                            style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'6px 5px', fontSize:11, outline:'none' }} />
+                        </div>
+                        <button onClick={() => removeOption(gi,oi)} style={{ padding:'5px 7px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>✕</button>
+                      </div>
+                    );
+                  })}
                 </div>
                 <button className="abtn" style={{ fontSize:11, padding:'4px 12px' }} onClick={() => addOption(gi)}>+ Add Choice</button>
               </div>
@@ -988,8 +1016,11 @@ function FullProductEditor({ prod, onSave, onCancel }) {
       </div>
 
       <div style={{ background:'var(--sf)', border:'1px solid var(--bd)', borderRadius:10, padding:'12px 16px', marginTop:14, fontSize:11, color:'var(--mu)', lineHeight:1.7 }}>
-        <strong style={{ color:'var(--tx)' }}>💡 Multiplier Reference:</strong>{" "}
-        1.0 = no change · 1.05 = +5% · 1.10 = +10% · 1.15 = +15% · 1.22 = +22% · 1.25 = +25% · 1.50 = +50% · 0.95 = -5% · 0.90 = -10%
+        <strong style={{ color:'var(--tx)' }}>💡 Option Pricing Types:</strong>{" "}
+        <span><strong style={{color:'var(--tx)'}}>Multiplier</strong> — ×1.22 multiplies base price by 1.22 (22% increase). Use for paper upgrades, double sided, etc.</span>{" · "}
+        <span><strong style={{color:'var(--tx)'}}>Percentage</strong> — adds X% of base price. e.g. 15 = +15%.</span>{" · "}
+        <span><strong style={{color:'var(--tx)'}}>Fixed</strong> — adds flat dollar amount regardless of qty. e.g. 10 = +$10.00.</span>{" · "}
+        <span><strong style={{color:'var(--tx)'}}>Linear Footage</strong> — multiplies $/ft rate by the width dimension. e.g. 2.50 = $2.50/ft.</span>
       </div>
 
       <div style={{ display:'flex', gap:10, marginTop:18 }}>
