@@ -1029,34 +1029,66 @@ function FullProductEditor({ prod, onSave, onCancel }) {
                     const pt = o.price_type || 'multiplier';
                     const pv = o.price_val ?? o.m ?? 1;
                     const ptLabel = pt === 'multiplier' ? '×' : pt === 'percent' ? '%' : pt === 'fixed' ? '$' : '$/ft';
+                    const isSizeGroup = g.key === 'size';
                     return (
-                      <div key={oi} style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 120px 80px auto', gap:5, marginBottom:6, alignItems:'center' }}>
-                        <input value={o.l} onChange={e => updOption(gi,oi,'l',e.target.value)} style={{...inp,fontSize:11}} placeholder="UV Gloss" />
-                        <input value={o.id} onChange={e => updOption(gi,oi,'id',e.target.value.toLowerCase().replace(/\s+/g,'-'))} style={{...inp,fontSize:10,fontFamily:"'DM Mono',monospace"}} placeholder="uv" />
-                        <select value={pt} onChange={e => {
-                          const ng=[...(p.opts||[])]; const no=[...ng[gi].opts];
-                          const defaults = { multiplier:1.0, percent:10, fixed:5, linear_ft:2.5 };
-                          no[oi]={...no[oi], price_type:e.target.value, price_val: defaults[e.target.value], m: e.target.value==='multiplier' ? (no[oi].price_val||1) : 1 };
-                          ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
-                        }} style={{...inp,fontSize:11,padding:'6px 7px'}}>
-                          <option value="multiplier">Multiplier (×)</option>
-                          <option value="percent">Percentage (%)</option>
-                          <option value="fixed">Fixed Add-on ($)</option>
-                          <option value="linear_ft">Linear Footage ($/ft)</option>
-                        </select>
-                        <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
-                          <span style={{ padding:'0 5px', color:'var(--mu)', fontSize:11, borderRight:'1px solid var(--bd)' }}>{ptLabel}</span>
-                          <input type="number" step={pt==='multiplier'?'0.01':pt==='fixed'||pt==='linear_ft'?'0.25':'1'} min={pt==='multiplier'?'0.1':'0'}
-                            value={pv}
-                            onChange={e => {
-                              const ng=[...(p.opts||[])]; const no=[...ng[gi].opts];
-                              const v = parseFloat(e.target.value)||0;
-                              no[oi]={...no[oi], price_val:v, m: pt==='multiplier'?v:1, price_type:pt };
-                              ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
-                            }}
-                            style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'6px 5px', fontSize:11, outline:'none' }} />
+                      <div key={oi} style={{ marginBottom: 8 }}>
+                        <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 120px 80px auto', gap:5, marginBottom: (isSizeGroup || pt === 'linear_ft') ? 4 : 0, alignItems:'center' }}>
+                          <input value={o.l} onChange={e => updOption(gi,oi,'l',e.target.value)} style={{...inp,fontSize:11}} placeholder="UV Gloss" />
+                          <input value={o.id} onChange={e => updOption(gi,oi,'id',e.target.value.toLowerCase().replace(/\s+/g,'-'))} style={{...inp,fontSize:10,fontFamily:"'DM Mono',monospace"}} placeholder="uv" />
+                          <select value={pt} onChange={e => {
+                            const ng=[...(p.opts||[])]; const no=[...ng[gi].opts];
+                            const defaults = { multiplier:1.0, percent:10, fixed:5, linear_ft:2.5 };
+                            no[oi]={...no[oi], price_type:e.target.value, price_val: defaults[e.target.value], m: e.target.value==='multiplier' ? (no[oi].price_val||1) : 1 };
+                            ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
+                          }} style={{...inp,fontSize:11,padding:'6px 7px'}}>
+                            <option value="multiplier">Multiplier (×)</option>
+                            <option value="percent">Percentage (%)</option>
+                            <option value="fixed">Fixed Add-on ($)</option>
+                            <option value="linear_ft">Linear Footage ($/ft)</option>
+                          </select>
+                          <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
+                            <span style={{ padding:'0 5px', color:'var(--mu)', fontSize:11, borderRight:'1px solid var(--bd)' }}>{ptLabel}</span>
+                            <input type="number" step={pt==='multiplier'?'0.01':pt==='fixed'||pt==='linear_ft'?'0.25':'1'} min={pt==='multiplier'?'0.1':'0'}
+                              value={pv}
+                              onChange={e => {
+                                const ng=[...(p.opts||[])]; const no=[...ng[gi].opts];
+                                const v = parseFloat(e.target.value)||0;
+                                no[oi]={...no[oi], price_val:v, m: pt==='multiplier'?v:1, price_type:pt };
+                                ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
+                              }}
+                              style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'6px 5px', fontSize:11, outline:'none' }} />
+                          </div>
+                          <button onClick={() => removeOption(gi,oi)} style={{ padding:'5px 7px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>✕</button>
                         </div>
-                        <button onClick={() => removeOption(gi,oi)} style={{ padding:'5px 7px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>✕</button>
+                        {/* Width/Height fields for size options (used by linear footage calc) */}
+                        {isSizeGroup && (
+                          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:5, paddingLeft:4 }}>
+                            <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
+                              <span style={{ padding:'0 6px', color:'var(--mu)', fontSize:10, borderRight:'1px solid var(--bd)', whiteSpace:'nowrap' }}>W ft</span>
+                              <input type="number" step="0.5" min="0" value={o.w||''} placeholder="e.g. 4"
+                                onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],w:parseFloat(e.target.value)||0}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }}
+                                style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'5px', fontSize:11, outline:'none' }} />
+                            </div>
+                            <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
+                              <span style={{ padding:'0 6px', color:'var(--mu)', fontSize:10, borderRight:'1px solid var(--bd)', whiteSpace:'nowrap' }}>H ft</span>
+                              <input type="number" step="0.5" min="0" value={o.h||''} placeholder="e.g. 8"
+                                onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],h:parseFloat(e.target.value)||0}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }}
+                                style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'5px', fontSize:11, outline:'none' }} />
+                            </div>
+                            <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
+                              <span style={{ padding:'0 6px', color:'var(--mu)', fontSize:10, borderRight:'1px solid var(--bd)', whiteSpace:'nowrap' }}>sqft</span>
+                              <input type="number" step="0.5" min="0" value={o.sqft||''} placeholder="auto"
+                                onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],sqft:parseFloat(e.target.value)||0}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }}
+                                style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'5px', fontSize:11, outline:'none' }} />
+                            </div>
+                          </div>
+                        )}
+                        {/* Linear footage hint */}
+                        {pt === 'linear_ft' && !isSizeGroup && (
+                          <div style={{ fontSize:10, color:'var(--mu)', paddingLeft:4, marginTop:2 }}>
+                            💡 Will multiply $/ft × customer's width dimension
+                          </div>
+                        )}
                       </div>
                     );
                   })}

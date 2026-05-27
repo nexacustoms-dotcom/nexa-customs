@@ -187,7 +187,7 @@ export function AppProvider({ children }) {
     if (!prod) return { total: 0, unit: 0, sqft: 0 };
 
     // Helper: apply option add-ons to a base price
-    function applyOpts(base, opts, selOpts, skipKey, sqftW, sqftH) {
+    function applyOpts(base, opts, selOpts, skipKey, sqftW, sqftH, qty) {
       let total = base;
       (opts||[]).filter(g => g.key !== skipKey).forEach(g => {
         const o = g.opts?.find(o => o.id === selOpts?.[g.key]);
@@ -198,8 +198,10 @@ export function AppProvider({ children }) {
         else if (t === 'percent')    total += base * (v / 100);
         else if (t === 'fixed')      total += v;
         else if (t === 'linear_ft') {
-          // Use width first, then height, then explicit lf on the option
-          const ft = parseFloat(sqftW || sqftH || selOpts?._custW || selOpts?._custH || o.lf || 1);
+          // Priority: explicit width entered by customer → preset size width → height → qty
+          const custW = parseFloat(selOpts?._custW) || 0;
+          const custH = parseFloat(selOpts?._custH) || 0;
+          const ft = custW || sqftW || custH || sqftH || qty || 1;
           total += v * ft;
         }
       });
@@ -222,12 +224,12 @@ export function AppProvider({ children }) {
         sqftH = sizeOpt?.h || Math.sqrt(sqftVal);
       }
       const baseUnit = Math.max(sqftVal, prod.sqft.min||1) * (prod.sqft.rate||6.5);
-      const unitCost = applyOpts(baseUnit, prod.opts, selOpts, 'size', sqftW, sqftH);
+      const unitCost = applyOpts(baseUnit, prod.opts, selOpts, 'size', sqftW, sqftH, sqftW);
       return { total: +(unitCost * Math.max(qty||1,1)).toFixed(2), unit: +unitCost.toFixed(4), sqft: sqftVal };
     }
     const tier = prod.pricing?.find(t => t.q===qty) || prod.pricing?.[0];
     if (!tier) return { total: 0, unit: 0, sqft: 0 };
-    const total = +applyOpts(tier.p, prod.opts, selOpts, null, 0, 0).toFixed(2);
+    const total = +applyOpts(tier.p, prod.opts, selOpts, null, 0, 0, qty).toFixed(2);
     return { total, unit: +(total/(qty||1)).toFixed(4), sqft: 0 };
   }, []);
 

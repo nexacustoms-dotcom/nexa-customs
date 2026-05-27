@@ -21,7 +21,7 @@ export default function ProductDetailPage() {
     const defaults = {};
     (prod.opts || []).forEach(g => { const f = g.opts?.find(o => !o.disabled); if (f) defaults[g.key] = f.id; });
     setSelOpts(defaults);
-    setSelQty(prod.pricing?.length > 1 ? prod.pricing[1].q : prod.pricing?.[0]?.q ?? 1);
+    setSelQty(prod.pricing?.[0]?.q ?? 1);
     setImgIdx(0); setCustW(''); setCustH('');
     setTurnaround('standard');
   }, [prod?.id]);
