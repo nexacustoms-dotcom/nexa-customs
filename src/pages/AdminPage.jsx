@@ -494,7 +494,60 @@ function AppearanceTab() {
           <div className="afg"><label className="aflbl">Accent Line (orange colour)</label><input className="ainp" value={s.hero_accent} onChange={updE('hero_accent')} /></div>
           <div className="afg"><label className="aflbl">Line 2</label><input className="ainp" value={s.hero2} onChange={updE('hero2')} /></div>
           <div className="afg"><label className="aflbl">Sub-headline</label><textarea className="ainp" rows="2" style={{ resize: 'vertical' }} value={s.hero_sub} onChange={updE('hero_sub')} /></div>
-          <ImageUpload label="Hero Background Image (optional)" value={s.hero_bg || ''} onChange={v => upd('hero_bg')(v)} folder="branding" note="Wide banner, min 1400px wide. Used as hero section background." />
+          <ImageUpload label="Hero Background Image (optional)" value={s.hero_bg || ''} onChange={v => upd('hero_bg')(v)} folder="branding" note="Wide banner, min 1400px wide. Used as a subtle background behind the hero text." />
+
+          {/* Hero Slideshow Manager */}
+          <div className="afg">
+            <label className="aflbl">Hero Slideshow Slides</label>
+            <p style={{ fontSize:11, color:'var(--mu)', marginBottom:12, lineHeight:1.65 }}>
+              Upload images or use emoji + text for each slide in the right-side hero panel. Leave image blank to use emoji/text mode.
+            </p>
+            {(s.hero_slides || [
+              { ico:'🪪', title:'Premium Business Cards', sub:'From $24.32 · Same-week turnaround · Free design proof', img:'' },
+              { ico:'🪧', title:'Vinyl Banners & Signs', sub:'Custom sizes · Full colour · Indoor & outdoor · Rush available', img:'' },
+              { ico:'🚗', title:'Vehicle Wraps', sub:'Full & partial wraps · Cast vinyl · 5–7 year life · Professional install', img:'' },
+              { ico:'📄', title:'Flyers & Postcards', sub:'1,000 flyers from $99 · Canada-wide shipping · 100lb gloss or matte', img:'' },
+            ]).map((sl, si) => {
+              const slides = s.hero_slides || [];
+              const updSlide = (field, val) => {
+                const updated = [...(s.hero_slides || [
+                  { ico:'🪪', title:'Premium Business Cards', sub:'From $24.32 · Same-week turnaround · Free design proof', img:'' },
+                  { ico:'🪧', title:'Vinyl Banners & Signs', sub:'Custom sizes · Full colour · Indoor & outdoor · Rush available', img:'' },
+                  { ico:'🚗', title:'Vehicle Wraps', sub:'Full & partial wraps · Cast vinyl · 5–7 year life · Professional install', img:'' },
+                  { ico:'📄', title:'Flyers & Postcards', sub:'1,000 flyers from $99 · Canada-wide shipping · 100lb gloss or matte', img:'' },
+                ])];
+                updated[si] = { ...updated[si], [field]: val };
+                upd('hero_slides')(updated);
+              };
+              return (
+                <div key={si} style={{ border:'1px solid var(--bd)', borderRadius:10, padding:14, marginBottom:10, background:'var(--s2)' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                    <div style={{ fontWeight:700, fontSize:12 }}>Slide {si + 1}</div>
+                    <button onClick={() => {
+                      const updated = [...(s.hero_slides || [])];
+                      updated.splice(si, 1);
+                      upd('hero_slides')(updated);
+                    }} style={{ fontSize:11, color:'#f87171', background:'rgba(239,68,68,.1)', border:'1px solid rgba(239,68,68,.3)', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>✕ Remove</button>
+                  </div>
+                  <ImageUpload label="Slide Image (optional)" value={sl.img || ''} onChange={v => updSlide('img', v)} folder="branding" note="If set, fills the slide panel. Leave blank to use emoji + text below." />
+                  <div style={{ display:'grid', gridTemplateColumns:'60px 1fr', gap:8, marginTop:8 }}>
+                    <div><label className="aflbl" style={{fontSize:10}}>Emoji</label><input className="ainp" value={sl.ico||''} onChange={e => updSlide('ico', e.target.value)} style={{textAlign:'center',fontSize:20}} /></div>
+                    <div><label className="aflbl" style={{fontSize:10}}>Title</label><input className="ainp" value={sl.title||''} onChange={e => updSlide('title', e.target.value)} placeholder="Premium Business Cards" /></div>
+                  </div>
+                  <div style={{marginTop:6}}><label className="aflbl" style={{fontSize:10}}>Subtitle</label><input className="ainp" value={sl.sub||''} onChange={e => updSlide('sub', e.target.value)} placeholder="From $24.32 · Same-week turnaround" /></div>
+                </div>
+              );
+            })}
+            <button onClick={() => upd('hero_slides')([...(s.hero_slides||[
+              { ico:'🪪', title:'Premium Business Cards', sub:'From $24.32 · Same-week turnaround · Free design proof', img:'' },
+              { ico:'🪧', title:'Vinyl Banners & Signs', sub:'Custom sizes · Full colour · Indoor & outdoor · Rush available', img:'' },
+              { ico:'🚗', title:'Vehicle Wraps', sub:'Full & partial wraps · Cast vinyl · 5–7 year life · Professional install', img:'' },
+              { ico:'📄', title:'Flyers & Postcards', sub:'1,000 flyers from $99 · Canada-wide shipping · 100lb gloss or matte', img:'' },
+            ]), { ico:'🖨️', title:'New Slide', sub:'Subtitle here', img:'' }])}
+              style={{ padding:'8px 14px', borderRadius:8, border:'1px solid var(--o)', background:'rgba(249,115,22,.1)', color:'var(--o)', fontSize:12, fontWeight:600, cursor:'pointer' }}>
+              + Add Slide
+            </button>
+          </div>
         </div>
 
         {/* Social */}

@@ -11,22 +11,73 @@ const TESTIMONIALS = [
 ];
 
 export default function HomePage() {
-  const { cats, prods, store } = useApp();
+  const { cats, prods, store, showProduct } = useApp();
   const navigate = useNavigate();
   const [slide, setSlide] = useState(0);
   const [tIdx, setTIdx] = useState(0);
 
-  const slides = [
+  // Slides: use admin-configured hero_slides if available, else defaults
+  const defaultSlides = [
     { ico: '🪪', title: 'Premium Business Cards', sub: 'From $24.32 · Same-week turnaround · Free design proof' },
     { ico: '🪧', title: 'Vinyl Banners & Signs', sub: 'Custom sizes · Full colour · Indoor & outdoor · Rush available' },
     { ico: '🚗', title: 'Vehicle Wraps', sub: 'Full & partial wraps · Cast vinyl · 5–7 year life · Professional install' },
     { ico: '📄', title: 'Flyers & Postcards', sub: '1,000 flyers from $99 · Canada-wide shipping · 100lb gloss or matte' },
   ];
+  const slides = (store.hero_slides && store.hero_slides.length > 0) ? store.hero_slides : defaultSlides;
 
-  useEffect(() => { const t = setInterval(() => setSlide(i => (i + 1) % slides.length), 4000); return () => clearInterval(t); }, []);
+  useEffect(() => { const t = setInterval(() => setSlide(i => (i + 1) % slides.length), 4000); return () => clearInterval(t); }, [slides.length]);
 
   const featured = prods.filter(p => p.badge === 'Most Popular' || p.badge === 'Best Seller').slice(0, 4);
   const displayProds = featured.length >= 4 ? featured : prods.slice(0, 4);
+
+  return (
+    <div>
+      {/* HERO */}
+      <section style={{ position: 'relative', padding: '76px 0 100px' }}>
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+          {store.hero_bg
+            ? <img src={store.hero_bg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }} />
+            : null}
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(249,115,22,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,.04) 1px,transparent 1px)', backgroundSize: '54px 54px' }} />
+          <div style={{ position: 'absolute', top: -120, right: -60, width: 640, height: 640, borderRadius: '50%', background: 'radial-gradient(circle,rgba(249,115,22,.1) 0%,transparent 68%)' }} />
+        </div>
+        <div className="W">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 410px', gap: 60, alignItems: 'center', position: 'relative', zIndex: 1 }} className="hero-grid">
+            <div>
+              <div className="badge-orange" style={{ marginBottom: 18 }}>Mississauga's Print Experts Since 2010</div>
+              <h1 className="D" style={{ fontSize: 'clamp(52px,6vw,84px)', marginBottom: 22 }}>
+                {store.hero1}<br />
+                <span style={{ color: 'var(--o)' }}>{store.hero_accent}</span><br />
+                {store.hero2}
+              </h1>
+              <p style={{ fontSize: 15, color: 'var(--mu)', maxWidth: 460, marginBottom: 32, lineHeight: 1.78 }}>{store.hero_sub}</p>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 44, flexWrap: 'wrap' }}>
+                <button className="btn btn-primary" onClick={() => navigate('/products')}>Shop All Products →</button>
+                <button className="btn btn-ghost" onClick={() => navigate('/quote')}>Get a Free Quote</button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
+                {[['10K+', 'Orders Completed'], ['500+', 'Happy Clients'], ['24hr', 'Rush Available'], ['4.9★', 'Google Rating']].map(([n, l], i, arr) => (
+                  <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+                    <div><div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 28, lineHeight: 1 }}>{n}</div><div style={{ fontSize: 11, color: 'var(--mu)' }}>{l}</div></div>
+                    {i < arr.length - 1 && <div style={{ width: 1, height: 36, background: 'var(--bd)' }} />}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Slide showcase */}
+            <div className="hero-right">
+              <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 18, overflow: 'hidden', boxShadow: '0 36px 88px rgba(0,0,0,.55)', minHeight: 260, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative' }}>
+                {slides[slide]?.img
+                  ? <img src={slides[slide].img} alt={slides[slide].title} style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }} />
+                  : <div style={{ padding: 36, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                      <div style={{ fontSize: 64, marginBottom: 16 }}>{slides[slide]?.ico || '🖨️'}</div>
+                      <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, textTransform: 'uppercase', marginBottom: 8 }}>{slides[slide]?.title}</div>
+                      <div style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.6 }}>{slides[slide]?.sub}</div>
+                    </div>
+                }
+                <div style={{ display: 'flex', gap: 6, marginTop: slides[slide]?.img ? 0 : 20, padding: slides[slide]?.img ? '10px 0' : '0 0 10px', position: slides[slide]?.img ? 'absolute' : 'static', bottom: 10 }}>
+                  {slides.map((_, i) => <div key={i} onClick={() => setSlide(i)} style={{ width: 6, height: 6, borderRadius: '50%', background: i === slide ? 'var(--o)' : 'var(--bd)', cursor: 'pointer', transition: 'background .2s' }} />)}
+                </div>
 
   return (
     <div>

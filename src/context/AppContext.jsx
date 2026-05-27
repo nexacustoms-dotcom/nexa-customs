@@ -187,7 +187,7 @@ export function AppProvider({ children }) {
     if (!prod) return { total: 0, unit: 0, sqft: 0 };
 
     // Helper: apply option add-ons to a base price
-    function applyOpts(base, opts, selOpts, skipKey) {
+    function applyOpts(base, opts, selOpts, skipKey, sqftW, sqftH) {
       let total = base;
       (opts||[]).filter(g => g.key !== skipKey).forEach(g => {
         const o = g.opts?.find(o => o.id === selOpts?.[g.key]);
@@ -197,23 +197,37 @@ export function AppProvider({ children }) {
         if      (t === 'multiplier') total *= v;
         else if (t === 'percent')    total += base * (v / 100);
         else if (t === 'fixed')      total += v;
-        else if (t === 'linear_ft')  total += v * (parseFloat(o.lf || selOpts?._custW || selOpts?._custH || 1));
+        else if (t === 'linear_ft') {
+          // Use width first, then height, then explicit lf on the option
+          const ft = parseFloat(sqftW || sqftH || selOpts?._custW || selOpts?._custH || o.lf || 1);
+          total += v * ft;
+        }
       });
       return total;
     }
 
     if (prod.sqft?.enabled) {
       let sqftVal = 0;
+      let sqftW = 0, sqftH = 0;
       const selSizeId = selOpts?.size;
-      if (selSizeId === 'custom') { sqftVal = (parseFloat(selOpts?._custW)||0) * (parseFloat(selOpts?._custH)||0); }
-      else { sqftVal = prod.opts?.find(g => g.key==='size')?.opts?.find(o => o.id===selSizeId)?.sqft || 0; }
+      if (selSizeId === 'custom') {
+        sqftW = parseFloat(selOpts?._custW) || 0;
+        sqftH = parseFloat(selOpts?._custH) || 0;
+        sqftVal = sqftW * sqftH;
+      } else {
+        const sizeOpt = prod.opts?.find(g => g.key==='size')?.opts?.find(o => o.id===selSizeId);
+        sqftVal = sizeOpt?.sqft || 0;
+        // Try to extract w/h from preset size (e.g. stored as w/h fields or parse from label)
+        sqftW = sizeOpt?.w || Math.sqrt(sqftVal);
+        sqftH = sizeOpt?.h || Math.sqrt(sqftVal);
+      }
       const baseUnit = Math.max(sqftVal, prod.sqft.min||1) * (prod.sqft.rate||6.5);
-      const unitCost = applyOpts(baseUnit, prod.opts, selOpts, 'size');
+      const unitCost = applyOpts(baseUnit, prod.opts, selOpts, 'size', sqftW, sqftH);
       return { total: +(unitCost * Math.max(qty||1,1)).toFixed(2), unit: +unitCost.toFixed(4), sqft: sqftVal };
     }
     const tier = prod.pricing?.find(t => t.q===qty) || prod.pricing?.[0];
     if (!tier) return { total: 0, unit: 0, sqft: 0 };
-    const total = +applyOpts(tier.p, prod.opts, selOpts, null).toFixed(2);
+    const total = +applyOpts(tier.p, prod.opts, selOpts, null, 0, 0).toFixed(2);
     return { total, unit: +(total/(qty||1)).toFixed(4), sqft: 0 };
   }, []);
 

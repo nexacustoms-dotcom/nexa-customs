@@ -106,7 +106,10 @@ export function CheckoutPage() {
     try {
       const stripe = window.Stripe(pk);
       const elements = stripe.elements({ appearance: { theme: 'night', variables: { colorPrimary: '#f97316', colorBackground: '#242429', colorText: '#f0ede8', borderRadius: '9px' } } });
-      const card = elements.create('card', { style: { base: { color: '#f0ede8', fontSize: '14px', fontFamily: 'DM Sans,sans-serif', '::placeholder': { color: '#7c7c8a' } } } });
+      const card = elements.create('card', { 
+        hidePostalCode: true,
+        style: { base: { color: '#f0ede8', fontSize: '14px', fontFamily: 'DM Sans,sans-serif', '::placeholder': { color: '#7c7c8a' } } } 
+      });
       setTimeout(() => { try { card.mount('#stripe-card-el'); } catch {} }, 150);
       card.on('change', e => setStripeErr(e.error?.message || ''));
       stripeRef.current = stripe; cardRef.current = card;
@@ -574,6 +577,11 @@ export function CheckoutPage() {
                           <label className="flbl">Card Details</label>
                           <div id="stripe-card-el" style={{ background: 'var(--s2)', border: `1px solid ${stripeErr ? '#ef4444' : 'var(--bd)'}`, borderRadius: 9, padding: 14, minHeight: 44, transition: 'border-color .2s' }} />
                           {stripeErr && <div style={{ color: '#f87171', fontSize: 11, marginTop: 5 }}>⚠ {stripeErr}</div>}
+                          {cfg.stripePk() && !stripeRef.current && (
+                            <div style={{ fontSize: 12, color: '#f87171', marginTop: 8, background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 7, padding: '10px 12px', lineHeight: 1.6 }}>
+                              ⚠️ <strong>Payment form blocked.</strong> An ad blocker (e.g. uBlock Origin) is preventing the card form from loading. Please disable it for this page and refresh, or <a href="tel:4379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>call us at (437) 997-9921</a> to place your order.
+                            </div>
+                          )}
                           {!cfg.stripePk() && <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 8, background: 'rgba(249,115,22,.06)', border: '1px solid rgba(249,115,22,.15)', borderRadius: 7, padding: '8px 12px' }}>💡 Stripe not configured — order will be processed as invoice.</div>}
                         </div>
                       </div>

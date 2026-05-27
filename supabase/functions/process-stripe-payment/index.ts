@@ -5,6 +5,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Simple in-memory rate limiter — max 5 attempts per IP per minute
+const rateLimitMap = new Map<string, { count: number; reset: number }>();
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.reset) {
+    rateLimitMap.set(ip, { count: 1, reset: now + 60_000 });
+    return true;
+  }
+  if (entry.count >= 5) return false;
+  entry.count++;
+  return true;
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -12,6 +26,15 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    if (!checkRateLimit(ip)) {
+      return new Response(
+        JSON.stringify({ error: 'Too many payment attempts. Please wait a minute and try again.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeSecret) {
       return new Response(
@@ -52,21 +75,9 @@ serve(async (req) => {
       'metadata[customer_name]': customer_name || '',
       'metadata[customer_email]': customer_email || '',
     });
-
-    // Attach billing details if provided
-    if (billing_details?.name) {
-      params.set('payment_method_data[billing_details][name]', billing_details.name);
-    }
-    if (billing_details?.email) {
-      params.set('payment_method_data[billing_details][email]', billing_details.email);
-    }
-    if (billing_details?.address?.line1) {
-      params.set('payment_method_data[billing_details][address][line1]', billing_details.address.line1);
-      params.set('payment_method_data[billing_details][address][city]', billing_details.address.city || '');
-      params.set('payment_method_data[billing_details][address][state]', billing_details.address.state || '');
-      params.set('payment_method_data[billing_details][address][postal_code]', billing_details.address.postal_code || '');
-      params.set('payment_method_data[billing_details][address][country]', billing_details.address.country || 'CA');
-    }
+    // Note: billing_details are already attached to the PaymentMethod when created
+    // on the frontend via createPaymentMethod(). Do NOT use payment_method_data here
+    // as that would try to create a new PM inline and requires payment_method_data[type].
 
     const stripeRes = await fetch('https://api.stripe.com/v1/payment_intents', {
       method: 'POST',
