@@ -181,7 +181,14 @@ export function AppProvider({ children }) {
   const addToCart = useCallback((item) => { setCart(prev => [...prev, { ...item, cartId: Date.now() + Math.random() }]); showToast('✓ ' + item.name + ' added to cart'); }, [showToast]);
   const removeFromCart = useCallback((cartId) => setCart(prev => prev.filter(i => i.cartId !== cartId)), []);
   const clearCart = useCallback(() => setCart([]), []);
-  const showProduct = useCallback((id) => { const p = prods.find(x => x.id === id); if (!p) return; setCurProd(p); go('detail'); }, [prods, go]);
+  const showProduct = useCallback((id) => {
+    const p = prods.find(x => x.id === id);
+    if (!p) return;
+    setCurProd(p);
+    const url = `/products/${p.cat}/${p.id}`;
+    if (navigateRef.current) navigateRef.current(url);
+    else window.location.href = url;
+  }, [prods]);
 
   const calcPrice = useCallback((prod, qty, selOpts = {}) => {
     if (!prod) return { total: 0, unit: 0, sqft: 0 };

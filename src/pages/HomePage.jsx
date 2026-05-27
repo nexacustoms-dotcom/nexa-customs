@@ -108,14 +108,14 @@ export default function HomePage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10 }} className="cat-grid">
             {cats.slice(0, 12).map(c => (
               <div key={c.id} onClick={() => navigate(`/products/${c.id}`)}
-                style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: '18px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 8, transition: 'all .2s', cursor: 'pointer' }}
+                style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 0, transition: 'all .2s', cursor: 'pointer' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--o)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--bd)'; e.currentTarget.style.transform = ''; }}
               >
                 {c.img
-                  ? <img src={c.img} alt={c.l} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, marginBottom: 2 }} />
-                  : <span style={{ fontSize: 28 }}>{c.i}</span>}
-                <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.3 }}>{c.l}</span>
+                  ? <img src={c.img} alt={c.l} style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }} />
+                  : <div style={{ width: '100%', height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, background: 'var(--s2)' }}>{c.i}</div>}
+                <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.3, padding: '10px 8px' }}>{c.l}</span>
               </div>
             ))}
           </div>
