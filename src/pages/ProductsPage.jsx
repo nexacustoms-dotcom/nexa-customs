@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
 
 export default function ProductsPage() {
   const { cats, prods } = useApp();
   const navigate = useNavigate();
-  const [activeCat, setActiveCat] = useState('all');
+  const { catSlug } = useParams();
+  const activeCat = catSlug || 'all';
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
@@ -19,12 +20,20 @@ export default function ProductsPage() {
     return list;
   }, [prods, activeCat, search]);
 
+  function handleCatClick(id) {
+    setSearch('');
+    if (id === 'all') navigate('/products');
+    else navigate(`/products/${id}`);
+  }
+
   return (
     <div>
       <div style={{ background: 'var(--dk)', borderBottom: '1px solid var(--bd)', padding: '44px 0', textAlign: 'center' }}>
         <div className="W">
-          <div className="badge-orange" style={{ marginBottom: 12 }}>Full Catalogue</div>
-          <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,58px)', marginBottom: 8 }}>All Products</h1>
+          <div className="badge-orange" style={{ marginBottom: 12 }}>{activeCat === 'all' ? 'Full Catalogue' : 'Category'}</div>
+          <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,58px)', marginBottom: 8 }}>
+            {activeCat === 'all' ? 'All Products' : (cats.find(c => c.id === activeCat)?.l || 'Products')}
+          </h1>
           <p style={{ fontSize: 13, color: 'var(--mu)' }}>Professional print, signs & graphics for businesses across Ontario.</p>
         </div>
       </div>
@@ -41,9 +50,9 @@ export default function ProductsPage() {
             </div>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 10 }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mu)', padding: '4px 8px 10px', borderBottom: '1px solid var(--bd)', marginBottom: 4 }}>Categories</div>
-              <SidebarItem label="All Products" count={prods.length} active={activeCat === 'all'} onClick={() => setActiveCat('all')} />
+              <SidebarItem label="All Products" count={prods.length} active={activeCat === 'all'} onClick={() => handleCatClick('all')} />
               {cats.map(c => (
-                <SidebarItem key={c.id} label={c.l} emoji={c.i} img={c.img} count={prods.filter(p => p.cat === c.id).length} active={activeCat === c.id} onClick={() => setActiveCat(c.id)} />
+                <SidebarItem key={c.id} label={c.l} emoji={c.i} img={c.img} count={prods.filter(p => p.cat === c.id).length} active={activeCat === c.id} onClick={() => handleCatClick(c.id)} />
               ))}
             </div>
           </div>
@@ -61,7 +70,7 @@ export default function ProductsPage() {
                 <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
                 <div style={{ fontWeight: 700, marginBottom: 8 }}>No products found</div>
                 <div style={{ fontSize: 12 }}>Try a different search or category</div>
-                <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={() => { setSearch(''); setActiveCat('all'); }}>Clear filters</button>
+                <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={() => handleCatClick('all')}>Clear filters</button>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(196px,1fr))', gap: 12 }}>

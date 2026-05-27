@@ -209,7 +209,7 @@ function AppRoutes() {
         {/* Main pages */}
         <Route path="/" element={<Layout><HomePage /></Layout>} />
         <Route path="/products" element={<Layout><ProductsPage /></Layout>} />
-        <Route path="/products/:catSlug" element={<Layout><CategoryPage /></Layout>} />
+        <Route path="/products/:catSlug" element={<Layout><ProductsPage /></Layout>} />
         <Route path="/products/:catSlug/:productSlug" element={<Layout><ProductPageWrapper /></Layout>} />
         <Route path="/cart" element={<Layout><CartPage /></Layout>} />
         <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
