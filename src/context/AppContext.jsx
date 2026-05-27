@@ -198,11 +198,13 @@ export function AppProvider({ children }) {
         else if (t === 'percent')    total += base * (v / 100);
         else if (t === 'fixed')      total += v;
         else if (t === 'linear_ft') {
-          // Priority: explicit width entered by customer → preset size width → height → qty
+          // Linear footage = perimeter of the banner/sign: 2×(W+H)
           const custW = parseFloat(selOpts?._custW) || 0;
           const custH = parseFloat(selOpts?._custH) || 0;
-          const ft = custW || sqftW || custH || sqftH || qty || 1;
-          total += v * ft;
+          const w = custW || sqftW || 0;
+          const h = custH || sqftH || 0;
+          const perimeter = (w > 0 && h > 0) ? 2 * (w + h) : (w || h || qty || 1);
+          total += v * perimeter;
         }
       });
       return total;
@@ -219,9 +221,21 @@ export function AppProvider({ children }) {
       } else {
         const sizeOpt = prod.opts?.find(g => g.key==='size')?.opts?.find(o => o.id===selSizeId);
         sqftVal = sizeOpt?.sqft || 0;
-        // Try to extract w/h from preset size (e.g. stored as w/h fields or parse from label)
-        sqftW = sizeOpt?.w || Math.sqrt(sqftVal);
-        sqftH = sizeOpt?.h || Math.sqrt(sqftVal);
+        if (sizeOpt?.w) {
+          // Explicit w/h stored in admin
+          sqftW = sizeOpt.w;
+          sqftH = sizeOpt.h || (sqftVal / sqftW);
+        } else {
+          // Parse from label e.g. "2×4 ft", "2x4", "2×4"
+          const match = (sizeOpt?.l || sizeOpt?.id || '').match(/(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i);
+          if (match) {
+            sqftW = parseFloat(match[1]);
+            sqftH = parseFloat(match[2]);
+          } else {
+            sqftW = 0;
+            sqftH = 0;
+          }
+        }
       }
       const baseUnit = Math.max(sqftVal, prod.sqft.min||1) * (prod.sqft.rate||6.5);
       const unitCost = applyOpts(baseUnit, prod.opts, selOpts, 'size', sqftW, sqftH, sqftW);
