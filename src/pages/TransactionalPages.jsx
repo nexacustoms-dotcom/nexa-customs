@@ -766,6 +766,7 @@ export function SuccessPage() {
 // ── QUOTE ─────────────────────────────────────────────────────────────────────
 export function QuotePage() {
   const { showToast, cats, cfg } = useApp();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ fname: '', lname: '', email: '', phone: '', cat: 'Business Cards', qty: '', deadline: '', desc: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -844,7 +845,7 @@ export function QuotePage() {
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={() => setSent(false)}>Submit Another Quote</button>
-          <button className="btn btn-ghost" onClick={() => window.location.href = '/'}>Back to Home</button>
+          <button className="btn btn-ghost" onClick={() => navigate('/')}>Back to Home</button>
         </div>
       </div>
     );
