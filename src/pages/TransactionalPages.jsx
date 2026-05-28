@@ -911,62 +911,6 @@ export function QuotePage() {
   );
 }
 
-  return (
-    <div className="W" style={{ padding: '40px 28px 76px' }}>
-      <div style={{ textAlign: 'center', marginBottom: 36 }}>
-        <div className="badge-orange" style={{ marginBottom: 12 }}>Free Consultation</div>
-        <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,56px)', marginBottom: 8 }}>Request a Quote</h1>
-        <p style={{ fontSize: 13, color: 'var(--mu)', maxWidth: 440, margin: '0 auto' }}>Tell us about your project. We will get back to you within 1 business day.</p>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24 }} className="qp-layout">
-        <div>
-          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, marginBottom: 14 }}>
-            <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Your Information</div>
-            <div className="frow">
-              <div className="fgrp"><label className="flbl">First Name *</label><input className="finp" placeholder="Ravi" value={form.fname} onChange={upd('fname')} /></div>
-              <div className="fgrp"><label className="flbl">Last Name</label><input className="finp" placeholder="Sharma" value={form.lname} onChange={upd('lname')} /></div>
-            </div>
-            <div className="frow">
-              <div className="fgrp"><label className="flbl">Email *</label><input className="finp" type="email" placeholder="ravi@nexacustoms.ca" value={form.email} onChange={upd('email')} /></div>
-              <div className="fgrp"><label className="flbl">Phone</label><input className="finp" type="tel" placeholder="(437) 997-9921" value={form.phone} onChange={upd('phone')} /></div>
-            </div>
-          </div>
-          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, marginBottom: 14 }}>
-            <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Project Details</div>
-            <div className="fgrp"><label className="flbl">Product Category</label>
-              <select className="fsel" value={form.cat} onChange={upd('cat')}>
-                {cats.map(c => <option key={c.id}>{c.l}</option>)}
-                <option>Other / Custom</option>
-              </select>
-            </div>
-            <div className="frow">
-              <div className="fgrp"><label className="flbl">Quantity</label><input className="finp" placeholder="e.g. 500" value={form.qty} onChange={upd('qty')} /></div>
-              <div className="fgrp"><label className="flbl">Deadline</label><input className="finp" type="date" value={form.deadline} onChange={upd('deadline')} /></div>
-            </div>
-            <div className="fgrp"><label className="flbl">Project Description *</label><textarea className="ftxt" rows="4" placeholder="Sizes, finishes, deadline, special requirements..." value={form.desc} onChange={upd('desc')} /></div>
-          </div>
-          <button className="btn btn-primary" onClick={submit} style={{ width: '100%', justifyContent: 'center', fontSize: 14, padding: 14, borderRadius: 'var(--r)' }}>Send Quote Request →</button>
-        </div>
-        <div>
-          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 20, marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Why Nexa Customs?</div>
-            {['Response within 1 business day','Free digital proof before printing','Same-day pickup in Mississauga','Quality guaranteed — reprint if not satisfied','13+ years in business'].map(t => (
-              <div key={t} style={{ display: 'flex', gap: 8, fontSize: 12, marginBottom: 8, color: 'var(--mu)' }}><span style={{ color: 'var(--o)' }}>✓</span>{t}</div>
-            ))}
-          </div>
-          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 20 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Contact Directly</div>
-            {[['📞','(437) 997-9921','tel:+14379979921'],['✉️','info@nexacustoms.ca','mailto:info@nexacustoms.ca'],['📍','6033 Shawson Dr, Unit 40',null]].map(([ico, val, href]) => (
-              <div key={val} style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9, marginBottom: 10 }}>
-                {ico} {href ? <a href={href} style={{ color: 'var(--o)' }}>{val}</a> : val}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── CONTACT ───────────────────────────────────────────────────────────────────
 export function ContactPage() {
