@@ -741,12 +741,13 @@ function PagesTab() {
 // ── EMAILS TAB ────────────────────────────────────────────────────────────────
 function EmailsTab() {
   const { showToast, ls } = useApp();
-  const [v, setV] = useState({ tgToken:ls.raw('nxt_tg_token',''), tgChat:ls.raw('nxt_tg_chatid',''), ejsSvc:ls.raw('nxt_ejs_svc',''), ejsTpl:ls.raw('nxt_ejs_tpl',''), ejsKey:ls.raw('nxt_ejs_key',''), ejsTo:ls.raw('nxt_ejs_to',''), sendCust:ls.raw('nxt_send_cust','')==='1' });
+  const [v, setV] = useState({ tgToken:ls.raw('nxt_tg_token',''), tgChat:ls.raw('nxt_tg_chatid',''), ejsSvc:ls.raw('nxt_ejs_svc',''), ejsTpl:ls.raw('nxt_ejs_tpl',''), ejsCtTpl:ls.raw('nxt_ejs_ct_tpl',''), ejsKey:ls.raw('nxt_ejs_key',''), ejsTo:ls.raw('nxt_ejs_to',''), sendCust:ls.raw('nxt_send_cust','')==='1' });
   const upd = k => e => setV(prev => ({ ...prev, [k]: e.target.type==='checkbox' ? e.target.checked : e.target.value }));
 
   function save() {
     ls.setRaw('nxt_tg_token',v.tgToken); ls.setRaw('nxt_tg_chatid',v.tgChat);
     ls.setRaw('nxt_ejs_svc',v.ejsSvc); ls.setRaw('nxt_ejs_tpl',v.ejsTpl);
+    ls.setRaw('nxt_ejs_ct_tpl',v.ejsCtTpl);
     ls.setRaw('nxt_ejs_key',v.ejsKey); ls.setRaw('nxt_ejs_to',v.ejsTo);
     ls.setRaw('nxt_send_cust',v.sendCust?'1':'0');
     showToast('✅ Email settings saved!');
@@ -757,6 +758,29 @@ function EmailsTab() {
     fetch(`https://api.telegram.org/bot${v.tgToken}/sendMessage?chat_id=${v.tgChat}&text=${encodeURIComponent('✅ Test from Nexa Customs! Notifications working.')}`)
       .then(r=>r.json()).then(d => d.ok ? showToast('✅ Test sent to Telegram!') : showToast('❌ '+(d.description||'check token/chat ID')))
       .catch(() => showToast('❌ Network error'));
+  }
+
+  async function testEmail() {
+    if (!v.ejsSvc||!v.ejsTpl||!v.ejsKey||!v.ejsTo) { showToast('Fill in Service ID, Template ID, Public Key and To Email first'); return; }
+    const params = {
+      to_email: v.ejsTo, from_name: 'Nexa Customs Test', reply_to: v.ejsTo,
+      order_number: 'TEST-001', order_id: 'TEST-001',
+      customer_name: 'Test Customer', customer_email: v.ejsTo,
+      customer_phone: '(437) 997-9921', company: 'Test Co',
+      order_items: '100x Business Cards', total: '$38.05',
+      delivery: 'pickup', turnaround: 'standard', payment_method: 'stripe',
+      notes: 'This is a test email from Nexa Customs admin panel.',
+      subject: 'Test Email from Nexa Customs', message: 'This is a test email from Nexa Customs admin panel.',
+      from_email: v.ejsTo, phone: '(437) 997-9921',
+    };
+    try {
+      const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ service_id: v.ejsSvc, template_id: v.ejsTpl, user_id: v.ejsKey, template_params: params }),
+      });
+      if (res.ok) showToast('✅ Test email sent! Check your inbox.');
+      else { const t = await res.text(); showToast('❌ EmailJS error: ' + t); }
+    } catch (e) { showToast('❌ Network error: ' + e.message); }
   }
 
   return (
@@ -791,7 +815,8 @@ function EmailsTab() {
           </div>
           <div className="aform-row" style={{ marginBottom:10 }}>
             <div className="aform-grp"><label className="aform-lbl">Service ID</label><input className="ainp" value={v.ejsSvc} onChange={upd('ejsSvc')} placeholder="service_abc123" /></div>
-            <div className="aform-grp"><label className="aform-lbl">Template ID</label><input className="ainp" value={v.ejsTpl} onChange={upd('ejsTpl')} placeholder="template_xyz789" /></div>
+            <div className="aform-grp"><label className="aform-lbl">Order Template ID <span style={{color:'var(--mu)',fontSize:10}}>(for order notifications)</span></label><input className="ainp" value={v.ejsTpl} onChange={upd('ejsTpl')} placeholder="template_xyz789" /></div>
+            <div className="aform-grp"><label className="aform-lbl">Contact Template ID <span style={{color:'var(--mu)',fontSize:10}}>(for contact form — leave blank to use Order Template)</span></label><input className="ainp" value={v.ejsCtTpl} onChange={upd('ejsCtTpl')} placeholder="template_contact123 (optional)" /></div>
           </div>
           <div className="aform-row" style={{ marginBottom:10 }}>
             <div className="aform-grp"><label className="aform-lbl">Public Key</label><input className="ainp" value={v.ejsKey} onChange={upd('ejsKey')} placeholder="user_abc…" /></div>
@@ -801,7 +826,10 @@ function EmailsTab() {
             <input type="checkbox" id="send-cust" style={{ width:16,height:16 }} checked={v.sendCust} onChange={upd('sendCust')} />
             <label htmlFor="send-cust" style={{ fontSize:13 }}>Also email confirmation to the customer</label>
           </div>
-          <button className="abtn abtn-add" onClick={save}>💾 Save Email Settings</button>
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+            <button className="abtn abtn-add" onClick={save}>💾 Save Email Settings</button>
+            <button className="abtn" onClick={testEmail} style={{ background:'rgba(249,115,22,.1)', color:'var(--o)', borderColor:'rgba(249,115,22,.3)' }}>▶ Send Test Email</button>
+          </div>
         </div>
       </div>
     </div>

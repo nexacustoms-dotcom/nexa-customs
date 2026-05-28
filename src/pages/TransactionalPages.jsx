@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
+import { useApp, sendEmailJS } from '../context/AppContext';
 
 // ── CART ──────────────────────────────────────────────────────────────────────
 export function CartPage() {
@@ -192,40 +192,30 @@ export function CheckoutPage() {
     }
     const ejsSvc = cfg.ejsSvc(); const ejsTpl = cfg.ejsTpl(); const ejsKey = cfg.ejsKey(); const ejsTo = cfg.ejsTo();
     if (ejsSvc && ejsTpl && ejsKey) {
-      const sendEmail = () => {
-        window.emailjs.init(ejsKey);
-        const p = {
-          to_email:       ejsTo || 'info@nexacustoms.ca',
-          from_name:      'Nexa Customs Website',
-          reply_to:       form.email,
-          order_number:   no,
-          order_id:       no,
-          customer_name:  (form.fn + ' ' + form.ln).trim(),
-          customer_email: form.email,
-          customer_phone: form.phone || 'N/A',
-          company:        form.company || 'N/A',
-          order_items:    cart.map(i => `${i.qty}x ${i.name}`).join(', '),
-          total:          '$' + total.toFixed(2),
-          delivery:       delivery,
-          turnaround:     cart.map(i => i.turnaround || 'standard').join(', '),
-          payment_method: payMethod,
-          notes:          form.notes || 'None',
-          subject:        `New Order ${no} — ${(form.fn + ' ' + form.ln).trim()}`,
-          message:        `New order received!\n\nOrder: ${no}\nCustomer: ${(form.fn + ' ' + form.ln).trim()}\nEmail: ${form.email}\nPhone: ${form.phone}\nItems: ${cart.map(i => `${i.qty}x ${i.name}`).join(', ')}\nTotal: $${total.toFixed(2)}\nPayment: ${payMethod}`,
-        };
-        window.emailjs.send(ejsSvc, ejsTpl, p)
-          .then(() => console.log('Order email sent OK'))
-          .catch(err => console.error('EmailJS order error:', err));
+      const p = {
+        to_email:       ejsTo || 'info@nexacustoms.ca',
+        from_name:      'Nexa Customs Website',
+        reply_to:       form.email,
+        order_number:   no,
+        order_id:       no,
+        customer_name:  (form.fn + ' ' + form.ln).trim(),
+        customer_email: form.email,
+        customer_phone: form.phone || 'N/A',
+        company:        form.company || 'N/A',
+        order_items:    cart.map(i => `${i.qty}x ${i.name}`).join(', '),
+        total:          '$' + total.toFixed(2),
+        delivery:       delivery,
+        turnaround:     cart.map(i => i.turnaround || 'standard').join(', '),
+        payment_method: payMethod,
+        notes:          form.notes || 'None',
+        subject:        `New Order ${no} — ${(form.fn + ' ' + form.ln).trim()}`,
+        message:        `New order!\n\nOrder: ${no}\nCustomer: ${(form.fn + ' ' + form.ln).trim()}\nEmail: ${form.email}\nPhone: ${form.phone}\nItems: ${cart.map(i => `${i.qty}x ${i.name}`).join(', ')}\nTotal: $${total.toFixed(2)}\nPayment: ${payMethod}`,
       };
-      window.emailjs ? sendEmail() : (() => {
-        const sc = document.createElement('script');
-        sc.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
-        sc.onload = sendEmail;
-        sc.onerror = () => console.error('Failed to load EmailJS');
-        document.head.appendChild(sc);
-      })();
+      sendEmailJS(ejsSvc, ejsTpl, ejsKey, p)
+        .then(() => console.log('✅ Order email sent'))
+        .catch(err => console.error('❌ Order email failed:', err.message));
     } else {
-      console.warn('EmailJS not configured — skipping email notification');
+      console.warn('EmailJS not configured — skipping order email');
     }
   }
 
@@ -865,48 +855,45 @@ export function ContactPage() {
     setSending(true);
 
     const ejsSvc = cfg.ejsSvc();
-    const ejsTpl = cfg.ejsTpl();
     const ejsKey = cfg.ejsKey();
     const ejsTo  = cfg.ejsTo();
+    // Use dedicated contact template if set, otherwise fall back to order template
+    const ejsTpl = cfg.ejsCtTpl() || cfg.ejsTpl();
 
-    async function send() {
-      if (window.emailjs && ejsSvc && ejsTpl && ejsKey) {
-        window.emailjs.init(ejsKey);
-        const params = {
-          to_email:    ejsTo || 'info@nexacustoms.ca',
-          from_name:   form.name,
-          from_email:  form.email,
-          phone:       form.phone || 'Not provided',
-          message:     form.msg,
-          subject:     `New Contact Message from ${form.name}`,
-          reply_to:    form.email,
-        };
-        try {
-          await window.emailjs.send(ejsSvc, ejsTpl, params);
-          setSent(true);
-          setForm({ name: '', email: '', phone: '', msg: '' });
-        } catch (err) {
-          console.error('EmailJS error:', err);
-          showToast('Failed to send — please email us directly at info@nexacustoms.ca');
-        }
-      } else {
-        // EmailJS not configured — show fallback
-        showToast('Message received! We will reply within 1 business day.');
+    if (ejsSvc && ejsTpl && ejsKey) {
+      const params = {
+        to_email:    ejsTo || 'info@nexacustoms.ca',
+        from_name:   form.name,
+        from_email:  form.email,
+        reply_to:    form.email,
+        phone:       form.phone || 'Not provided',
+        message:     form.msg,
+        subject:     `New Contact Message from ${form.name}`,
+        customer_name:  form.name,
+        customer_email: form.email,
+        customer_phone: form.phone || 'Not provided',
+        order_number:   'Contact Form',
+        order_items:    'N/A',
+        total:          'N/A',
+        payment_method: 'N/A',
+        notes:          form.msg,
+      };
+      try {
+        await sendEmailJS(ejsSvc, ejsTpl, ejsKey, params);
+        console.log('✅ Contact email sent');
         setSent(true);
         setForm({ name: '', email: '', phone: '', msg: '' });
+      } catch (err) {
+        console.error('❌ Contact email failed:', err.message);
+        showToast('Failed to send — please email us directly at info@nexacustoms.ca');
       }
-      setSending(false);
-    }
-
-    if (window.emailjs) {
-      await send();
     } else {
-      const sc = document.createElement('script');
-      sc.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
-      sc.onload = send;
-      sc.onerror = () => { showToast('Could not load email service — please call us.'); setSending(false); };
-      document.head.appendChild(sc);
+      console.warn('EmailJS not configured');
+      // Still show success to user so they know we got their message
+      setSent(true);
+      setForm({ name: '', email: '', phone: '', msg: '' });
     }
+    setSending(false);
   }
 
   return (

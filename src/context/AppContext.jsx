@@ -21,7 +21,22 @@ const cfg = {
   ejsTpl:  () => import.meta.env.VITE_EJS_TPL  || ls.raw('nxt_ejs_tpl', ''),
   ejsKey:  () => import.meta.env.VITE_EJS_KEY  || ls.raw('nxt_ejs_key', ''),
   ejsTo:   () => import.meta.env.VITE_EJS_TO   || ls.raw('nxt_ejs_to', ''),
+  ejsCtTpl:() => import.meta.env.VITE_EJS_CT_TPL || ls.raw('nxt_ejs_ct_tpl', ''),
 };
+
+// Universal EmailJS sender using REST API — no library needed, shows real errors
+export async function sendEmailJS(svc, tpl, key, params) {
+  const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ service_id: svc, template_id: tpl, user_id: key, template_params: params }),
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`EmailJS ${res.status}: ${txt}`);
+  }
+  return true;
+}
 
 function isSupaReady() {
   return cfg.supaUrl().length > 10 && cfg.supaKey().length > 10;
