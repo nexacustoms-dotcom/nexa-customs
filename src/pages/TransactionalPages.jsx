@@ -213,7 +213,7 @@ export function CheckoutPage() {
       };
       sendEmailJS(ejsSvc, ejsTpl, ejsKey, p)
         .then(() => console.log('✅ Order email sent'))
-        .catch(err => console.error('❌ Order email failed:', err.message));
+        .catch(err => { console.error('❌ Order email failed:', err.message); showToast('Order saved! Email error: ' + err.message); });
     } else {
       console.warn('EmailJS not configured — skipping order email');
     }
@@ -765,23 +765,150 @@ export function SuccessPage() {
 
 // ── QUOTE ─────────────────────────────────────────────────────────────────────
 export function QuotePage() {
-  const { showToast, ls, cats, cfg } = useApp();
-  const navigate = useNavigate();
+  const { showToast, cats, cfg } = useApp();
   const [form, setForm] = useState({ fname: '', lname: '', email: '', phone: '', cat: 'Business Cards', qty: '', deadline: '', desc: '' });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
   const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   async function submit() {
     if (!form.fname || !form.email || !form.desc) { showToast('Please fill in required fields'); return; }
+    setSending(true);
+    const id = 'WEB-QUO-' + Date.now();
+
+    // Save to Supabase
     const supaUrl = cfg.supaUrl(); const supaKey = cfg.supaKey();
     if (supaUrl && supaKey && supaKey.length > 10) {
-      const id = 'WEB-QUO-' + Date.now();
-      fetch(supaUrl + '/rest/v1/orders', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: supaKey, Authorization: 'Bearer ' + supaKey, Prefer: 'return=minimal' }, body: JSON.stringify({ id, order_number: id, customer_name: form.fname + ' ' + form.lname, customer_email: form.email, customer_phone: form.phone, items: form.cat + ': ' + form.desc.slice(0, 120), total: 0, status: 'Quote', source: 'Quote Form', created_at: new Date().toISOString() }) }).catch(() => {});
+      fetch(supaUrl + '/rest/v1/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: supaKey, Authorization: 'Bearer ' + supaKey, Prefer: 'return=minimal' },
+        body: JSON.stringify({ id, order_number: id, customer_name: form.fname + ' ' + form.lname, customer_email: form.email, customer_phone: form.phone, items: form.cat + ': ' + form.desc.slice(0, 200), total: 0, status: 'Quote', source: 'Quote Form', notes: form.desc, created_at: new Date().toISOString() })
+      }).catch(e => console.error('Supabase quote save:', e));
     }
+
+    // Telegram
     const tok = cfg.tgToken(); const cid = cfg.tgChat();
-    if (tok && cid) fetch(`https://api.telegram.org/bot${tok}/sendMessage?chat_id=${cid}&text=${encodeURIComponent(`QUOTE REQUEST | ${form.fname} ${form.lname} | ${form.email} | ${form.phone} | ${form.cat} | ${form.desc.slice(0,100)}`)}`).catch(() => {});
-    showToast('Quote request sent! We will respond within 1 business day.');
-    navigate('/');
+    if (tok && cid) {
+      fetch(`https://api.telegram.org/bot${tok}/sendMessage?chat_id=${cid}&text=${encodeURIComponent(`📋 QUOTE REQUEST\n\nName: ${form.fname} ${form.lname}\nEmail: ${form.email}\nPhone: ${form.phone || 'N/A'}\nCategory: ${form.cat}\nQty: ${form.qty || 'N/A'}\nDeadline: ${form.deadline || 'N/A'}\n\n${form.desc.slice(0, 200)}`)}`).catch(() => {});
+    }
+
+    // EmailJS
+    const ejsSvc = cfg.ejsSvc(); const ejsKey = cfg.ejsKey(); const ejsTo = cfg.ejsTo();
+    const ejsTpl = cfg.ejsCtTpl() || cfg.ejsTpl();
+    if (ejsSvc && ejsTpl && ejsKey) {
+      const params = {
+        to_email:       ejsTo || 'info@nexacustoms.ca',
+        from_name:      form.fname + ' ' + form.lname,
+        from_email:     form.email,
+        reply_to:       form.email,
+        customer_name:  form.fname + ' ' + form.lname,
+        customer_email: form.email,
+        customer_phone: form.phone || 'N/A',
+        order_number:   id,
+        order_id:       id,
+        order_items:    `${form.cat} — Qty: ${form.qty || 'N/A'} — Deadline: ${form.deadline || 'N/A'}`,
+        total:          'Quote Request',
+        payment_method: 'Quote',
+        notes:          form.desc,
+        message:        `QUOTE REQUEST\n\nName: ${form.fname} ${form.lname}\nEmail: ${form.email}\nPhone: ${form.phone || 'N/A'}\nCategory: ${form.cat}\nQty: ${form.qty || 'N/A'}\nDeadline: ${form.deadline || 'N/A'}\n\nDescription:\n${form.desc}`,
+        subject:        `Quote Request from ${form.fname} ${form.lname} — ${form.cat}`,
+        phone:          form.phone || 'N/A',
+        company:        'N/A',
+        delivery:       'N/A',
+        turnaround:     'N/A',
+      };
+      try {
+        const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ service_id: ejsSvc, template_id: ejsTpl, user_id: ejsKey, template_params: params }),
+        });
+        if (res.ok) { console.log('✅ Quote email sent'); }
+        else { const t = await res.text(); console.error('❌ Quote email failed:', t); showToast('Quote saved! Email error: ' + t); }
+      } catch (e) { console.error('❌ Quote email error:', e.message); }
+    }
+
+    setSending(false);
+    setSent(true);
   }
+
+  if (sent) {
+    return (
+      <div className="W" style={{ padding: '80px 28px', textAlign: 'center' }}>
+        <div style={{ fontSize: 72, marginBottom: 20 }}>📋</div>
+        <h1 className="D" style={{ fontSize: 'clamp(28px,4vw,48px)', marginBottom: 12 }}>Quote Request Received!</h1>
+        <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 460, margin: '0 auto 12px', lineHeight: 1.75 }}>
+          Thanks <strong>{form.fname}</strong>! We have received your quote request and will get back to you at <strong>{form.email}</strong> within 1 business day.
+        </p>
+        <p style={{ fontSize: 13, color: 'var(--mu)', marginBottom: 32 }}>
+          For urgent requests call us at <a href="tel:4379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>(437) 997-9921</a>
+        </p>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button className="btn btn-primary" onClick={() => setSent(false)}>Submit Another Quote</button>
+          <button className="btn btn-ghost" onClick={() => window.location.href = '/'}>Back to Home</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="W" style={{ padding: '40px 28px 76px' }}>
+      <div style={{ textAlign: 'center', marginBottom: 36 }}>
+        <div className="badge-orange" style={{ marginBottom: 12 }}>Free Consultation</div>
+        <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,56px)', marginBottom: 8 }}>Request a Quote</h1>
+        <p style={{ fontSize: 13, color: 'var(--mu)', maxWidth: 440, margin: '0 auto' }}>Tell us about your project. We will get back to you within 1 business day.</p>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24 }} className="qp-layout">
+        <div>
+          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, marginBottom: 14 }}>
+            <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Your Information</div>
+            <div className="frow">
+              <div className="fgrp"><label className="flbl">First Name *</label><input className="finp" placeholder="Ravi" value={form.fname} onChange={upd('fname')} /></div>
+              <div className="fgrp"><label className="flbl">Last Name</label><input className="finp" placeholder="Sharma" value={form.lname} onChange={upd('lname')} /></div>
+            </div>
+            <div className="frow">
+              <div className="fgrp"><label className="flbl">Email *</label><input className="finp" type="email" placeholder="ravi@nexacustoms.ca" value={form.email} onChange={upd('email')} /></div>
+              <div className="fgrp"><label className="flbl">Phone</label><input className="finp" type="tel" placeholder="(437) 997-9921" value={form.phone} onChange={upd('phone')} /></div>
+            </div>
+          </div>
+          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, marginBottom: 14 }}>
+            <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Project Details</div>
+            <div className="fgrp"><label className="flbl">Product Category</label>
+              <select className="fsel" value={form.cat} onChange={upd('cat')}>
+                {cats.map(c => <option key={c.id}>{c.l}</option>)}
+                <option>Other / Custom</option>
+              </select>
+            </div>
+            <div className="frow">
+              <div className="fgrp"><label className="flbl">Quantity</label><input className="finp" placeholder="e.g. 500" value={form.qty} onChange={upd('qty')} /></div>
+              <div className="fgrp"><label className="flbl">Deadline</label><input className="finp" type="date" value={form.deadline} onChange={upd('deadline')} /></div>
+            </div>
+            <div className="fgrp"><label className="flbl">Project Description *</label><textarea className="ftxt" rows="4" placeholder="Sizes, finishes, deadline, special requirements..." value={form.desc} onChange={upd('desc')} /></div>
+          </div>
+          <button className="btn btn-primary" onClick={submit} disabled={sending}
+            style={{ width: '100%', justifyContent: 'center', fontSize: 14, padding: 14, borderRadius: 'var(--r)', opacity: sending ? 0.7 : 1 }}>
+            {sending ? 'Sending…' : 'Send Quote Request →'}
+          </button>
+        </div>
+        <div>
+          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 20, marginBottom: 12 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Why Nexa Customs?</div>
+            {['Response within 1 business day','Free digital proof before printing','Same-day pickup in Mississauga','Quality guaranteed — reprint if not satisfied','13+ years in business'].map(t => (
+              <div key={t} style={{ display: 'flex', gap: 8, fontSize: 12, marginBottom: 8, color: 'var(--mu)' }}><span style={{ color: 'var(--o)' }}>✓</span>{t}</div>
+            ))}
+          </div>
+          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 20 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Contact Directly</div>
+            {[['📞','(437) 997-9921','tel:+14379979921'],['✉️','info@nexacustoms.ca','mailto:info@nexacustoms.ca'],['📍','6033 Shawson Dr, Unit 40',null]].map(([ico, val, href]) => (
+              <div key={val} style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9, marginBottom: 10 }}>
+                {ico} {href ? <a href={href} style={{ color: 'var(--o)' }}>{val}</a> : val}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="W" style={{ padding: '40px 28px 76px' }}>
@@ -885,7 +1012,7 @@ export function ContactPage() {
         setForm({ name: '', email: '', phone: '', msg: '' });
       } catch (err) {
         console.error('❌ Contact email failed:', err.message);
-        showToast('Failed to send — please email us directly at info@nexacustoms.ca');
+        showToast('Email error: ' + err.message);
       }
     } else {
       console.warn('EmailJS not configured');
