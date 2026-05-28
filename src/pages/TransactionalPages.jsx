@@ -192,13 +192,40 @@ export function CheckoutPage() {
     }
     const ejsSvc = cfg.ejsSvc(); const ejsTpl = cfg.ejsTpl(); const ejsKey = cfg.ejsKey(); const ejsTo = cfg.ejsTo();
     if (ejsSvc && ejsTpl && ejsKey) {
-      const send = () => {
+      const sendEmail = () => {
         window.emailjs.init(ejsKey);
-        const p = { order_id: no, customer_name: (form.fn + ' ' + form.ln).trim(), customer_email: form.email, customer_phone: form.phone, order_items: cart.map(i => `${i.qty}x ${i.name}`).join(', '), total: '$' + total.toFixed(2), to_email: ejsTo, reply_to: form.email, payment_method: payMethod };
-        if (ejsTo) window.emailjs.send(ejsSvc, ejsTpl, p).catch(() => {});
-        if (ls.raw('nxt_send_cust', '') === '1' && form.email) window.emailjs.send(ejsSvc, ejsTpl, { ...p, to_email: form.email }).catch(() => {});
+        const p = {
+          to_email:       ejsTo || 'info@nexacustoms.ca',
+          from_name:      'Nexa Customs Website',
+          reply_to:       form.email,
+          order_number:   no,
+          order_id:       no,
+          customer_name:  (form.fn + ' ' + form.ln).trim(),
+          customer_email: form.email,
+          customer_phone: form.phone || 'N/A',
+          company:        form.company || 'N/A',
+          order_items:    cart.map(i => `${i.qty}x ${i.name}`).join(', '),
+          total:          '$' + total.toFixed(2),
+          delivery:       delivery,
+          turnaround:     cart.map(i => i.turnaround || 'standard').join(', '),
+          payment_method: payMethod,
+          notes:          form.notes || 'None',
+          subject:        `New Order ${no} — ${(form.fn + ' ' + form.ln).trim()}`,
+          message:        `New order received!\n\nOrder: ${no}\nCustomer: ${(form.fn + ' ' + form.ln).trim()}\nEmail: ${form.email}\nPhone: ${form.phone}\nItems: ${cart.map(i => `${i.qty}x ${i.name}`).join(', ')}\nTotal: $${total.toFixed(2)}\nPayment: ${payMethod}`,
+        };
+        window.emailjs.send(ejsSvc, ejsTpl, p)
+          .then(() => console.log('Order email sent OK'))
+          .catch(err => console.error('EmailJS order error:', err));
       };
-      window.emailjs ? send() : (() => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js'; sc.onload = send; document.head.appendChild(sc); })();
+      window.emailjs ? sendEmail() : (() => {
+        const sc = document.createElement('script');
+        sc.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+        sc.onload = sendEmail;
+        sc.onerror = () => console.error('Failed to load EmailJS');
+        document.head.appendChild(sc);
+      })();
+    } else {
+      console.warn('EmailJS not configured — skipping email notification');
     }
   }
 
@@ -825,9 +852,62 @@ export function QuotePage() {
 
 // ── CONTACT ───────────────────────────────────────────────────────────────────
 export function ContactPage() {
-  const { store, showToast } = useApp();
-  const [form, setForm] = useState({ name: '', email: '', msg: '' });
+  const { store, showToast, cfg } = useApp();
+  const [form, setForm] = useState({ name: '', email: '', phone: '', msg: '' });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
   const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  async function handleSend() {
+    if (!form.name.trim()) { showToast('Please enter your name'); return; }
+    if (!form.email.trim() || !form.email.includes('@')) { showToast('Please enter a valid email'); return; }
+    if (!form.msg.trim()) { showToast('Please enter a message'); return; }
+    setSending(true);
+
+    const ejsSvc = cfg.ejsSvc();
+    const ejsTpl = cfg.ejsTpl();
+    const ejsKey = cfg.ejsKey();
+    const ejsTo  = cfg.ejsTo();
+
+    async function send() {
+      if (window.emailjs && ejsSvc && ejsTpl && ejsKey) {
+        window.emailjs.init(ejsKey);
+        const params = {
+          to_email:    ejsTo || 'info@nexacustoms.ca',
+          from_name:   form.name,
+          from_email:  form.email,
+          phone:       form.phone || 'Not provided',
+          message:     form.msg,
+          subject:     `New Contact Message from ${form.name}`,
+          reply_to:    form.email,
+        };
+        try {
+          await window.emailjs.send(ejsSvc, ejsTpl, params);
+          setSent(true);
+          setForm({ name: '', email: '', phone: '', msg: '' });
+        } catch (err) {
+          console.error('EmailJS error:', err);
+          showToast('Failed to send — please email us directly at info@nexacustoms.ca');
+        }
+      } else {
+        // EmailJS not configured — show fallback
+        showToast('Message received! We will reply within 1 business day.');
+        setSent(true);
+        setForm({ name: '', email: '', phone: '', msg: '' });
+      }
+      setSending(false);
+    }
+
+    if (window.emailjs) {
+      await send();
+    } else {
+      const sc = document.createElement('script');
+      sc.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+      sc.onload = send;
+      sc.onerror = () => { showToast('Could not load email service — please call us.'); setSending(false); };
+      document.head.appendChild(sc);
+    }
+  }
 
   return (
     <div className="W" style={{ padding: '40px 28px 76px' }}>
@@ -852,12 +932,31 @@ export function ContactPage() {
       </div>
       <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, maxWidth: 560, margin: '0 auto' }}>
         <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Send Us a Message</div>
-        <div className="frow">
-          <div className="fgrp"><label className="flbl">Name</label><input className="finp" placeholder="Your name" value={form.name} onChange={upd('name')} /></div>
-          <div className="fgrp"><label className="flbl">Email</label><input className="finp" placeholder="your@email.com" value={form.email} onChange={upd('email')} /></div>
-        </div>
-        <div className="fgrp"><label className="flbl">Message</label><textarea className="ftxt" rows="4" placeholder="Tell us about your project..." value={form.msg} onChange={upd('msg')} /></div>
-        <button className="btn btn-primary" onClick={() => { showToast('Message sent! We will reply within 1 business day.'); setForm({ name:'',email:'',msg:'' }); }} style={{ width: '100%', justifyContent: 'center', fontSize: 14, padding: 13, borderRadius: 'var(--r)' }}>Send Message →</button>
+
+        {sent ? (
+          <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+            <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
+            <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 8 }}>Message Sent!</div>
+            <p style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.7, marginBottom: 20 }}>
+              Thanks for reaching out, <strong>{form.name || 'there'}</strong>! We will reply to your email within 1 business day.<br />
+              For urgent orders call us at <a href="tel:4379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>(437) 997-9921</a>.
+            </p>
+            <button className="btn btn-ghost" onClick={() => setSent(false)} style={{ fontSize: 13 }}>Send Another Message</button>
+          </div>
+        ) : (
+          <>
+            <div className="frow">
+              <div className="fgrp"><label className="flbl">Name *</label><input className="finp" placeholder="Your name" value={form.name} onChange={upd('name')} /></div>
+              <div className="fgrp"><label className="flbl">Email *</label><input className="finp" placeholder="your@email.com" value={form.email} onChange={upd('email')} /></div>
+            </div>
+            <div className="fgrp"><label className="flbl">Phone (optional)</label><input className="finp" placeholder="(416) 555-0000" value={form.phone} onChange={upd('phone')} /></div>
+            <div className="fgrp"><label className="flbl">Message *</label><textarea className="ftxt" rows="4" placeholder="Tell us about your project..." value={form.msg} onChange={upd('msg')} /></div>
+            <button className="btn btn-primary" onClick={handleSend} disabled={sending}
+              style={{ width: '100%', justifyContent: 'center', fontSize: 14, padding: 13, borderRadius: 'var(--r)', opacity: sending ? 0.7 : 1, cursor: sending ? 'wait' : 'pointer' }}>
+              {sending ? 'Sending…' : 'Send Message →'}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
