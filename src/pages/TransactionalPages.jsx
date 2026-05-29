@@ -74,7 +74,7 @@ export function CheckoutPage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ fn: '', ln: '', email: '', phone: '', company: '', notes: '' });
   const [errors, setErrors] = useState({});
-  const [delivery, setDelivery] = useState('pickup');
+  const [shipping, setShipping] = useState({ address: '', city: '', province: 'ON', postal: '', country: 'Canada' });
   const [turnaround, setTurnaround] = useState('standard');
   const [payMethod, setPayMethod] = useState('stripe');
   const [stripeErr, setStripeErr] = useState('');
@@ -127,8 +127,20 @@ export function CheckoutPage() {
     return Object.keys(errs).length === 0;
   }
 
+  function validateStep2() {
+    if (delivery === 'pickup') return true;
+    const errs = {};
+    if (!shipping.address.trim()) errs.ship_address = 'Street address is required';
+    if (!shipping.city.trim()) errs.ship_city = 'City is required';
+    if (!shipping.postal.trim()) errs.ship_postal = 'Postal code is required';
+    else if (!/^[A-Za-z]\d[A-Za-z][\s]?\d[A-Za-z]\d$/.test(shipping.postal.trim())) errs.ship_postal = 'Enter a valid Canadian postal code (e.g. L5T 1J6)';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  }
+
   function goNext() {
     if (step === 1 && !validateStep1()) return;
+    if (step === 2 && !validateStep2()) return;
     setStep(s => Math.min(s + 1, 4));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -181,7 +193,7 @@ export function CheckoutPage() {
       fetch(supaUrl + '/rest/v1/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: supaKey, Authorization: 'Bearer ' + supaKey, Prefer: 'return=minimal,resolution=merge-duplicates' },
-        body: JSON.stringify({ id: 'WEB-' + no, order_number: no, customer_name: (form.fn + ' ' + form.ln).trim(), billing_name: billing.sameAsContact ? (form.fn + ' ' + form.ln).trim() : (billing.fn + ' ' + billing.ln).trim(), billing_address: billing.sameAsContact ? '' : `${billing.address}, ${billing.city}, ${billing.province} ${billing.postal}, ${billing.country}`, customer_email: form.email, customer_phone: form.phone, company: form.company, items: itemsStr, total, delivery, turnaround, status: 'New', source: 'Website', payment_method: payMethod, stripe_pm_id: pmId, artwork_urls: artworkFiles.filter(f => f.url).map(f => f.url).join(', '), artwork_files: artworkFiles.map(f => f.name).join(', '), notes: form.notes, created_at: new Date().toISOString() }),
+        body: JSON.stringify({ id: 'WEB-' + no, order_number: no, customer_name: (form.fn + ' ' + form.ln).trim(), billing_name: billing.sameAsContact ? (form.fn + ' ' + form.ln).trim() : (billing.fn + ' ' + billing.ln).trim(), billing_address: billing.sameAsContact ? '' : `${billing.address}, ${billing.city}, ${billing.province} ${billing.postal}, ${billing.country}`, shipping_address: delivery !== 'pickup' ? `${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}, ${shipping.country}` : 'Pickup', customer_email: form.email, customer_phone: form.phone, company: form.company, items: itemsStr, total, delivery, turnaround, status: 'New', source: 'Website', payment_method: payMethod, stripe_pm_id: pmId, artwork_urls: artworkFiles.filter(f => f.url).map(f => f.url).join(', '), artwork_files: artworkFiles.map(f => f.name).join(', '), notes: form.notes, created_at: new Date().toISOString() }),
       }).catch(() => {});
     }
     const tok = cfg.tgToken(); const cid = cfg.tgChat();
@@ -204,12 +216,12 @@ export function CheckoutPage() {
         company:        form.company || 'N/A',
         order_items:    cart.map(i => `${i.qty}x ${i.name}`).join(', '),
         total:          '$' + total.toFixed(2),
-        delivery:       delivery,
+        delivery:       delivery === 'pickup' ? 'Free Pickup — Mississauga' : delivery === 'post' ? `Canada Post — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : `Courier — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}`,
         turnaround:     cart.map(i => i.turnaround || 'standard').join(', '),
         payment_method: payMethod,
-        notes:          form.notes || 'None',
+        notes:          (form.notes || '') + (delivery !== 'pickup' ? `\nShip To: ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : ''),
         subject:        `New Order ${no} — ${(form.fn + ' ' + form.ln).trim()}`,
-        message:        `New order!\n\nOrder: ${no}\nCustomer: ${(form.fn + ' ' + form.ln).trim()}\nEmail: ${form.email}\nPhone: ${form.phone}\nItems: ${cart.map(i => `${i.qty}x ${i.name}`).join(', ')}\nTotal: $${total.toFixed(2)}\nPayment: ${payMethod}`,
+        message:        `New order!\n\nOrder: ${no}\nCustomer: ${(form.fn + ' ' + form.ln).trim()}\nEmail: ${form.email}\nPhone: ${form.phone}\nItems: ${cart.map(i => `${i.qty}x ${i.name}`).join(', ')}\nTotal: $${total.toFixed(2)}\nDelivery: ${delivery}${delivery !== 'pickup' ? `\nShip To: ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : ' (Pickup at 6033 Shawson Dr)'}\nPayment: ${payMethod}`,
       };
       sendEmailJS(ejsSvc, ejsTpl, ejsKey, p)
         .then(() => console.log('✅ Order email sent'))
@@ -423,6 +435,52 @@ export function CheckoutPage() {
                     </div>
                   ))}
                 </div>
+
+                {/* Shipping address — only shown when post or courier selected */}
+                {delivery !== 'pickup' && (
+                  <div style={{ background: 'var(--sf)', border: `1px solid ${errors.ship_address || errors.ship_city || errors.ship_postal ? '#ef4444' : 'var(--bd)'}`, borderRadius: 'var(--rl)', padding: 26, marginBottom: 14 }}>
+                    <div className="D" style={{ fontSize: 22, marginBottom: 4 }}>Shipping Address</div>
+                    <p style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 18, lineHeight: 1.6 }}>Enter the address where you want your order delivered.</p>
+                    <div className="fgrp">
+                      <label className="flbl">Street Address *</label>
+                      <input className="finp" placeholder="123 Main Street, Unit 4" value={shipping.address}
+                        onChange={e => { setShipping(s => ({...s, address: e.target.value})); setErrors(er => ({...er, ship_address: ''})); }}
+                        style={{ borderColor: errors.ship_address ? '#ef4444' : '' }} />
+                      {errors.ship_address && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>⚠ {errors.ship_address}</div>}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <div className="fgrp">
+                        <label className="flbl">City *</label>
+                        <input className="finp" placeholder="Mississauga" value={shipping.city}
+                          onChange={e => { setShipping(s => ({...s, city: e.target.value})); setErrors(er => ({...er, ship_city: ''})); }}
+                          style={{ borderColor: errors.ship_city ? '#ef4444' : '' }} />
+                        {errors.ship_city && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>⚠ {errors.ship_city}</div>}
+                      </div>
+                      <div className="fgrp">
+                        <label className="flbl">Province</label>
+                        <select className="fsel" value={shipping.province} onChange={e => setShipping(s => ({...s, province: e.target.value}))}>
+                          {['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'].map(p => <option key={p}>{p}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <div className="fgrp">
+                        <label className="flbl">Postal Code * <span style={{ color: 'var(--mu)', fontSize: 10 }}>(e.g. L5T 1J6)</span></label>
+                        <input className="finp" placeholder="L5T 1J6" value={shipping.postal} maxLength={7}
+                          onChange={e => { setShipping(s => ({...s, postal: e.target.value.toUpperCase()})); setErrors(er => ({...er, ship_postal: ''})); }}
+                          style={{ borderColor: errors.ship_postal ? '#ef4444' : '', fontFamily: "'DM Mono',monospace", letterSpacing: '.1em' }} />
+                        {errors.ship_postal && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>⚠ {errors.ship_postal}</div>}
+                      </div>
+                      <div className="fgrp">
+                        <label className="flbl">Country</label>
+                        <select className="fsel" value={shipping.country} onChange={e => setShipping(s => ({...s, country: e.target.value}))}>
+                          <option>Canada</option>
+                          <option>United States</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 26, marginBottom: 14 }}>
                   <div className="D" style={{ fontSize: 22, marginBottom: 4 }}>Turnaround Summary</div>
@@ -748,7 +806,13 @@ export function SuccessPage() {
       <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 460, margin: '0 auto 12px', lineHeight: 1.7 }}>Your order has been received. We will be in touch within 1 business day with your proof.</p>
       <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 18, color: 'var(--o)', marginBottom: 28, background: 'rgba(249,115,22,.1)', border: '1px solid rgba(249,115,22,.2)', borderRadius: 8, padding: '10px 24px', display: 'inline-block' }}>{orderNo}</div>
       <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 14, padding: 22, maxWidth: 440, width: '100%', marginBottom: 28, textAlign: 'left' }}>
-        {[['📎 Artwork', 'Email files to info@nexacustoms.ca with your order number'],['📍 Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM'],['📞 Questions?', 'Call or text (437) 997-9921']].map(([k, v]) => (
+        {[
+          ['📎 Artwork', 'Email files to info@nexacustoms.ca with your order number'],
+          delivery === 'pickup'
+            ? ['📍 Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM']
+            : ['📦 Shipping To', `${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal} · ${delivery === 'post' ? 'Canada Post 3–7 days' : 'Courier 1–2 days'}`],
+          ['📞 Questions?', 'Call or text (437) 997-9921']
+        ].map(([k, v]) => (
           <div key={k} style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--bd)' }}>
             <span style={{ color: 'var(--o)', flexShrink: 0, fontWeight: 600 }}>{k}</span>
             <span style={{ color: 'var(--mu)' }}>{v}</span>
