@@ -81,6 +81,7 @@ export function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [artworkFiles, setArtworkFiles] = useState([]);
   const [artworkUploading, setArtworkUploading] = useState(false);
+  const [delivery, setDelivery] = useState('pickup');
   const [billing, setBilling] = useState({
     sameAsContact: true,
     name: '',
