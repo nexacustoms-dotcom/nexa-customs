@@ -77,6 +77,8 @@ export function CheckoutPage() {
   const [shipping, setShipping] = useState({ address: '', city: '', province: 'ON', postal: '', country: 'Canada' });
   const [turnaround, setTurnaround] = useState('standard');
   const [payMethod, setPayMethod] = useState('stripe');
+  const [stripeReady, setStripeReady] = useState(false);
+  const [stripeCheckDone, setStripeCheckDone] = useState(false);
   const [stripeErr, setStripeErr] = useState('');
   const [placing, setPlacing] = useState(false);
   const [artworkFiles, setArtworkFiles] = useState([]);
@@ -103,18 +105,28 @@ export function CheckoutPage() {
   useEffect(() => {
     if (payMethod !== 'stripe' || step !== 4) return;
     const pk = cfg.stripePk();
-    if (!pk || pk.length < 10 || typeof window.Stripe === 'undefined') return;
+    if (!pk || pk.length < 10 || typeof window.Stripe === 'undefined') {
+      // Give Stripe script time to load, then mark check done
+      setTimeout(() => setStripeCheckDone(true), 3000);
+      return;
+    }
     try {
       const stripe = window.Stripe(pk);
       const elements = stripe.elements({ appearance: { theme: 'night', variables: { colorPrimary: '#f97316', colorBackground: '#242429', colorText: '#f0ede8', borderRadius: '9px' } } });
-      const card = elements.create('card', { 
+      const card = elements.create('card', {
         hidePostalCode: true,
-        style: { base: { color: '#f0ede8', fontSize: '14px', fontFamily: 'DM Sans,sans-serif', '::placeholder': { color: '#7c7c8a' } } } 
+        style: { base: { color: '#f0ede8', fontSize: '14px', fontFamily: 'DM Sans,sans-serif', '::placeholder': { color: '#7c7c8a' } } }
       });
-      setTimeout(() => { try { card.mount('#stripe-card-el'); } catch {} }, 150);
+      setTimeout(() => {
+        try { card.mount('#stripe-card-el'); setStripeReady(true); } catch {}
+        setStripeCheckDone(true);
+      }, 500);
       card.on('change', e => setStripeErr(e.error?.message || ''));
       stripeRef.current = stripe; cardRef.current = card;
-    } catch (e) { console.warn('Stripe:', e.message); }
+    } catch (e) {
+      console.warn('Stripe:', e.message);
+      setTimeout(() => setStripeCheckDone(true), 3000);
+    }
   }, [payMethod, step]);
 
   const upd = k => e => { setForm(f => ({ ...f, [k]: e.target.value })); setErrors(er => ({ ...er, [k]: '' })); };
@@ -653,9 +665,9 @@ export function CheckoutPage() {
                           <label className="flbl">Card Details</label>
                           <div id="stripe-card-el" style={{ background: 'var(--s2)', border: `1px solid ${stripeErr ? '#ef4444' : 'var(--bd)'}`, borderRadius: 9, padding: 14, minHeight: 44, transition: 'border-color .2s' }} />
                           {stripeErr && <div style={{ color: '#f87171', fontSize: 11, marginTop: 5 }}>⚠ {stripeErr}</div>}
-                          {cfg.stripePk() && !stripeRef.current && (
+                          {cfg.stripePk() && stripeCheckDone && !stripeReady && (
                             <div style={{ fontSize: 12, color: '#f87171', marginTop: 8, background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 7, padding: '10px 12px', lineHeight: 1.6 }}>
-                              ⚠️ <strong>Payment form blocked.</strong> An ad blocker (e.g. uBlock Origin) is preventing the card form from loading. Please disable it for this page and refresh, or <a href="tel:4379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>call us at (437) 997-9921</a> to place your order.
+                              ⚠️ <strong>Payment form not loading.</strong> Try disabling any ad blocker for this page and refreshing, or <a href="tel:4379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>call us at (437) 997-9921</a>.
                             </div>
                           )}
                           {!cfg.stripePk() && <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 8, background: 'rgba(249,115,22,.06)', border: '1px solid rgba(249,115,22,.15)', borderRadius: 7, padding: '8px 12px' }}>💡 Stripe not configured — order will be processed as invoice.</div>}
