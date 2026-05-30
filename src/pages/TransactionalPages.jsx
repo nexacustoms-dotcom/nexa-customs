@@ -341,6 +341,8 @@ export function CheckoutPage() {
         await saveOrder(no);
       }
       sessionStorage.setItem('last_order_no', no);
+      sessionStorage.setItem('last_delivery', delivery);
+      sessionStorage.setItem('last_ship_addr', delivery !== 'pickup' ? `${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : '');
       clearCart();
       navigate('/order-confirmed');
     } catch (err) {
@@ -811,7 +813,10 @@ export function CheckoutPage() {
 // ── SUCCESS ───────────────────────────────────────────────────────────────────
 export function SuccessPage() {
   const navigate = useNavigate();
-  const orderNo = sessionStorage.getItem('last_order_no') || 'NCX—';
+  const orderNo   = sessionStorage.getItem('last_order_no') || 'NCX—';
+  const deliveryType = sessionStorage.getItem('last_delivery') || 'pickup';
+  const shipAddr  = sessionStorage.getItem('last_ship_addr') || '';
+
   return (
     <div style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 20px' }}>
       <div style={{ fontSize: 72, marginBottom: 20 }}>🎉</div>
@@ -821,10 +826,10 @@ export function SuccessPage() {
       <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 14, padding: 22, maxWidth: 440, width: '100%', marginBottom: 28, textAlign: 'left' }}>
         {[
           ['📎 Artwork', 'Email files to info@nexacustoms.ca with your order number'],
-          delivery === 'pickup'
+          deliveryType === 'pickup'
             ? ['📍 Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM']
-            : ['📦 Shipping To', `${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal} · ${delivery === 'post' ? 'Canada Post 3–7 days' : 'Courier 1–2 days'}`],
-          ['📞 Questions?', 'Call or text (437) 997-9921']
+            : ['📦 Shipping To', `${shipAddr} · ${deliveryType === 'post' ? 'Canada Post 3–7 days' : 'Courier 1–2 days'}`],
+          ['📞 Questions?', 'Call or text (437) 997-9921'],
         ].map(([k, v]) => (
           <div key={k} style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--bd)' }}>
             <span style={{ color: 'var(--o)', flexShrink: 0, fontWeight: 600 }}>{k}</span>
