@@ -78,14 +78,24 @@ function mergeOverrides(prods, overrides) {
     if (!o) return p;
     return {
       ...p,
-      pricing:  o.pricing  || p.pricing,
-      sqft:     o.sqft     ? { ...p.sqft, ...o.sqft } : p.sqft,
-      imgs:     o.imgs?.length ? o.imgs : p.imgs,
-      badge:    o.badge    !== undefined ? o.badge    : p.badge,
-      name:     o.name     || p.name,
-      desc:     o.desc     || p.desc,
-      disabled: o.disabled || false,
-      opts:     o.opts     !== undefined ? o.opts     : p.opts,
+      pricing:        o.pricing         || p.pricing,
+      sqft:           o.sqft            ? { ...p.sqft, ...o.sqft } : p.sqft,
+      imgs:           o.imgs?.length    ? o.imgs : p.imgs,
+      badge:          o.badge           !== undefined ? o.badge    : p.badge,
+      name:           o.name            || p.name,
+      desc:           o.desc            || p.desc,
+      disabled:       o.disabled        || false,
+      opts:           o.opts            !== undefined ? o.opts     : p.opts,
+      // Turnaround availability
+      rush_ok:        o.rush_ok         !== undefined ? o.rush_ok         : p.rush_ok,
+      express_ok:     o.express_ok      !== undefined ? o.express_ok      : p.express_ok,
+      // Label configurator fields
+      label_configurator: o.label_configurator !== undefined ? o.label_configurator : p.label_configurator,
+      lbl_shapes:     o.lbl_shapes      !== undefined ? o.lbl_shapes      : p.lbl_shapes,
+      lbl_sizes:      o.lbl_sizes       !== undefined ? o.lbl_sizes       : p.lbl_sizes,
+      lbl_stocks:     o.lbl_stocks      !== undefined ? o.lbl_stocks      : p.lbl_stocks,
+      lbl_ink:        o.lbl_ink         !== undefined ? o.lbl_ink         : p.lbl_ink,
+      lbl_finishing:  o.lbl_finishing   !== undefined ? o.lbl_finishing   : p.lbl_finishing,
     };
   });
 }
@@ -172,7 +182,27 @@ export function AppProvider({ children }) {
   const setProds = useCallback((updater) => {
     setProdsState(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
-      const overrides = next.map(p => ({ id: p.id, name: p.name, desc: p.desc, badge: p.badge, disabled: p.disabled || false, imgs: p.imgs || [], pricing: p.pricing, sqft: p.sqft || null, opts: p.opts || [] }));
+      const overrides = next.map(p => ({
+        id:                 p.id,
+        name:               p.name,
+        desc:               p.desc,
+        badge:              p.badge,
+        disabled:           p.disabled || false,
+        imgs:               p.imgs || [],
+        pricing:            p.pricing,
+        sqft:               p.sqft || null,
+        opts:               p.opts || [],
+        // Turnaround
+        rush_ok:            p.rush_ok,
+        express_ok:         p.express_ok,
+        // Label configurator
+        label_configurator: p.label_configurator,
+        lbl_shapes:         p.lbl_shapes,
+        lbl_sizes:          p.lbl_sizes,
+        lbl_stocks:         p.lbl_stocks,
+        lbl_ink:            p.lbl_ink,
+        lbl_finishing:      p.lbl_finishing,
+      }));
       ls.set('nxt_pricing', overrides);
       supaUpsert('site_config', { id: 'products', data: overrides, updated_at: new Date().toISOString() });
       return next;
