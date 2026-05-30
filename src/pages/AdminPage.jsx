@@ -1177,6 +1177,110 @@ function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null);
+
+  function printOrderSheet(o) {
+    const win = window.open('', '_blank');
+    const items = (o.items || '').split(',').map(i => `<li style="padding:4px 0;border-bottom:1px solid #eee">${i.trim()}</li>`).join('');
+    win.document.write(`<!DOCTYPE html><html><head><title>Order ${o.order_number}</title>
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      body{font-family:Arial,sans-serif;color:#111;padding:32px;max-width:720px;margin:0 auto}
+      .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #f97316}
+      .logo{font-size:22px;font-weight:900;letter-spacing:-.5px}
+      .logo span{color:#f97316}
+      .order-no{font-size:28px;font-weight:900;color:#f97316;font-family:monospace}
+      .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+      .badge-new{background:#fef3c7;color:#92400e}
+      .badge-inprog{background:#dbeafe;color:#1e40af}
+      .badge-ready{background:#d1fae5;color:#065f46}
+      .badge-done{background:#f3f4f6;color:#374151}
+      .section{margin-bottom:20px}
+      .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#666;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #eee}
+      .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f5f5f5}
+      .row strong{color:#111}
+      .items{background:#fff8f0;border:1px solid #f97316;border-radius:8px;padding:14px;margin-bottom:20px}
+      .items ul{list-style:none;padding:0}
+      .items li{padding:5px 0;font-size:13px;border-bottom:1px solid #ffe4cc}
+      .items li:last-child{border:none}
+      .total{font-size:28px;font-weight:900;color:#f97316}
+      .notes{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;font-size:13px;color:#374151;min-height:60px}
+      .footer{margin-top:32px;padding-top:16px;border-top:2px solid #f97316;display:flex;justify-content:space-between;font-size:11px;color:#666}
+      .artwork-box{background:#fffbeb;border:2px dashed #f59e0b;border-radius:8px;padding:12px;margin-top:10px}
+      .print-instructions{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px;font-size:12px;color:#166534;margin-bottom:20px}
+      @media print{body{padding:16px}.print-instructions{display:none}}
+    </style></head><body>
+    <div class="print-instructions">📄 <strong>Print Tip:</strong> Press Ctrl+P (or Cmd+P on Mac) → set margins to Minimum → Print. This sheet fits on one A4 page.</div>
+    <div class="header">
+      <div>
+        <div class="logo">NEXA <span>CUSTOMS</span> INC.</div>
+        <div style="font-size:12px;color:#666;margin-top:4px">Print · Signs · Graphics · Mississauga</div>
+        <div style="font-size:12px;color:#666">(437) 997-9921 · info@nexacustoms.ca</div>
+      </div>
+      <div style="text-align:right">
+        <div class="order-no">${o.order_number || o.id}</div>
+        <div style="margin-top:4px"><span class="badge badge-${o.status === 'New' ? 'new' : o.status === 'In Progress' ? 'inprog' : o.status === 'Ready' ? 'ready' : 'done'}">${o.status || 'New'}</span></div>
+        <div style="font-size:12px;color:#666;margin-top:4px">${new Date(o.created_at || Date.now()).toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' })}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+      <div class="section">
+        <div class="section-title">Customer Info</div>
+        ${[['Name', o.customer_name],['Email', o.customer_email],['Phone', o.customer_phone],['Company', o.company]].filter(([,v])=>v).map(([l,v])=>`<div class="row"><span style="color:#666">${l}</span><strong>${v}</strong></div>`).join('')}
+      </div>
+      <div class="section">
+        <div class="section-title">Order Details</div>
+        ${[['Delivery', o.delivery || (o.shipping_address === 'Pickup' ? 'Free Pickup' : o.shipping_address)],['Turnaround', o.turnaround],['Payment', o.payment_method],['Source', o.source]].filter(([,v])=>v).map(([l,v])=>`<div class="row"><span style="color:#666">${l}</span><strong>${v}</strong></div>`).join('')}
+        ${o.shipping_address && o.shipping_address !== 'Pickup' ? `<div class="row"><span style="color:#666">Ship To</span><strong style="font-size:11px">${o.shipping_address}</strong></div>` : ''}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Items Ordered</div>
+      <div class="items"><ul>${items}</ul></div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div>
+        <div style="font-size:11px;color:#666;text-transform:uppercase;font-weight:700;letter-spacing:.1em">Order Total</div>
+        <div class="total">$${parseFloat(o.total || 0).toFixed(2)} CAD</div>
+      </div>
+      <div style="text-align:right;font-size:12px;color:#666">
+        <div>HST included</div>
+        <div style="margin-top:2px">Payment: ${o.payment_method || 'N/A'}</div>
+      </div>
+    </div>
+
+    ${o.artwork_urls || o.artwork_files ? `
+    <div class="section">
+      <div class="section-title">Artwork</div>
+      <div class="artwork-box">
+        <div style="font-size:12px;font-weight:700;margin-bottom:4px">📎 Artwork Files</div>
+        <div style="font-size:12px;color:#666">${o.artwork_files || 'See attached files'}</div>
+        ${o.artwork_urls ? `<div style="font-size:11px;color:#0066cc;margin-top:4px;word-break:break-all">${o.artwork_urls}</div>` : ''}
+      </div>
+    </div>` : `
+    <div class="section">
+      <div class="section-title">Artwork</div>
+      <div class="artwork-box">
+        <div style="font-size:12px;font-weight:700;color:#92400e">⚠️ Artwork Not Uploaded</div>
+        <div style="font-size:12px;color:#666;margin-top:4px">Customer will send artwork to info@nexacustoms.ca with order number ${o.order_number}</div>
+      </div>
+    </div>`}
+
+    <div class="section">
+      <div class="section-title">Notes / Special Instructions</div>
+      <div class="notes">${o.notes || '—'}</div>
+    </div>
+
+    <div class="footer">
+      <div>Nexa Customs Inc. · 6033 Shawson Dr, Unit 40, Mississauga, ON L5T 1J6</div>
+      <div>Printed: ${new Date().toLocaleString('en-CA')}</div>
+    </div>
+    </body></html>`);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+  }
   const [filter, setFilter] = useState('all');
 
   async function loadOrders() {
@@ -1380,6 +1484,7 @@ function OrdersTab() {
               {/* Quick actions */}
               <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
                 <a href={`mailto:${selected.customer_email}?subject=Your Nexa Customs Order ${selected.order_number}`} style={{ flex: 1, padding: '9px 12px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--tx)', fontSize: 12, fontWeight: 600, textAlign: 'center', cursor: 'pointer', textDecoration: 'none', display: 'block' }}>✉️ Email</a>
+                <button onClick={() => printOrderSheet(selected)} style={{ flex: 1, padding: '9px 12px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--tx)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif" }}>🖨️ Print</button>
                 <a href={`tel:${selected.customer_phone}`} style={{ flex: 1, padding: '9px 12px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--tx)', fontSize: 12, fontWeight: 600, textAlign: 'center', cursor: 'pointer', textDecoration: 'none', display: 'block' }}>📞 Call</a>
               </div>
             </div>

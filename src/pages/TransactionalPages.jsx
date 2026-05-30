@@ -434,19 +434,23 @@ export function CheckoutPage() {
                     { id: 'post',   ico: '📬', label: 'Canada Post Standard', sub: '3–7 business days · Tracking included', price: `$${pricing.shipping_post.toFixed(2)}`, tag: '' },
                     { id: 'courier',ico: '🚀', label: 'Courier Express', sub: '1–2 business days · FedEx or UPS', price: `$${pricing.shipping_courier.toFixed(2)}`, tag: 'Fastest' },
                   ].map(opt => (
-                    <div key={opt.id} onClick={() => setDelivery(opt.id)} style={{ display: 'flex', alignItems: 'center', gap: 14, background: delivery === opt.id ? 'rgba(249,115,22,.08)' : 'var(--s2)', border: `2px solid ${delivery === opt.id ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all .18s', marginBottom: 10, position: 'relative' }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 9, background: delivery === opt.id ? 'rgba(249,115,22,.15)' : 'var(--dk)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>{opt.ico}</div>
-                      <div style={{ flex: 1 }}>
+                    <div key={opt.id} onClick={() => setDelivery(opt.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, background: delivery === opt.id ? 'rgba(249,115,22,.08)' : 'var(--s2)', border: `2px solid ${delivery === opt.id ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all .18s', marginBottom: 10 }}>
+                      {/* Radio */}
+                      <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${delivery === opt.id ? 'var(--o)' : 'var(--bd)'}`, background: delivery === opt.id ? 'var(--o)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all .15s' }}>
+                        {delivery === opt.id && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#000' }} />}
+                      </div>
+                      {/* Icon */}
+                      <div style={{ width: 36, height: 36, borderRadius: 9, background: delivery === opt.id ? 'rgba(249,115,22,.15)' : 'var(--dk)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{opt.ico}</div>
+                      {/* Label */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           {opt.label}
                           {opt.tag && <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 20, background: 'var(--ol)', color: 'var(--o)', border: '1px solid var(--o25)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{opt.tag}</span>}
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.4 }}>{opt.sub}</div>
                       </div>
+                      {/* Price */}
                       <div style={{ fontWeight: 800, fontSize: 16, color: delivery === opt.id ? 'var(--o)' : 'var(--tx)', flexShrink: 0 }}>{opt.price}</div>
-                      <div style={{ position: 'absolute', top: 14, right: 14, width: 18, height: 18, borderRadius: '50%', border: `2px solid ${delivery === opt.id ? 'var(--o)' : 'var(--bd)'}`, background: delivery === opt.id ? 'var(--o)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {delivery === opt.id && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#000' }} />}
-                      </div>
                     </div>
                   ))}
                 </div>
