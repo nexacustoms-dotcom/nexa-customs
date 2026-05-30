@@ -203,11 +203,56 @@ export function CheckoutPage() {
     const supaUrl = cfg.supaUrl(); const supaKey = cfg.supaKey();
     const itemsStr = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
     if (supaUrl && supaKey && supaKey.length > 10) {
-      fetch(supaUrl + '/rest/v1/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', apikey: supaKey, Authorization: 'Bearer ' + supaKey, Prefer: 'return=minimal,resolution=merge-duplicates' },
-        body: JSON.stringify({ id: 'WEB-' + no, order_number: no, customer_name: (form.fn + ' ' + form.ln).trim(), billing_name: billing.sameAsContact ? (form.fn + ' ' + form.ln).trim() : (billing.fn + ' ' + billing.ln).trim(), billing_address: billing.sameAsContact ? '' : `${billing.address}, ${billing.city}, ${billing.province} ${billing.postal}, ${billing.country}`, shipping_address: delivery !== 'pickup' ? `${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}, ${shipping.country}` : 'Pickup', customer_email: form.email, customer_phone: form.phone, company: form.company, items: itemsStr, total, delivery, turnaround, status: 'New', source: 'Website', payment_method: payMethod, stripe_pm_id: pmId, artwork_urls: artworkFiles.filter(f => f.url).map(f => f.url).join(', '), artwork_files: artworkFiles.map(f => f.name).join(', '), notes: form.notes, created_at: new Date().toISOString() }),
-      }).catch(() => {});
+      const orderData = {
+        id: 'WEB-' + no,
+        order_number: no,
+        customer_name: (form.fn + ' ' + form.ln).trim(),
+        customer_email: form.email,
+        customer_phone: form.phone,
+        company: form.company || '',
+        items: itemsStr,
+        total,
+        delivery,
+        turnaround,
+        status: 'New',
+        source: 'Website',
+        payment_method: payMethod,
+        stripe_pm_id: pmId || '',
+        artwork_urls: artworkFiles.filter(f => f.url).map(f => f.url).join(', '),
+        artwork_files: artworkFiles.map(f => f.name).join(', '),
+        notes: form.notes || '',
+        created_at: new Date().toISOString(),
+      };
+      // Try full save first (with new columns)
+      try {
+        const res = await fetch(supaUrl + '/rest/v1/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: supaKey, Authorization: 'Bearer ' + supaKey, Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            ...orderData,
+            billing_name: billing.sameAsContact ? (form.fn + ' ' + form.ln).trim() : (billing.fn + ' ' + billing.ln).trim(),
+            billing_address: billing.sameAsContact ? '' : `${billing.address}, ${billing.city}, ${billing.province} ${billing.postal}`,
+            shipping_address: delivery !== 'pickup' ? `${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : 'Pickup',
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          console.error('Supabase order save error:', err);
+          // Fallback: save without new columns in case they don't exist yet
+          const res2 = await fetch(supaUrl + '/rest/v1/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', apikey: supaKey, Authorization: 'Bearer ' + supaKey, Prefer: 'return=minimal' },
+            body: JSON.stringify(orderData),
+          });
+          if (!res2.ok) {
+            const err2 = await res2.text();
+            console.error('Supabase fallback save error:', err2);
+            showToast('Order placed! Note: database save failed — ' + err2.slice(0, 80));
+          }
+        }
+      } catch (e) {
+        console.error('Supabase network error:', e.message);
+      }
     }
     const tok = cfg.tgToken(); const cid = cfg.tgChat();
     if (tok && cid) {
