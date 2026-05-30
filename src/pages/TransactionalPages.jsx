@@ -204,7 +204,7 @@ export function CheckoutPage() {
     const itemsStr = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
     if (supaUrl && supaKey && supaKey.length > 10) {
       const orderData = {
-        id: 'WEB-' + no,
+        id: no,
         order_number: no,
         customer_name: (form.fn + ' ' + form.ln).trim(),
         customer_email: form.email,
@@ -906,7 +906,7 @@ export function QuotePage() {
   async function submit() {
     if (!form.fname || !form.email || !form.desc) { showToast('Please fill in required fields'); return; }
     setSending(true);
-    const id = 'WEB-QUO-' + Date.now();
+    const id = 'QUO-' + Math.floor(10000 + Math.random() * 90000);
 
     // Save to Supabase
     const supaUrl = cfg.supaUrl(); const supaKey = cfg.supaKey();
