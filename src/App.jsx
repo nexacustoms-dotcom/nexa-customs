@@ -7,7 +7,6 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import ProductCard from './components/ProductCard';
 import AdminPage from './pages/AdminPage';
-import LabelsStickersPage from './pages/LabelsStickersPage';
 import { CartPage, CheckoutPage, SuccessPage, QuotePage, ContactPage } from './pages/TransactionalPages';
 
 // ── POLICY DATA ───────────────────────────────────────────────────────────────
@@ -139,11 +138,6 @@ function CategoryPage() {
 }
 
 // ── PRODUCT DETAIL PAGE WRAPPER ───────────────────────────────────────────────
-function LabelsStickersWrapper() {
-  const { productSlug } = useParams();
-  return <LabelsStickersPage productId={productSlug} />;
-}
-
 function ProductPageWrapper() {
   const { productSlug } = useParams();
   const { prods, setCurProd, curProd } = useApp();
@@ -215,8 +209,6 @@ function AppRoutes() {
         {/* Main pages */}
         <Route path="/" element={<Layout><HomePage /></Layout>} />
         <Route path="/products" element={<Layout><ProductsPage /></Layout>} />
-        <Route path="/products/labels-stickers" element={<Layout><LabelsStickersPage productId="sheet-stickers" /></Layout>} />
-        <Route path="/products/labels-stickers/:productSlug" element={<Layout><LabelsStickersWrapper /></Layout>} />
         <Route path="/products/:catSlug" element={<Layout><ProductsPage /></Layout>} />
         <Route path="/products/:catSlug/:productSlug" element={<Layout><ProductPageWrapper /></Layout>} />
         <Route path="/cart" element={<Layout><CartPage /></Layout>} />

@@ -937,6 +937,33 @@ function FullProductEditor({ prod, onSave, onCancel }) {
         <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:22 }}>Editing: {prod.name}</h2>
       </div>
 
+      {/* Label Configurator Settings — only shown for label products */}
+      {p.label_configurator && (
+        <div className="aform-section" style={{ marginBottom:18 }}>
+          <div className="aform-title">🏷️ Label Configurator Settings</div>
+          <p style={{ fontSize:11, color:'var(--mu)', marginBottom:14, lineHeight:1.65 }}>
+            Controls the label configurator shown to customers. Separate options with commas.
+          </p>
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {[
+              { key:'lbl_shapes',    label:'Available Shapes',   hint:'Circle, Oval, Square, Rectangle, Custom' },
+              { key:'lbl_sizes',     label:'Preset Sizes (in)',  hint:'2" × 2", 3" × 3", 4" × 4", 4" × 6"' },
+              { key:'lbl_stocks',    label:'Stock / Materials',  hint:'Semi Gloss Paper, White BOPP, Clear BOPP' },
+              { key:'lbl_ink',       label:'Ink Colours',        hint:'CMYK (Full Colour), Black Only' },
+              { key:'lbl_finishing', label:'Finishing Options',  hint:'Standard, Matte Lamination, Gloss Lamination, Spot UV' },
+            ].map(({ key, label, hint }) => (
+              <div key={key} className="aform-grp">
+                <label className="aform-lbl">{label}</label>
+                <input className="ainp" placeholder={hint}
+                  value={Array.isArray(p[key]) ? p[key].join(', ') : (p[key] || '')}
+                  onChange={e => upd(key)(e.target.value.split(',').map(x => x.trim()).filter(Boolean))} />
+                <div style={{ fontSize:10, color:'var(--mu)', marginTop:3 }}>Separate options with commas</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Rush / Express availability */}
       <div className="aform-section" style={{ marginBottom:18 }}>
         <div className="aform-title">⚡ Turnaround Availability</div>

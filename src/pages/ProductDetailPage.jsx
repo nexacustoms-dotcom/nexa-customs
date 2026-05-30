@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
 import { CAT_BG } from '../data/products';
+import LabelConfigurator from './LabelConfigurator';
 
 export default function ProductDetailPage() {
   const { curProd, cats, prods, addToCart, calcPrice, showToast, store, pricing } = useApp();
@@ -33,6 +34,11 @@ export default function ProductDetailPage() {
       <button className="btn btn-primary" onClick={() => navigate('/products')}>Browse Products</button>
     </div>
   );
+
+  // Label configurator — special rendering for label/sticker products
+  if (prod.label_configurator) {
+    return <LabelConfigurator prod={prod} />;
+  }
 
   const cat = cats.find(c => c.id === prod.cat);
   const imgs = prod.imgs?.filter(x => x?.length) || [];
