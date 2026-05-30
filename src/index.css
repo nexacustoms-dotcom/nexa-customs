@@ -33,9 +33,9 @@ img{max-width:100%}
 .ob{padding:7px 13px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--mu);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
 .ob:hover{border-color:var(--o);color:var(--tx)}
 .ob.sel{border-color:var(--o);background:rgba(249,115,22,.1);color:var(--tx);font-weight:700}
-.qb{display:flex;flex-direction:column;align-items:center;padding:11px 6px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;gap:3px;transition:all .15s;font-family:'DM Sans',sans-serif;width:100%}
+.qb{display:flex;flex-direction:column;align-items:center;padding:11px 6px;border-radius:9px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;gap:3px;transition:all .15s;font-family:'DM Sans',sans-serif;width:100%;color:var(--tx)}
 .qb:hover{border-color:var(--o)}
-.qb.sel{border-color:var(--o);background:rgba(249,115,22,.1)}
+.qb.sel{border-color:var(--o);background:rgba(249,115,22,.1);color:var(--tx)}
 .mob-nav{display:none;position:fixed;inset:0;background:rgba(12,12,14,.97);z-index:9000;flex-direction:column;align-items:center;justify-content:center;gap:4px}
 .mob-nav.open{display:flex}
 .faq-q{width:100%;text-align:left;padding:14px 4px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--tx);transition:color .15s}

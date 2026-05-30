@@ -288,9 +288,15 @@ export default function ProductDetailPage() {
         )}
       </div>
       <style>{`
-        @media(max-width:1100px){.det-layout{grid-template-columns:1fr 260px !important}}
-        @media(max-width:1100px){.det-img{display:none !important}}
-        @media(max-width:700px){.det-layout{grid-template-columns:1fr !important} .det-sum{position:static !important}}
+        @media(max-width:1100px){
+          .det-layout{grid-template-columns:1fr 260px !important}
+          .det-img{position:static !important; grid-column:1/-1; display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:start}
+        }
+        @media(max-width:700px){
+          .det-layout{grid-template-columns:1fr !important}
+          .det-img{grid-template-columns:1fr !important; margin-bottom:8px}
+          .det-sum{position:static !important}
+        }
         @media(max-width:640px){.related-grid{grid-template-columns:repeat(2,1fr) !important}}
       `}</style>
     </div>
