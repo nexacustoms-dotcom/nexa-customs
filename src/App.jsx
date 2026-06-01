@@ -8,6 +8,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import ProductCard from './components/ProductCard';
 import AdminPage from './pages/AdminPage';
 import { CartPage, CheckoutPage, SuccessPage, QuotePage, ContactPage } from './pages/TransactionalPages';
+import { usePageSEO } from './hooks/usePageSEO';
 
 // ── POLICY DATA ───────────────────────────────────────────────────────────────
 const POLICY = {
@@ -190,8 +191,6 @@ function ScrollToTop() {
 }
 
 // ── LAYOUT ────────────────────────────────────────────────────────────────────
-import { usePageSEO } from './hooks/usePageSEO';
-
 function Layout({ children, noNav }) {
   usePageSEO();
   return (
