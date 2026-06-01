@@ -26,8 +26,8 @@ export default function HomePage() {
 
   useEffect(() => { const t = setInterval(() => setSlide(i => (i + 1) % slides.length), 4000); return () => clearInterval(t); }, [slides.length]);
 
-  const featured = prods.filter(p => p.badge === 'Most Popular' || p.badge === 'Best Seller').slice(0, 4);
-  const displayProds = featured.length >= 4 ? featured : prods.slice(0, 4);
+  const featured = prods.filter(p => !p.disabled && (p.badge === 'Most Popular' || p.badge === 'Best Seller')).slice(0, 4);
+  const displayProds = featured.length >= 4 ? featured : prods.filter(p => !p.disabled).slice(0, 4);
 
   return (
     <div>

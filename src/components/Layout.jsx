@@ -130,8 +130,106 @@ const QUICK_LINKS = [
 export function Footer() {
   const { store, cats } = useApp();
   const navigate = useNavigate();
-  const URL_MAP_F = { 'home':'/', 'products':'/products', 'cart':'/cart', 'checkout':'/checkout', 'quote':'/quote', 'contact':'/contact', 'admin':'/admin', 'faq':'/faq', 'shipping':'/shipping', 'returns':'/returns', 'terms':'/terms', 'turnaround':'/turnaround' };
+  const URL_MAP_F = { 'home':'/', 'products':'/products', 'cart':'/cart', 'checkout':'/checkout', 'quote':'/quote', 'contact':'/contact', 'admin':'/admin', 'faq':'/faq', 'shipping':'/shipping', 'returns':'/returns', 'terms':'/terms', 'turnaround':'/turnaround', 'about':'/about' };
   function go(p) { navigate(URL_MAP_F[p] || '/'+p); }
+
+  const GTA_CITIES = ['Mississauga','Toronto','Brampton','Oakville','Burlington','Vaughan','Markham','Richmond Hill','Etobicoke','North York','Scarborough','Milton','Georgetown','Pickering','Ajax','Hamilton'];
+
+  return (
+    <footer style={{ background: 'var(--dk)', borderTop: '1px solid var(--bd)', padding: '54px 0 0' }}>
+      <div className="W">
+        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1.3fr', gap: 44, marginBottom: 44 }} className="ft-grid">
+          {/* Brand */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 13 }}>
+              <div style={{ width: 36, height: 36, background: store.logo_img ? 'transparent' : 'var(--o)', clipPath: store.logo_img ? 'none' : 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 14, color: '#000', flexShrink: 0, borderRadius: store.logo_img ? 8 : 0, overflow: 'hidden' }}>
+                {store.logo_img ? <img src={store.logo_img} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : (store.logo_text || 'N')}
+              </div>
+              <div>
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 17, letterSpacing: '.05em' }}>{store.name}</div>
+                <div style={{ fontSize: 10, color: 'var(--mu)', letterSpacing: '.1em' }}>{store.tagline}</div>
+              </div>
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.78, maxWidth: 265, marginBottom: 10 }}>GTA's trusted print partner. Quality printing, fast turnaround, unbeatable prices.</p>
+            <p style={{ fontSize: 11, color: 'var(--mu)', lineHeight: 1.7, maxWidth: 265, marginBottom: 17 }}>📍 Free pickup in Mississauga · 🇨🇦 Ships Canada-wide</p>
+            <div style={{ display: 'flex', gap: 7 }}>
+              {[['IG', store.social_ig], ['fb', store.social_fb], ['💬', `https://wa.me/${store.social_wa}`]].map(([l, h]) => (
+                <a key={l} href={h} target="_blank" rel="noreferrer" style={{ width: 33, height: 33, background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mu)', fontSize: 11, fontWeight: 800 }}>{l}</a>
+              ))}
+            </div>
+          </div>
+          {/* Products */}
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Products</div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 7 }}>
+              {cats.slice(0, 8).map(c => (
+                <li key={c.id} onClick={() => navigate(`/products/${c.id}`)} style={{ fontSize: 12, color: 'var(--mu)', cursor: 'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--tx)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--mu)'}
+                >{c.l}</li>
+              ))}
+            </ul>
+          </div>
+          {/* Links */}
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Quick Links</div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 7 }}>
+              {[['Home','home'],['All Products','products'],['Get a Quote','quote'],['About Us','about'],['Contact Us','contact'],['FAQ','faq'],['Turnaround Times','turnaround'],['Shipping Policy','shipping']].map(([l, p]) => (
+                <li key={l} onClick={() => go(p)} style={{ fontSize: 12, color: 'var(--mu)', cursor: 'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--tx)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--mu)'}
+                >{l}</li>
+              ))}
+            </ul>
+          </div>
+          {/* Contact */}
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Contact</div>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <li style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9 }}><span style={{ color: 'var(--o)' }}>📍</span><span>{store.address}<br />{store.city}</span></li>
+              <li style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9 }}><span style={{ color: 'var(--o)' }}>📞</span><a href={`tel:+${store.phone_raw}`} style={{ color: 'var(--mu)' }}>{store.phone}</a></li>
+              <li style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9 }}><span style={{ color: 'var(--o)' }}>✉️</span><span>{store.email}</span></li>
+            </ul>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--o)', marginTop: 14, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.1em' }}>Hours</div>
+            <div style={{ fontSize: 11, color: 'var(--mu)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>{store.hours}</div>
+          </div>
+        </div>
+
+        {/* GTA Cities — SEO keyword row */}
+        <div style={{ borderTop: '1px solid var(--bd)', padding: '18px 0', marginBottom: 0 }}>
+          <div style={{ fontSize: 10, color: 'var(--mu)', marginBottom: 8, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+            Serving GTA — Free Pickup · Canada-Wide Shipping
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 0' }}>
+            {GTA_CITIES.map((city, i) => (
+              <span key={city} style={{ fontSize: 11, color: 'var(--mu)' }}>
+                <span style={{ color: 'var(--bd)', margin: '0 6px' }}>·</span>
+                {city}
+                {i === GTA_CITIES.length - 1 && <span style={{ color: 'var(--bd)', marginLeft: 6 }}>· All of Canada</span>}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--bd)', padding: '17px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'var(--mu)', flexWrap: 'wrap', gap: 10 }}>
+          <span>{store.footer_copy}</span>
+          <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
+            {[['Terms','terms'],['Shipping','shipping'],['Returns','returns'],['FAQ','faq'],['About','about'],['Contact','contact']].map(([l, p]) => (
+              <span key={l} onClick={() => go(p)} style={{ cursor: 'pointer' }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--tx)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--mu)'}
+              >{l}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @media(max-width:1060px){.ft-grid{grid-template-columns:1fr 1fr !important;gap:28px !important}}
+        @media(max-width:640px){.ft-grid{grid-template-columns:1fr !important}}
+      `}</style>
+    </footer>
+  );
+}
   return (
     <footer style={{ background: 'var(--dk)', borderTop: '1px solid var(--bd)', padding: '54px 0 0' }}>
       <div className="W">

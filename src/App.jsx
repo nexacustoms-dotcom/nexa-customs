@@ -47,7 +47,8 @@ function FAQItem({ q, a }) {
 }
 
 function PolicyPage({ slug }) {
-  const p = POLICY[slug];
+  const { builtinPages, pages } = useApp();
+  const p = builtinPages?.[slug] || pages?.find(pg => pg.slug === slug);
   if (!p) return <NotFoundPage />;
   return (
     <div className="W" style={{ padding: '40px 28px 76px', maxWidth: 820 }}>
@@ -59,6 +60,10 @@ function PolicyPage({ slug }) {
     </div>
   );
 }
+
+function CustomPageRoute() {
+  const { slug } = useParams();
+  return <PolicyPage slug={slug} />;
 
 function LoadingSpinner({ text = 'Loading…' }) {
   return (
@@ -185,7 +190,10 @@ function ScrollToTop() {
 }
 
 // ── LAYOUT ────────────────────────────────────────────────────────────────────
+import { usePageSEO } from './hooks/usePageSEO';
+
 function Layout({ children, noNav }) {
+  usePageSEO();
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {!noNav && <Topbar />}
@@ -223,6 +231,8 @@ function AppRoutes() {
         <Route path="/returns" element={<Layout><PolicyPage slug="returns" /></Layout>} />
         <Route path="/terms" element={<Layout><PolicyPage slug="terms" /></Layout>} />
         <Route path="/turnaround" element={<Layout><PolicyPage slug="turnaround" /></Layout>} />
+        <Route path="/about" element={<Layout><PolicyPage slug="about" /></Layout>} />
+        <Route path="/p/:slug" element={<Layout><CustomPageRoute /></Layout>} />
 
         {/* Admin-created custom pages */}
         <Route path="/p/:slug" element={<Layout><CustomPageRoute /></Layout>} />

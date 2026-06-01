@@ -63,7 +63,7 @@ export default function ProductDetailPage() {
     showToast(`✅ Added to cart!`);
   }
 
-  const related = prods.filter(p => p.cat === prod.cat && p.id !== prod.id).slice(0, 4);
+  const related = prods.filter(p => !p.disabled && p.cat === prod.cat && p.id !== prod.id).slice(0, 4);
 
   // Build config summary for right panel
   const configSummary = [

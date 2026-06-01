@@ -672,13 +672,31 @@ function SettingsTab() {
 
 // ── PAGES TAB ─────────────────────────────────────────────────────────────────
 function PagesTab() {
-  const { pages, setPages, showToast } = useApp();
+  const { pages, setPages, builtinPages, setBuiltinPages, showToast } = useApp();
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ title:'', slug:'', nav:false, content:'' });
-  const BUILTIN = ['home','products','detail','cart','checkout','success','quote','contact','admin','faq','turnaround','shipping','returns','terms'];
+  const [editingBuiltin, setEditingBuiltin] = useState(null);
+  const [form, setForm] = useState({ title:'', slug:'', nav:false, content:'', body:'', faqs:[] });
+  const upd = k => e => setForm(f => ({ ...f, [k]: e.target.type==='checkbox' ? e.target.checked : e.target.value }));
 
-  function startEdit(pg, idx) { setForm({ title:pg.title, slug:pg.slug, nav:pg.nav||false, content:pg.content||'' }); setEditing(idx); }
-  function save() {
+  const SYSTEM = ['home','products','cart','checkout','success','quote','contact','admin'];
+  const builtinList = Object.values(builtinPages || {});
+
+  function startEditBuiltin(slug) {
+    const p = builtinPages[slug];
+    setForm({ title: p.title, slug: p.slug, nav: p.nav ?? true, body: p.body || '', faqs: p.faqs || [], content: '' });
+    setEditingBuiltin(slug);
+    setEditing(null);
+  }
+
+  function saveBuiltin() {
+    if (!form.title.trim()) { showToast('Title required'); return; }
+    setBuiltinPages(prev => ({ ...prev, [editingBuiltin]: { ...prev[editingBuiltin], title: form.title, nav: form.nav, body: form.body, faqs: form.faqs } }));
+    showToast('✅ Page saved!'); setEditingBuiltin(null);
+  }
+
+  function startEditCustom(pg, idx) { setForm({ title:pg.title, slug:pg.slug, nav:pg.nav||false, content:pg.content||'', body:'', faqs:[] }); setEditing(idx); setEditingBuiltin(null); }
+
+  function saveCustom() {
     if (!form.title.trim() || !form.slug.trim()) { showToast('Title and slug required'); return; }
     const slug = form.slug.toLowerCase().replace(/[^a-z0-9-]/g,'-');
     if (editing === 'new') setPages(prev => [...prev, { id:'cp-'+Date.now(), title:form.title, slug, nav:form.nav, content:form.content }]);
@@ -686,6 +704,63 @@ function PagesTab() {
     showToast('✅ Page saved!'); setEditing(null);
   }
 
+  // Editing builtin page
+  if (editingBuiltin) {
+    const isFaq = editingBuiltin === 'faq';
+    return (
+      <div>
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:22 }}>
+          <button className="abtn" onClick={() => setEditingBuiltin(null)}>← Back</button>
+          <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:22 }}>Edit: {form.title}</h2>
+          <span style={{ fontSize:10, padding:'2px 8px', borderRadius:10, background:'rgba(249,115,22,.1)', color:'var(--o)', border:'1px solid rgba(249,115,22,.2)', fontWeight:700 }}>Built-in Page</span>
+        </div>
+        <div className="aform-section" style={{ maxWidth:760 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 200px', gap:12, marginBottom:12 }}>
+            <div className="afg"><label className="aflbl">Page Title</label><input className="ainp" value={form.title} onChange={upd('title')} /></div>
+            <div className="afg"><label className="aflbl">URL</label><div style={{ fontFamily:"'DM Mono',monospace", fontSize:12, color:'var(--mu)', padding:'10px 0' }}>/{editingBuiltin}</div></div>
+          </div>
+          <div className="afg" style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+            <input type="checkbox" id="pg-nav" style={{ width:16,height:16 }} checked={form.nav} onChange={upd('nav')} />
+            <label htmlFor="pg-nav" style={{ fontSize:13 }}>Show in footer navigation</label>
+          </div>
+          {isFaq ? (
+            <div className="afg">
+              <label className="aflbl">FAQ Items</label>
+              {form.faqs.map((faq, i) => (
+                <div key={i} style={{ background:'var(--s2)', border:'1px solid var(--bd)', borderRadius:8, padding:12, marginBottom:8 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:'var(--mu)' }}>Q&A #{i+1}</div>
+                    <button className="abtn" onClick={() => setForm(f => ({ ...f, faqs: f.faqs.filter((_,fi) => fi !== i) }))} style={{ color:'#f87171', borderColor:'rgba(239,68,68,.3)', fontSize:11, padding:'3px 8px' }}>✕ Remove</button>
+                  </div>
+                  <div className="afg" style={{ marginBottom:8 }}>
+                    <label className="aflbl" style={{ fontSize:10 }}>Question</label>
+                    <input className="ainp" value={faq.q} onChange={e => setForm(f => { const faqs=[...f.faqs]; faqs[i]={...faqs[i],q:e.target.value}; return {...f,faqs}; })} />
+                  </div>
+                  <div className="afg">
+                    <label className="aflbl" style={{ fontSize:10 }}>Answer</label>
+                    <textarea className="ainp" rows="2" style={{ resize:'vertical' }} value={faq.a} onChange={e => setForm(f => { const faqs=[...f.faqs]; faqs[i]={...faqs[i],a:e.target.value}; return {...f,faqs}; })} />
+                  </div>
+                </div>
+              ))}
+              <button className="abtn abtn-add" style={{ marginTop:4 }} onClick={() => setForm(f => ({ ...f, faqs:[...f.faqs, {q:'',a:''}] }))}>+ Add FAQ Item</button>
+            </div>
+          ) : (
+            <div className="afg">
+              <label className="aflbl">Page Content</label>
+              <p style={{ fontSize:11, color:'var(--mu)', marginBottom:8 }}>Use blank lines to separate paragraphs.</p>
+              <textarea className="ainp" rows="14" style={{ resize:'vertical', lineHeight:1.6 }} value={form.body} onChange={upd('body')} />
+            </div>
+          )}
+          <div style={{ display:'flex', gap:10, marginTop:14 }}>
+            <button className="abtn abtn-add" onClick={saveBuiltin}>💾 Save Page</button>
+            <button className="abtn" onClick={() => setEditingBuiltin(null)}>Cancel</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Editing custom page
   if (editing !== null) return (
     <div>
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:22 }}>
@@ -694,18 +769,18 @@ function PagesTab() {
       </div>
       <div className="aform-section" style={{ maxWidth:720 }}>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
-          <div className="afg"><label className="aflbl">Page Title *</label><input className="ainp" placeholder="FAQ" value={form.title} onChange={e => setForm(f=>({...f,title:e.target.value}))} /></div>
-          <div className="afg"><label className="aflbl">URL Slug * (e.g. faq)</label><input className="ainp" placeholder="faq" value={form.slug} onChange={e => setForm(f=>({...f,slug:e.target.value}))} /></div>
+          <div className="afg"><label className="aflbl">Page Title *</label><input className="ainp" placeholder="About Us" value={form.title} onChange={upd('title')} /></div>
+          <div className="afg"><label className="aflbl">URL Slug * <span style={{color:'var(--mu)',fontSize:10}}>(e.g. about → /p/about)</span></label><input className="ainp" placeholder="about" value={form.slug} onChange={upd('slug')} /></div>
         </div>
-        <div className="afg" style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <input type="checkbox" id="pg-nav" style={{ width:16,height:16 }} checked={form.nav} onChange={e => setForm(f=>({...f,nav:e.target.checked}))} />
-          <label htmlFor="pg-nav" style={{ fontSize:13 }}>Show in footer navigation</label>
+        <div className="afg" style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
+          <input type="checkbox" id="pg-nav2" style={{ width:16,height:16 }} checked={form.nav} onChange={upd('nav')} />
+          <label htmlFor="pg-nav2" style={{ fontSize:13 }}>Show in footer navigation</label>
         </div>
-        <div className="afg"><label className="aflbl">Content (HTML supported)</label>
-          <textarea className="ainp" rows="12" style={{ fontFamily:"'DM Mono',monospace", fontSize:12, resize:'vertical' }} value={form.content} onChange={e => setForm(f=>({...f,content:e.target.value}))} />
+        <div className="afg"><label className="aflbl">Content (plain text, blank lines = paragraphs)</label>
+          <textarea className="ainp" rows="12" style={{ resize:'vertical', lineHeight:1.6 }} value={form.content} onChange={upd('content')} />
         </div>
-        <div style={{ display:'flex', gap:10 }}>
-          <button className="abtn abtn-add" onClick={save}>💾 Save Page</button>
+        <div style={{ display:'flex', gap:10, marginTop:14 }}>
+          <button className="abtn abtn-add" onClick={saveCustom}>💾 Save Page</button>
           <button className="abtn" onClick={() => setEditing(null)}>Cancel</button>
         </div>
       </div>
@@ -716,24 +791,57 @@ function PagesTab() {
     <div>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
         <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:24 }}>Pages</h2>
-        <button className="abtn abtn-add" onClick={() => { setForm({title:'',slug:'',nav:false,content:''}); setEditing('new'); }}>+ New Page</button>
+        <button className="abtn abtn-add" onClick={() => { setForm({title:'',slug:'',nav:false,content:'',body:'',faqs:[]}); setEditing('new'); }}>+ New Page</button>
       </div>
+
+      {/* Builtin pages — fully editable */}
       <div style={{ background:'var(--sf)', border:'1px solid var(--bd)', borderRadius:'var(--rl)', overflow:'hidden', marginBottom:16 }}>
-        <div style={{ padding:'10px 16px', borderBottom:'1px solid var(--bd)', fontSize:10, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', color:'var(--mu)' }}>Built-in Pages</div>
-        <table className="atable"><thead><tr><th>Page</th><th>URL</th><th>Type</th></tr></thead>
-          <tbody>{BUILTIN.map(slug => (<tr key={slug}><td style={{ fontWeight:600, textTransform:'capitalize' }}>{slug.replace(/-/g,' ')}</td><td style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:'var(--mu)' }}>/#{ slug}</td><td><span style={{ fontSize:10, padding:'2px 8px', borderRadius:10, background:'rgba(249,115,22,.1)', color:'var(--o)', border:'1px solid rgba(249,115,22,.2)', fontWeight:700 }}>Built-in</span></td></tr>))}</tbody>
+        <div style={{ padding:'10px 16px', borderBottom:'1px solid var(--bd)', fontSize:10, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', color:'var(--mu)', display:'flex', justifyContent:'space-between' }}>
+          <span>Built-in Pages (Editable)</span>
+        </div>
+        <table className="atable"><thead><tr><th>Page</th><th>URL</th><th>In Nav</th><th>Actions</th></tr></thead>
+          <tbody>
+            {builtinList.map(pg => (
+              <tr key={pg.slug}>
+                <td style={{ fontWeight:600 }}>{pg.title}</td>
+                <td style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:'var(--mu)' }}>/{pg.slug}</td>
+                <td>{pg.nav !== false ? <span style={{ fontSize:10, padding:'2px 7px', borderRadius:10, background:'rgba(34,197,94,.1)', color:'#22c55e', border:'1px solid rgba(34,197,94,.2)', fontWeight:700 }}>Yes</span> : <span style={{ color:'var(--mu)',fontSize:12 }}>No</span>}</td>
+                <td><button className="abtn" onClick={() => startEditBuiltin(pg.slug)}>✏️ Edit</button></td>
+              </tr>
+            ))}
+            {SYSTEM.map(slug => (
+              <tr key={slug}>
+                <td style={{ fontWeight:600, textTransform:'capitalize', color:'var(--mu)' }}>{slug.replace(/-/g,' ')}</td>
+                <td style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:'var(--mu)' }}>/{slug}</td>
+                <td>—</td>
+                <td><span style={{ fontSize:10, padding:'2px 8px', borderRadius:10, background:'var(--s2)', color:'var(--mu)', fontWeight:700 }}>System</span></td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
-      {pages.length > 0 && (
-        <div style={{ background:'var(--sf)', border:'1px solid var(--bd)', borderRadius:'var(--rl)', overflow:'hidden' }}>
-          <div style={{ padding:'10px 16px', borderBottom:'1px solid var(--bd)', fontSize:10, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', color:'var(--mu)' }}>Custom Pages ({pages.length})</div>
-          <table className="atable"><thead><tr><th>Title</th><th>Slug</th><th>In Nav</th><th>Actions</th></tr></thead>
-            <tbody>{pages.map((pg,i) => (<tr key={pg.id}><td style={{ fontWeight:600 }}>{pg.title}</td><td style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:'var(--mu)' }}>/#{ pg.slug}</td><td>{pg.nav ? <span className="badge-green">Yes</span> : <span style={{ color:'var(--mu)',fontSize:12 }}>No</span>}</td>
-              <td style={{ display:'flex', gap:6 }}><button className="abtn" onClick={() => startEdit(pg,i)}>✏️ Edit</button><button className="abtn" onClick={() => { if(window.confirm('Delete this page?')) { setPages(prev=>prev.filter((_,pi)=>pi!==i)); showToast('Deleted.'); }}} style={{ color:'#f87171', borderColor:'rgba(239,68,68,.3)' }}>Delete</button></td>
-            </tr>))}</tbody>
+
+      {/* Custom pages */}
+      <div style={{ background:'var(--sf)', border:'1px solid var(--bd)', borderRadius:'var(--rl)', overflow:'hidden' }}>
+        <div style={{ padding:'10px 16px', borderBottom:'1px solid var(--bd)', fontSize:10, fontWeight:700, letterSpacing:'.08em', textTransform:'uppercase', color:'var(--mu)' }}>Custom Pages ({pages.length})</div>
+        {pages.length === 0 ? (
+          <div style={{ padding:'24px 16px', fontSize:13, color:'var(--mu)', textAlign:'center' }}>No custom pages yet. Click + New Page to create one.</div>
+        ) : (
+          <table className="atable"><thead><tr><th>Title</th><th>URL</th><th>In Nav</th><th>Actions</th></tr></thead>
+            <tbody>{pages.map((pg,i) => (
+              <tr key={pg.id}>
+                <td style={{ fontWeight:600 }}>{pg.title}</td>
+                <td style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:'var(--mu)' }}>/p/{pg.slug}</td>
+                <td>{pg.nav ? <span style={{ fontSize:10, padding:'2px 7px', borderRadius:10, background:'rgba(34,197,94,.1)', color:'#22c55e', fontWeight:700 }}>Yes</span> : <span style={{ color:'var(--mu)',fontSize:12 }}>No</span>}</td>
+                <td style={{ display:'flex', gap:6 }}>
+                  <button className="abtn" onClick={() => startEditCustom(pg,i)}>✏️ Edit</button>
+                  <button className="abtn" onClick={() => { if(window.confirm('Delete this page?')) { setPages(prev=>prev.filter((_,pi)=>pi!==i)); showToast('Deleted.'); }}} style={{ color:'#f87171', borderColor:'rgba(239,68,68,.3)' }}>✕ Delete</button>
+                </td>
+              </tr>
+            ))}</tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

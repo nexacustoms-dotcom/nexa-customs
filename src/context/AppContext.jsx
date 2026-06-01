@@ -115,6 +115,7 @@ export function AppProvider({ children }) {
   const [pricing, setPricingState] = useState(() => ({ ...DEFAULT_PRICING, ...ls.get('nxt_pricing_cfg', {}) }));
   const [cart,  setCart]           = useState(() => ls.get('nxt_cart', []));
   const [pages, setPages]          = useState(() => ls.get('nxt_custom_pages', []));
+  const [builtinPages, setBuiltinPagesState] = useState(() => ({ ...DEFAULT_BUILTIN_PAGES, ...ls.get('nxt_builtin_pages', {}) }));
   const [curProd, setCurProd]      = useState(null);
   const [toast,   setToast]        = useState(null);
   const [adminAuthed, setAdminAuthed] = useState(() => ls.raw('nxt_admin_auth','') === 'true');
@@ -144,6 +145,10 @@ export function AppProvider({ children }) {
       if (pr?.length > 0 && pr[0].data) {
         const d = typeof pr[0].data === 'string' ? JSON.parse(pr[0].data) : pr[0].data;
         if (Array.isArray(d)) { ls.set('nxt_pricing', d); setProdsState(mergeOverrides(DEFAULT_PRODS, d)); }
+      });
+      supaGet('site_config', 'id=eq.builtin_pages').then(d => {
+        if (d?.[0]?.data) { const merged = { ...DEFAULT_BUILTIN_PAGES, ...d[0].data }; ls.set('nxt_builtin_pages', merged); setBuiltinPagesState(merged); }
+      });
       }
       // pricing config
       const pcr = await supaGet('site_config', 'id=eq.pricing_cfg&limit=1');
@@ -160,6 +165,15 @@ export function AppProvider({ children }) {
   useEffect(() => { if (store.favicon_img) applyFavicon(store.favicon_img); }, [store.favicon_img]);
   useEffect(() => ls.set('nxt_cart', cart), [cart]);
   useEffect(() => ls.set('nxt_custom_pages', pages), [pages]);
+
+  const setBuiltinPages = useCallback((updater) => {
+    setBuiltinPagesState(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      ls.set('nxt_builtin_pages', next);
+      supaUpsert('site_config', { id: 'builtin_pages', data: next, updated_at: new Date().toISOString() });
+      return next;
+    });
+  }, []);
 
 
 
@@ -302,10 +316,57 @@ export function AppProvider({ children }) {
   const cartSubtotal = cart.reduce((s, i) => s + (i.price || 0), 0);
 
   return (
-    <AppContext.Provider value={{ page, go, syncing, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
+    <AppContext.Provider value={{ page, go, syncing, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages, builtinPages, setBuiltinPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
       {children}
     </AppContext.Provider>
   );
 }
 
 export const useApp = () => useContext(AppContext);
+
+export const DEFAULT_BUILTIN_PAGES = {
+  about: {
+    title: 'About Nexa Customs', slug: 'about', nav: true,
+    body: `Nexa Customs Inc. is a full-service commercial print shop proudly serving the Greater Toronto Area (GTA) and all of Canada since 2010. We are located in Mississauga, Ontario — centrally positioned to serve clients across the entire GTA with free same-day pickup.
+
+Our Locations We Serve (Local Pickup Available)
+We are based in Mississauga and offer free same-day pickup for clients throughout the GTA including Toronto, Brampton, Oakville, Burlington, Milton, Vaughan, Woodbridge, Etobicoke, North York, Scarborough, Markham, Richmond Hill, Pickering, Ajax, and Hamilton. Most orders placed before 10:30 AM are available for same-day pickup.
+
+Canada-Wide Shipping
+Can't make it in person? No problem. We ship to every province and territory across Canada including British Columbia, Alberta, Saskatchewan, Manitoba, Quebec, Nova Scotia, New Brunswick, Newfoundland, Prince Edward Island, and the Territories. We use Canada Post and FedEx/UPS to ensure fast, reliable delivery nationwide.
+
+What We Print
+We specialize in the full range of commercial print including business cards, vinyl banners, vehicle wraps and fleet graphics, window graphics, custom stickers and labels, flyers, postcards, foam boards, real estate signs, restaurant menus, posters, canvas prints, and calendars.
+
+Our Equipment
+Our Epson SureColor R5070 wide-format resin printer delivers vivid, long-lasting colours for banners, signs, and large-format work. Combined with precision digital printing for business cards and marketing materials, every job meets commercial quality standards.
+
+Our Promise
+Every order includes a free digital proof — we never go to press without your approval. Quality is guaranteed: if there is a manufacturing defect on our end, we reprint at no charge. No questions asked.
+
+Contact Us
+Phone: (437) 997-9921
+Email: info@nexacustoms.ca
+Address: 6033 Shawson Dr, Unit 40, Mississauga, ON L5T 1J6
+Hours: Monday to Friday 9AM-6PM, Saturday by appointment`,
+  },
+  faq: {
+    title: 'Frequently Asked Questions', slug: 'faq', nav: true,
+    faqs: [
+      { q: 'What file formats do you accept?', a: 'We accept PDF, AI, EPS, PSD, PNG (300dpi+), and high-res JPG. PDF is preferred for print-ready files.' },
+      { q: 'Do you offer design services?', a: 'Yes! Free basic layout adjustments and affordable custom design. Email info@nexacustoms.ca with details.' },
+      { q: 'What is your standard turnaround time?', a: 'Standard is 5-7 business days from proof approval. Rush (2-3 days) and Express (same/next day) available at a surcharge.' },
+      { q: 'Do you ship across Canada?', a: 'Yes. We ship via Canada Post and courier. Local pickup is always free at our Mississauga location.' },
+      { q: 'What is your quality guarantee?', a: 'If there is a print defect on our end, we reprint at no charge. We send a free proof before every order.' },
+      { q: 'Can I get a proof before printing?', a: 'Absolutely - a digital PDF proof is free with every order. We print only after you approve it.' },
+      { q: 'What is the minimum order?', a: 'Business cards start at 100. Banners at 1 piece. Stickers at 10. Check each product page for specifics.' },
+      { q: 'Do you do same-day rush orders?', a: 'Yes! Call (437) 997-9921 to confirm availability before ordering.' },
+      { q: 'Can you match Pantone colours?', a: 'We print in CMYK. Provide your Pantone or hex codes and we adjust your proof accordingly.' },
+      { q: 'How do I send my artwork?', a: 'After placing your order, email files to info@nexacustoms.ca with your order number in the subject line.' },
+    ],
+  },
+  turnaround: { title: 'Turnaround Times', slug: 'turnaround', nav: true, body: 'Standard turnaround is 5-7 business days from proof approval.\n\nRush (2-3 business days) and Express (same/next day) options are available at an additional fee applied at checkout.\n\nTurnaround begins after artwork approval, not order placement. Complex projects may require additional time.\n\nSame-day pickup available for orders placed before 10:30 AM with artwork approved by noon.' },
+  shipping: { title: 'Shipping Policy', slug: 'shipping', nav: true, body: 'We ship across Ontario and Canada via Canada Post and FedEx/UPS courier.\n\nFree local pickup at 6033 Shawson Dr, Unit 40, Mississauga (Mon-Fri 9AM-6PM).\n\nFlat-rate shipping: Canada Post $18 · Courier $45\n\nNexa Customs is not responsible for carrier delays once the package is in transit. Contact us within 5 business days if your order arrives damaged.' },
+  returns: { title: 'Return Policy', slug: 'returns', nav: true, body: 'Due to the custom-printed nature of our products, we do not accept returns or exchanges.\n\nIf there is a manufacturing defect or error on our part, we will reprint at no charge.\n\nClaims must be made within 5 business days of delivery. Email info@nexacustoms.ca with photos.\n\nWe cannot reprint for customer-supplied artwork errors - this is why we always send a free proof first.' },
+  terms: { title: 'Terms & Conditions', slug: 'terms', nav: false, body: 'By placing an order with Nexa Customs Inc., you agree to the following:\n\n1. Artwork Rights: You confirm you own or have rights to all artwork submitted.\n\n2. Colour Accuracy: Colours may vary slightly from screen due to CMYK printing. Review your proof carefully.\n\n3. Payment: All prices are in CAD. Orders are confirmed once payment is received or invoice is approved.\n\n4. Turnaround: Production begins after proof approval.\n\n5. Liability: Nexa Customs liability is limited to the value of the order.' },
+};

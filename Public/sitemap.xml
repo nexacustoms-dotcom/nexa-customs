@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Core pages -->
+  <url><loc>https://nexacustoms.ca/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://nexacustoms.ca/products</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nexacustoms.ca/about</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nexacustoms.ca/quote</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nexacustoms.ca/contact</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+  <!-- Category pages -->
+  <url><loc>https://nexacustoms.ca/products/business-cards</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nexacustoms.ca/products/signs-banners</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nexacustoms.ca/products/vehicle-graphics</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://nexacustoms.ca/products/labels-stickers</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nexacustoms.ca/products/flyers-postcards</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nexacustoms.ca/products/marketing</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://nexacustoms.ca/products/stationery</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://nexacustoms.ca/products/restaurant</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://nexacustoms.ca/products/foam-boards</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://nexacustoms.ca/products/real-estate</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://nexacustoms.ca/products/calendars</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://nexacustoms.ca/products/posters-canvas</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+
+  <!-- Info pages -->
+  <url><loc>https://nexacustoms.ca/faq</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://nexacustoms.ca/shipping</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://nexacustoms.ca/returns</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://nexacustoms.ca/turnaround</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://nexacustoms.ca/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+</urlset>

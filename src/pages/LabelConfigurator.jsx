@@ -123,7 +123,7 @@ export default function LabelConfigurator({ prod }) {
     : selectedSize || '—';
 
   // Sibling label products for cross-navigation
-  const siblings = prods.filter(p => p.cat === 'labels-stickers' && p.label_configurator && p.id !== prod.id);
+  const siblings = prods.filter(p => !p.disabled && p.cat === 'labels-stickers' && p.label_configurator && p.id !== prod.id);
 
   function handleAddToCart() {
     if (isCustomShape || !showPricing || totalPrice === 0) {

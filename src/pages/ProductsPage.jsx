@@ -11,7 +11,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
-    let list = prods;
+    let list = prods.filter(p => !p.disabled);
     if (activeCat !== 'all') list = list.filter(p => p.cat === activeCat);
     if (search.trim()) {
       const q = search.toLowerCase();
