@@ -145,11 +145,11 @@ export function AppProvider({ children }) {
       if (pr?.length > 0 && pr[0].data) {
         const d = typeof pr[0].data === 'string' ? JSON.parse(pr[0].data) : pr[0].data;
         if (Array.isArray(d)) { ls.set('nxt_pricing', d); setProdsState(mergeOverrides(DEFAULT_PRODS, d)); }
-      });
+      }
+      // builtin pages
       supaGet('site_config', 'id=eq.builtin_pages').then(d => {
         if (d?.[0]?.data) { const merged = { ...DEFAULT_BUILTIN_PAGES, ...d[0].data }; ls.set('nxt_builtin_pages', merged); setBuiltinPagesState(merged); }
       });
-      }
       // pricing config
       const pcr = await supaGet('site_config', 'id=eq.pricing_cfg&limit=1');
       if (pcr?.length > 0 && pcr[0].data) {
