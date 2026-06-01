@@ -65,6 +65,7 @@ function PolicyPage({ slug }) {
 function CustomPageRoute() {
   const { slug } = useParams();
   return <PolicyPage slug={slug} />;
+}
 
 function LoadingSpinner({ text = 'Loading…' }) {
   return (
@@ -167,20 +168,6 @@ function ProductPageWrapper() {
   if (!curProd && !waited) return <LoadingSpinner text="Loading product…" />;
 
   return <ProductDetailPage />;
-}
-
-// ── CUSTOM PAGE ───────────────────────────────────────────────────────────────
-function CustomPageRoute() {
-  const { slug } = useParams();
-  const { pages } = useApp();
-  const pg = pages.find(p => p.slug === slug);
-  if (!pg) return <NotFoundPage />;
-  return (
-    <div className="W" style={{ padding: '40px 28px 76px', maxWidth: 860 }}>
-      <h1 className="D" style={{ fontSize: 'clamp(28px,4vw,50px)', marginBottom: 28 }}>{pg.title}</h1>
-      <div style={{ fontSize: 14, color: 'var(--mu)', lineHeight: 1.85 }} dangerouslySetInnerHTML={{ __html: pg.content }} />
-    </div>
-  );
 }
 
 // ── SCROLL TO TOP ON ROUTE CHANGE ─────────────────────────────────────────────
