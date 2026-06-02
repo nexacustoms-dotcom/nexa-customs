@@ -17,10 +17,10 @@ export default function HomePage() {
   const [tIdx, setTIdx] = useState(0);
 
   const defaultSlides = [
-    { ico: '🪪', title: 'Premium Business Cards', sub: 'From $24.32 · Same-week turnaround · Free design proof', img: '' },
-    { ico: '🪧', title: 'Vinyl Banners & Signs', sub: 'Custom sizes · Full colour · Indoor & outdoor · Rush available', img: '' },
-    { ico: '🚗', title: 'Vehicle Wraps', sub: 'Full & partial wraps · Cast vinyl · 5–7 year life · Professional install', img: '' },
-    { ico: '📄', title: 'Flyers & Postcards', sub: '1,000 flyers from $99 · Canada-wide shipping · 100lb gloss or matte', img: '' },
+    { ico: '🪪', title: 'Premium Business Cards', sub: 'From $24.32 · Same-week turnaround · Free design proof', img: '', link: '/products/business-cards' },
+    { ico: '🪧', title: 'Vinyl Banners & Signs', sub: 'Custom sizes · Full colour · Indoor & outdoor · Rush available', img: '', link: '/products/signs-banners' },
+    { ico: '🚗', title: 'Vehicle Wraps', sub: 'Full & partial wraps · Cast vinyl · 5–7 year life · Professional install', img: '', link: '/products/vehicle-graphics' },
+    { ico: '📄', title: 'Flyers & Postcards', sub: '1,000 flyers from $99 · Canada-wide shipping · 100lb gloss or matte', img: '', link: '/products/flyers-postcards' },
   ];
   const slides = (store.hero_slides && store.hero_slides.length > 0) ? store.hero_slides : defaultSlides;
 
@@ -67,7 +67,11 @@ export default function HomePage() {
 
             {/* Slide showcase */}
             <div className="hero-right">
-              <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 18, overflow: 'hidden', boxShadow: '0 36px 88px rgba(0,0,0,.55)', minHeight: 260, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative' }}>
+              <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 18, overflow: 'hidden', boxShadow: '0 36px 88px rgba(0,0,0,.55)', minHeight: 260, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', cursor: slides[slide]?.link ? 'pointer' : 'default' }}
+                onClick={() => slides[slide]?.link && navigate(slides[slide].link)}>
+                {slides[slide]?.link && (
+                  <div style={{ position: 'absolute', top: 10, right: 10, background: 'var(--o)', color: '#000', fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 20, zIndex: 2, letterSpacing: '.05em', textTransform: 'uppercase' }}>Shop Now →</div>
+                )}
                 {slides[slide]?.img
                   ? <img src={slides[slide].img} alt={slides[slide].title} style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }} />
                   : (
@@ -80,7 +84,7 @@ export default function HomePage() {
                 }
                 <div style={{ display: 'flex', gap: 6, padding: '10px 0', position: 'absolute', bottom: 8 }}>
                   {slides.map((_, i) => (
-                    <div key={i} onClick={() => setSlide(i)} style={{ width: 6, height: 6, borderRadius: '50%', background: i === slide ? 'var(--o)' : 'var(--bd)', cursor: 'pointer', transition: 'background .2s' }} />
+                    <div key={i} onClick={e => { e.stopPropagation(); setSlide(i); }} style={{ width: 6, height: 6, borderRadius: '50%', background: i === slide ? 'var(--o)' : 'var(--bd)', cursor: 'pointer', transition: 'background .2s' }} />
                   ))}
                 </div>
               </div>
