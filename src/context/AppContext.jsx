@@ -309,6 +309,17 @@ export function AppProvider({ children }) {
     }
     const tier = prod.pricing?.find(t => t.q===qty) || prod.pricing?.[0];
     if (!tier) return { total: 0, unit: 0, sqft: 0 };
+    const ti = prod.pricing?.indexOf(tier) ?? 0;
+    // Check if selected size has its own direct prices
+    const sizeGroup = prod.opts?.find(g => g.key === 'size');
+    const sizeOpt = sizeGroup?.opts?.find(o => o.id === selOpts?.size);
+    const sizePrice = sizeOpt?.size_prices?.[ti];
+    if (sizePrice > 0) {
+      // Use direct size price, then apply non-size option multipliers
+      const base = sizePrice;
+      const total = +applyOpts(base, prod.opts, selOpts, 'size', 0, 0, qty).toFixed(2);
+      return { total, unit: +(total/(qty||1)).toFixed(4), sqft: 0 };
+    }
     const total = +applyOpts(tier.p, prod.opts, selOpts, null, 0, 0, qty).toFixed(2);
     return { total, unit: +(total/(qty||1)).toFixed(4), sqft: 0 };
   }, []);

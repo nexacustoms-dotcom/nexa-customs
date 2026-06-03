@@ -1026,21 +1026,264 @@ function PricingTab() {
 function FullProductEditor({ prod, onSave, onCancel }) {
   const { pricing } = useApp();
   const [p, setP] = useState(JSON.parse(JSON.stringify(prod)));
+  const [selectedOptKey, setSelectedOptKey] = useState(null); // which size option is selected for per-size pricing
   const upd = k => v => setP(prev => ({ ...prev, [k]: v }));
 
+  // Tier helpers
   function updTierPrice(ti, val) { const np=[...p.pricing]; np[ti]={...np[ti],p:parseFloat(val)||0}; upd('pricing')(np); }
   function updTierQty(ti, val) { const np=[...p.pricing]; np[ti]={...np[ti],q:parseInt(val)||0}; upd('pricing')(np); }
   function addTier() { upd('pricing')([...p.pricing, { q:0, p:0 }]); }
   function removeTier(ti) { upd('pricing')(p.pricing.filter((_,i)=>i!==ti)); }
 
-  function addGroup() { upd('opts')([...(p.opts||[]), { key:'group-'+Date.now(), label:'New Group', opts:[{id:'opt1',l:'Option 1',m:1.0}] }]); }
+  // Option helpers
+  function addGroup() { upd('opts')([...(p.opts||[]), { key:'group-'+Date.now(), label:'New Group', opts:[{id:'opt1',l:'Option 1',price_type:'multiplier',price_val:1.0,m:1.0}] }]); }
   function removeGroup(gi) { upd('opts')((p.opts||[]).filter((_,i)=>i!==gi)); }
   function updGroup(gi, field, val) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],[field]:val}; upd('opts')(ng); }
-  function addOption(gi) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],opts:[...ng[gi].opts,{id:'opt-'+Date.now(),l:'New Choice',m:1.0}]}; upd('opts')(ng); }
+  function addOption(gi) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],opts:[...ng[gi].opts,{id:'opt-'+Date.now(),l:'New Choice',price_type:'multiplier',price_val:1.0,m:1.0}]}; upd('opts')(ng); }
   function removeOption(gi, oi) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],opts:ng[gi].opts.filter((_,i)=>i!==oi)}; upd('opts')(ng); }
-  function updOption(gi, oi, field, val) { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],[field]:field==='m'?(parseFloat(val)||1.0):val}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }
+  function updOption(gi, oi, field, val) { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],[field]:val}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }
+
+  // Per-size pricing helpers — stores prices per size option id
+  function getSizeMultiplier(optId) {
+    const g = (p.opts||[]).find(g => g.key === 'size');
+    const o = g?.opts?.find(o => o.id === optId);
+    return o ? (o.price_val ?? o.m ?? 1) : 1;
+  }
+  function setSizePrices(optId, tierIdx, price) {
+    // Store as a multiplier relative to base tier[0] price
+    const base = p.pricing?.[0]?.p || 1;
+    const ng = [...(p.opts||[])];
+    const gi = ng.findIndex(g => g.key === 'size');
+    if (gi === -1) return;
+    const no = [...ng[gi].opts];
+    const oi = no.findIndex(o => o.id === optId);
+    if (oi === -1) return;
+    // Store per-size tier prices as size_prices: { tierIdx: price }
+    no[oi] = { ...no[oi], size_prices: { ...(no[oi].size_prices || {}), [tierIdx]: parseFloat(price) || 0 } };
+    ng[gi] = { ...ng[gi], opts: no };
+    upd('opts')(ng);
+  }
+  function getSizePrice(optId, tierIdx) {
+    const g = (p.opts||[]).find(g => g.key === 'size');
+    const o = g?.opts?.find(o => o.id === optId);
+    return o?.size_prices?.[tierIdx] ?? '';
+  }
+
+  const isSqft = p.sqft?.enabled;
+  const hasSizeGroup = (p.opts||[]).some(g => g.key === 'size');
+  const sizeGroup = (p.opts||[]).find(g => g.key === 'size');
+  const selectedSizeOpt = sizeGroup?.opts?.find(o => o.id === selectedOptKey);
 
   const inp = { width:'100%', background:'var(--s2)', border:'1px solid var(--bd)', color:'var(--tx)', padding:'7px 10px', borderRadius:6, fontSize:12, outline:'none', fontFamily:"'DM Sans',sans-serif" };
+  const sl = { ...inp, appearance:'none', backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E\")", backgroundRepeat:'no-repeat', backgroundPosition:'right 10px center', paddingRight:28 };
+
+  return (
+    <div>
+      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:22 }}>
+        <button className="abtn" onClick={onCancel}>← Back to List</button>
+        <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:22 }}>Editing: {prod.name}</h2>
+      </div>
+
+      {/* Label Configurator Settings */}
+      {p.label_configurator && (
+        <div className="aform-section" style={{ marginBottom:18 }}>
+          <div className="aform-title">🏷️ Label Configurator Settings</div>
+          <p style={{ fontSize:11, color:'var(--mu)', marginBottom:14, lineHeight:1.65 }}>Controls the label configurator shown to customers. Separate options with commas.</p>
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {[
+              { key:'lbl_shapes', label:'Available Shapes', hint:'Circle, Oval, Square, Rectangle, Custom' },
+              { key:'lbl_sizes', label:'Preset Sizes (in)', hint:'2" × 2", 3" × 3", 4" × 4", 4" × 6"' },
+              { key:'lbl_stocks', label:'Stock / Materials', hint:'Semi Gloss Paper, White BOPP, Clear BOPP' },
+              { key:'lbl_ink', label:'Ink Colours', hint:'CMYK (Full Colour), Black Only' },
+              { key:'lbl_finishing', label:'Finishing Options', hint:'Standard, Matte Lamination, Gloss Lamination, Spot UV' },
+            ].map(({ key, label, hint }) => (
+              <div key={key} className="aform-grp">
+                <label className="aform-lbl">{label}</label>
+                <input className="ainp" placeholder={hint}
+                  value={Array.isArray(p[key]) ? p[key].join(', ') : (p[key] || '')}
+                  onChange={e => upd(key)(e.target.value.split(',').map(x => x.trim()).filter(Boolean))} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Rush / Express availability */}
+      <div className="aform-section" style={{ marginBottom:18 }}>
+        <div className="aform-title">⚡ Turnaround Availability</div>
+        <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+          {[
+            { key:'rush_ok', label:'Rush (2–3 days)', ico:'⚡', pct: Math.round((pricing?.rush_pct??0.25)*100) },
+            { key:'express_ok', label:'Express (same/next day)', ico:'🚀', pct: Math.round((pricing?.express_pct??0.50)*100) },
+          ].map(({ key, label, ico, pct }) => {
+            const val = p[key] !== false;
+            return (
+              <div key={key} onClick={() => upd(key)(!val)}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 18px', borderRadius:10, border:`2px solid ${val ? 'var(--o)' : 'var(--bd)'}`, background: val ? 'rgba(249,115,22,.08)' : 'var(--s2)', cursor:'pointer', transition:'all .15s', userSelect:'none' }}>
+                <div style={{ fontSize:22 }}>{ico}</div>
+                <div><div style={{ fontWeight:700, fontSize:13 }}>{label}</div><div style={{ fontSize:11, color:'var(--mu)' }}>+{pct}% surcharge</div></div>
+                <div style={{ marginLeft:8, width:22, height:22, borderRadius:6, background: val ? 'var(--o)' : 'var(--bd)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color: val ? '#000' : 'var(--mu)', fontWeight:800 }}>{val ? '✓' : '✗'}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── NEW PRICING INTERFACE ── */}
+      <div style={{ display:'grid', gridTemplateColumns: hasSizeGroup ? '1fr 1fr' : '1fr', gap:16, marginBottom:18 }} className="ed-grid">
+
+        {/* LEFT: Quantity tiers + prices */}
+        <div className="aform-section">
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+            <div className="aform-title" style={{ margin:0 }}>
+              💰 {hasSizeGroup && selectedSizeOpt ? `Prices for "${selectedSizeOpt.l}"` : 'Quantity Tiers & Prices'}
+            </div>
+            <button className="abtn abtn-add" style={{ fontSize:11, padding:'5px 10px' }} onClick={addTier}>+ Add Tier</button>
+          </div>
+
+          {hasSizeGroup && !selectedSizeOpt && (
+            <div style={{ fontSize:12, color:'var(--mu)', background:'var(--s2)', borderRadius:8, padding:'10px 12px', marginBottom:12, borderLeft:'3px solid var(--o)' }}>
+              👆 Click a size option on the right to enter prices for that size, or edit the base prices below (used when no size is selected).
+            </div>
+          )}
+          {hasSizeGroup && selectedSizeOpt && (
+            <div style={{ fontSize:12, color:'var(--o)', background:'var(--ol)', borderRadius:8, padding:'10px 12px', marginBottom:12, fontWeight:600 }}>
+              ✏️ Editing prices for <strong>{selectedSizeOpt.l}</strong> — enter the actual dollar price per quantity tier.
+            </div>
+          )}
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:6, marginBottom:6 }}>
+            <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'.08em', color:'var(--mu)' }}>Quantity</div>
+            <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'.08em', color:'var(--mu)' }}>
+              {selectedSizeOpt ? `Price for ${selectedSizeOpt.l} ($)` : 'Base Price ($)'}
+            </div>
+            <div></div>
+          </div>
+
+          {(p.pricing || []).map((tier, ti) => (
+            <div key={ti} style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:6, marginBottom:6, alignItems:'center' }}>
+              <input type="number" style={inp} value={tier.q}
+                onChange={e => updTierQty(ti, e.target.value)} placeholder="Qty" />
+              {selectedSizeOpt ? (
+                <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                  <span style={{ color:'var(--mu)', fontSize:12 }}>$</span>
+                  <input type="number" step="0.01" style={{ ...inp, flex:1 }}
+                    value={getSizePrice(selectedSizeOpt.id, ti)}
+                    onChange={e => setSizePrices(selectedSizeOpt.id, ti, e.target.value)}
+                    placeholder={tier.p > 0 ? `base: $${tier.p}` : '0.00'} />
+                </div>
+              ) : (
+                <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                  <span style={{ color:'var(--mu)', fontSize:12 }}>$</span>
+                  <input type="number" step="0.01" style={{ ...inp, flex:1 }}
+                    value={tier.p} onChange={e => updTierPrice(ti, e.target.value)} />
+                </div>
+              )}
+              <button onClick={() => removeTier(ti)} style={{ padding:'5px 9px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12 }}>✕</button>
+            </div>
+          ))}
+
+          {/* Preview */}
+          {!isSqft && p.pricing?.length > 0 && (
+            <div style={{ marginTop:12, background:'var(--s2)', borderRadius:8, padding:'10px 12px' }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', letterSpacing:'.08em', marginBottom:6 }}>Preview</div>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                {p.pricing.map((tier, ti) => {
+                  const price = selectedSizeOpt ? (getSizePrice(selectedSizeOpt.id, ti) || tier.p) : tier.p;
+                  return (
+                    <div key={ti} style={{ padding:'5px 10px', borderRadius:6, background:'var(--sf)', border:'1px solid var(--bd)', fontSize:11, textAlign:'center' }}>
+                      <div style={{ fontWeight:700 }}>{tier.q.toLocaleString()}</div>
+                      <div style={{ color:'var(--o)', fontWeight:700 }}>${parseFloat(price||0).toFixed(2)}</div>
+                      <div style={{ fontSize:9, color:'var(--mu)' }}>${tier.q > 0 ? (parseFloat(price||0)/tier.q).toFixed(3) : '0'}/ea</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: Option groups — sizes clickable */}
+        <div className="aform-section">
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+            <div className="aform-title" style={{ margin:0 }}>🔧 Option Groups</div>
+            <button className="abtn abtn-add" style={{ fontSize:11, padding:'5px 10px' }} onClick={addGroup}>+ Add Group</button>
+          </div>
+
+          {(p.opts || []).map((g, gi) => {
+            const isSize = g.key === 'size';
+            return (
+              <div key={gi} style={{ border:`1px solid ${isSize ? 'var(--o)' : 'var(--bd)'}`, borderRadius:10, padding:12, marginBottom:12, background: isSize ? 'rgba(249,115,22,.03)' : 'var(--s2)' }}>
+                {/* Group header */}
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:8, marginBottom:10, alignItems:'center' }}>
+                  <div>
+                    <div style={{ fontSize:9, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>Group Label</div>
+                    <input style={inp} value={g.label} onChange={e => updGroup(gi,'label',e.target.value)} placeholder="e.g. Paper Stock" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize:9, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>Key (no spaces)</div>
+                    <input style={inp} value={g.key} onChange={e => updGroup(gi,'key',e.target.value.toLowerCase().replace(/\s+/g,'-'))} placeholder="paper" />
+                  </div>
+                  <button onClick={() => removeGroup(gi)} style={{ padding:'5px 9px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12, alignSelf:'flex-end' }}>✕ Remove</button>
+                </div>
+
+                {isSize && (
+                  <div style={{ fontSize:10, color:'var(--o)', marginBottom:8, fontWeight:600 }}>
+                    👆 Click a size below to enter its prices on the left
+                  </div>
+                )}
+
+                {/* Options */}
+                {(g.opts || []).map((o, oi) => {
+                  const pt = o.price_type || 'multiplier';
+                  const pv = o.price_val ?? o.m ?? 1;
+                  const isSel = isSize && selectedOptKey === o.id;
+                  return (
+                    <div key={oi} style={{ marginBottom:8 }}>
+                      {/* Size option — big clickable button */}
+                      {isSize ? (
+                        <div onClick={() => setSelectedOptKey(isSel ? null : o.id)}
+                          style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 12px', borderRadius:8, border:`2px solid ${isSel ? 'var(--o)' : 'var(--bd)'}`, background: isSel ? 'var(--ol)' : 'var(--sf)', cursor:'pointer', transition:'all .15s', userSelect:'none' }}>
+                          <div style={{ flex:1 }}>
+                            <input style={{ ...inp, background:'transparent', border:'none', padding:0, fontWeight: isSel ? 700 : 400, color: isSel ? 'var(--o)' : 'var(--tx)', fontSize:13 }}
+                              value={o.l} onChange={e => { e.stopPropagation(); updOption(gi,oi,'l',e.target.value); }}
+                              onClick={e => e.stopPropagation()} placeholder="e.g. 4×6 inches" />
+                          </div>
+                          <div style={{ fontSize:10, color: isSel ? 'var(--o)' : 'var(--mu)', fontWeight:600 }}>
+                            {getSizePrice(o.id, 0) ? `from $${getSizePrice(o.id,0)}` : 'click to set prices'}
+                          </div>
+                          <div style={{ width:18, height:18, borderRadius:4, background: isSel ? 'var(--o)' : 'var(--bd)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, color: isSel ? '#000' : 'var(--mu)', fontWeight:800, flexShrink:0 }}>
+                            {isSel ? '✓' : '→'}
+                          </div>
+                          <button onClick={e => { e.stopPropagation(); removeOption(gi,oi); }} style={{ padding:'3px 6px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>✕</button>
+                        </div>
+                      ) : (
+                        /* Regular option — label + price type + value */
+                        <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr 100px 70px auto', gap:5, alignItems:'center' }}>
+                          <input style={{...inp,fontSize:11}} value={o.l} onChange={e => updOption(gi,oi,'l',e.target.value)} placeholder="Option label" />
+                          <input style={{...inp,fontSize:10,fontFamily:"'DM Mono',monospace"}} value={o.id} onChange={e => updOption(gi,oi,'id',e.target.value.toLowerCase().replace(/\s+/g,'-'))} placeholder="key-id" />
+                          <select value={pt} style={{...sl,fontSize:10,padding:'6px 24px 6px 7px'}}
+                            onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; const defaults={multiplier:1.0,percent:10,fixed:5,linear_ft:2.5}; no[oi]={...no[oi],price_type:e.target.value,price_val:defaults[e.target.value],m:e.target.value==='multiplier'?(no[oi].price_val||1):1}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }}>
+                            <option value="multiplier">× Multiplier</option>
+                            <option value="percent">% Percent</option>
+                            <option value="fixed">$ Fixed</option>
+                            <option value="linear_ft">$/ft Linear</option>
+                          </select>
+                          <input type="number" step={pt==='multiplier'?'0.01':'1'} style={{...inp,fontSize:11,textAlign:'center'}}
+                            value={pv}
+                            onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; const v=parseFloat(e.target.value)||0; no[oi]={...no[oi],price_val:v,m:pt==='multiplier'?v:1,price_type:pt}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }} />
+                          <button onClick={() => removeOption(gi,oi)} style={{ padding:'5px 7px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>✕</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                <button onClick={() => addOption(gi)} style={{ fontSize:11, padding:'5px 10px', borderRadius:6, border:'1px dashed var(--bd)', background:'transparent', color:'var(--mu)', cursor:'pointer', marginTop:4 }}>+ Add {isSize ? 'Size' : 'Choice'}</button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
   return (
     <div>
@@ -1105,175 +1348,6 @@ function FullProductEditor({ prod, onSave, onCancel }) {
         </div>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18 }} className="ed-grid">
-
-        {/* Left — qty tiers */}
-        <div>
-          <div className="aform-section">
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-              <div className="aform-title" style={{ marginBottom:0 }}>📦 Quantity Tiers & Prices</div>
-              <button className="abtn abtn-add" style={{ fontSize:11 }} onClick={addTier}>+ Add Tier</button>
-            </div>
-            <p style={{ fontSize:11, color:'var(--mu)', marginBottom:14, lineHeight:1.65 }}>
-              Base price per quantity. Option multipliers stack on top at checkout.<br/>
-              Example: $49.92 base × Double Sided (1.22) = $60.90
-            </p>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:8, marginBottom:6 }}>
-              <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700, letterSpacing:'.06em' }}>Quantity</div>
-              <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700, letterSpacing:'.06em' }}>Base Price ($)</div>
-              <div></div>
-            </div>
-            {p.pricing.map((tier, ti) => (
-              <div key={ti} style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:8, marginBottom:8, alignItems:'center' }}>
-                <input type="number" min="1" value={tier.q} onChange={e => updTierQty(ti, e.target.value)} style={inp} placeholder="e.g. 100" />
-                <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
-                  <span style={{ padding:'0 8px', color:'var(--mu)', fontSize:12 }}>$</span>
-                  <input type="number" step="0.01" min="0" value={tier.p} onChange={e => updTierPrice(ti, e.target.value)} style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'7px 5px', fontSize:12, outline:'none' }} />
-                </div>
-                <button onClick={() => removeTier(ti)} style={{ padding:'6px 9px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12 }}>✕</button>
-              </div>
-            ))}
-          </div>
-
-          {p.sqft?.enabled && (
-            <div className="aform-section" style={{ marginTop:14 }}>
-              <div className="aform-title">📐 Sq Ft Pricing</div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-                <div className="afg">
-                  <label className="aflbl">Rate per Sq Ft ($)</label>
-                  <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
-                    <span style={{ padding:'0 8px', color:'var(--mu)', fontSize:12 }}>$</span>
-                    <input type="number" step="0.25" value={p.sqft.rate} onChange={e => upd('sqft')({...p.sqft, rate:parseFloat(e.target.value)||p.sqft.rate})} style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'7px 5px', fontSize:12, outline:'none' }} />
-                  </div>
-                </div>
-                <div className="afg">
-                  <label className="aflbl">Min Sq Ft</label>
-                  <input type="number" step="0.5" value={p.sqft.min} onChange={e => upd('sqft')({...p.sqft, min:parseFloat(e.target.value)||p.sqft.min})} style={inp} />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right — option groups */}
-        <div>
-          <div className="aform-section">
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-              <div className="aform-title" style={{ marginBottom:0 }}>🎛️ Option Groups</div>
-              <button className="abtn abtn-add" style={{ fontSize:11 }} onClick={addGroup}>+ Add Group</button>
-            </div>
-            <p style={{ fontSize:11, color:'var(--mu)', marginBottom:14, lineHeight:1.65 }}>
-              Each group = choices shown to customer (Coating, Size, Sides, etc.).<br/>
-              Multiplier: 1.0 = no change · 1.22 = +22% · 0.95 = -5%
-            </p>
-
-            {(p.opts||[]).length === 0 && (
-              <div style={{ textAlign:'center', padding:'20px 0', color:'var(--mu)', fontSize:13 }}>No option groups. Click "+ Add Group" to create one.</div>
-            )}
-
-            {(p.opts||[]).map((g, gi) => (
-              <div key={gi} style={{ background:'var(--dk)', border:'1px solid var(--bd)', borderRadius:10, padding:14, marginBottom:12 }}>
-                <div style={{ display:'flex', gap:8, marginBottom:10, alignItems:'flex-end' }}>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:9, color:'var(--mu)', marginBottom:3, textTransform:'uppercase', letterSpacing:'.05em', fontWeight:700 }}>Group Label</div>
-                    <input value={g.label} onChange={e => updGroup(gi,'label',e.target.value)} style={inp} placeholder="e.g. Coating" />
-                  </div>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:9, color:'var(--mu)', marginBottom:3, textTransform:'uppercase', letterSpacing:'.05em', fontWeight:700 }}>Key (no spaces)</div>
-                    <input value={g.key} onChange={e => updGroup(gi,'key',e.target.value.toLowerCase().replace(/\s+/g,'-'))} style={{...inp, fontFamily:"'DM Mono',monospace"}} placeholder="e.g. coat" />
-                  </div>
-                  <button onClick={() => removeGroup(gi)} style={{ padding:'7px 10px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12, flexShrink:0 }}>✕ Remove</button>
-                </div>
-                <div style={{ marginBottom:8 }}>
-                  <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 120px 80px auto', gap:5, marginBottom:5, padding:'0 2px' }}>
-                    <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>Option Label</div>
-                    <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>ID Key</div>
-                    <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>Price Type</div>
-                    <div style={{ fontSize:9, color:'var(--mu)', textTransform:'uppercase', fontWeight:700 }}>Value</div>
-                    <div></div>
-                  </div>
-                  {g.opts.map((o, oi) => {
-                    const pt = o.price_type || 'multiplier';
-                    const pv = o.price_val ?? o.m ?? 1;
-                    const ptLabel = pt === 'multiplier' ? '×' : pt === 'percent' ? '%' : pt === 'fixed' ? '$' : '$/ft';
-                    const isSizeGroup = g.key === 'size';
-                    return (
-                      <div key={oi} style={{ marginBottom: 8 }}>
-                        <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 120px 80px auto', gap:5, marginBottom: (isSizeGroup || pt === 'linear_ft') ? 4 : 0, alignItems:'center' }}>
-                          <input value={o.l} onChange={e => updOption(gi,oi,'l',e.target.value)} style={{...inp,fontSize:11}} placeholder="UV Gloss" />
-                          <input value={o.id} onChange={e => updOption(gi,oi,'id',e.target.value.toLowerCase().replace(/\s+/g,'-'))} style={{...inp,fontSize:10,fontFamily:"'DM Mono',monospace"}} placeholder="uv" />
-                          <select value={pt} onChange={e => {
-                            const ng=[...(p.opts||[])]; const no=[...ng[gi].opts];
-                            const defaults = { multiplier:1.0, percent:10, fixed:5, linear_ft:2.5 };
-                            no[oi]={...no[oi], price_type:e.target.value, price_val: defaults[e.target.value], m: e.target.value==='multiplier' ? (no[oi].price_val||1) : 1 };
-                            ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
-                          }} style={{...inp,fontSize:11,padding:'6px 7px'}}>
-                            <option value="multiplier">Multiplier (×)</option>
-                            <option value="percent">Percentage (%)</option>
-                            <option value="fixed">Fixed Add-on ($)</option>
-                            <option value="linear_ft">Linear Footage ($/ft)</option>
-                          </select>
-                          <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
-                            <span style={{ padding:'0 5px', color:'var(--mu)', fontSize:11, borderRight:'1px solid var(--bd)' }}>{ptLabel}</span>
-                            <input type="number" step={pt==='multiplier'?'0.01':pt==='fixed'||pt==='linear_ft'?'0.25':'1'} min={pt==='multiplier'?'0.1':'0'}
-                              value={pv}
-                              onChange={e => {
-                                const ng=[...(p.opts||[])]; const no=[...ng[gi].opts];
-                                const v = parseFloat(e.target.value)||0;
-                                no[oi]={...no[oi], price_val:v, m: pt==='multiplier'?v:1, price_type:pt };
-                                ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
-                              }}
-                              style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'6px 5px', fontSize:11, outline:'none' }} />
-                          </div>
-                          <button onClick={() => removeOption(gi,oi)} style={{ padding:'5px 7px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>✕</button>
-                        </div>
-                        {/* Width/Height fields for size options (used by linear footage calc) */}
-                        {isSizeGroup && (
-                          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:5, paddingLeft:4 }}>
-                            <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
-                              <span style={{ padding:'0 6px', color:'var(--mu)', fontSize:10, borderRight:'1px solid var(--bd)', whiteSpace:'nowrap' }}>W ft</span>
-                              <input type="number" step="0.5" min="0" value={o.w||''} placeholder="e.g. 4"
-                                onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],w:parseFloat(e.target.value)||0}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }}
-                                style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'5px', fontSize:11, outline:'none' }} />
-                            </div>
-                            <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
-                              <span style={{ padding:'0 6px', color:'var(--mu)', fontSize:10, borderRight:'1px solid var(--bd)', whiteSpace:'nowrap' }}>H ft</span>
-                              <input type="number" step="0.5" min="0" value={o.h||''} placeholder="e.g. 8"
-                                onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],h:parseFloat(e.target.value)||0}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }}
-                                style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'5px', fontSize:11, outline:'none' }} />
-                            </div>
-                            <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--bd)', borderRadius:6, overflow:'hidden', background:'var(--s2)' }}>
-                              <span style={{ padding:'0 6px', color:'var(--mu)', fontSize:10, borderRight:'1px solid var(--bd)', whiteSpace:'nowrap' }}>sqft</span>
-                              <input type="number" step="0.5" min="0" value={o.sqft||''} placeholder="auto"
-                                onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],sqft:parseFloat(e.target.value)||0}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }}
-                                style={{ flex:1, background:'transparent', border:'none', color:'var(--tx)', padding:'5px', fontSize:11, outline:'none' }} />
-                            </div>
-                          </div>
-                        )}
-                        {/* Linear footage hint */}
-                        {pt === 'linear_ft' && !isSizeGroup && (
-                          <div style={{ fontSize:10, color:'var(--mu)', paddingLeft:4, marginTop:2 }}>
-                            💡 Will multiply $/ft × customer's width dimension
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                <button className="abtn" style={{ fontSize:11, padding:'4px 12px' }} onClick={() => addOption(gi)}>+ Add Choice</button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ background:'var(--sf)', border:'1px solid var(--bd)', borderRadius:10, padding:'12px 16px', marginTop:14, fontSize:11, color:'var(--mu)', lineHeight:1.7 }}>
-        <strong style={{ color:'var(--tx)' }}>💡 Option Pricing Types:</strong>{" "}
-        <span><strong style={{color:'var(--tx)'}}>Multiplier</strong> — ×1.22 multiplies base price by 1.22 (22% increase). Use for paper upgrades, double sided, etc.</span>{" · "}
-        <span><strong style={{color:'var(--tx)'}}>Percentage</strong> — adds X% of base price. e.g. 15 = +15%.</span>{" · "}
-        <span><strong style={{color:'var(--tx)'}}>Fixed</strong> — adds flat dollar amount regardless of qty. e.g. 10 = +$10.00.</span>{" · "}
-        <span><strong style={{color:'var(--tx)'}}>Linear Footage</strong> — multiplies $/ft rate by the width dimension. e.g. 2.50 = $2.50/ft.</span>
-      </div>
 
       <div style={{ display:'flex', gap:10, marginTop:18 }}>
         <button className="abtn abtn-add" onClick={() => onSave(p)} style={{ fontSize:14, padding:'10px 24px' }}>💾 Save All Changes</button>
