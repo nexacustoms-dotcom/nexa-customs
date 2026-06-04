@@ -1357,7 +1357,7 @@ function FullProductEditor({ prod, onSave, onCancel }) {
   );
 }
 
-// ── ORDERS TAB ────────────────────────────────────────────────────────────────
+// ── ORDERS TAB ─────────────────────────────────────────────────────────────────
 function OrdersTab() {
   const { ls, showToast } = useApp();
   const [orders, setOrders] = useState([]);
