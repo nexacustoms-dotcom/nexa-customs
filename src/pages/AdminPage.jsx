@@ -1,4 +1,3 @@
-// Nexa Customs Admin Panel v2
 import { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 
@@ -1285,70 +1284,6 @@ function FullProductEditor({ prod, onSave, onCancel }) {
           })}
         </div>
       </div>
-
-  return (
-    <div>
-      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:22 }}>
-        <button className="abtn" onClick={onCancel}>← Back to List</button>
-        <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:22 }}>Editing: {prod.name}</h2>
-      </div>
-
-      {/* Label Configurator Settings — only shown for label products */}
-      {p.label_configurator && (
-        <div className="aform-section" style={{ marginBottom:18 }}>
-          <div className="aform-title">🏷️ Label Configurator Settings</div>
-          <p style={{ fontSize:11, color:'var(--mu)', marginBottom:14, lineHeight:1.65 }}>
-            Controls the label configurator shown to customers. Separate options with commas.
-          </p>
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            {[
-              { key:'lbl_shapes',    label:'Available Shapes',   hint:'Circle, Oval, Square, Rectangle, Custom' },
-              { key:'lbl_sizes',     label:'Preset Sizes (in)',  hint:'2" × 2", 3" × 3", 4" × 4", 4" × 6"' },
-              { key:'lbl_stocks',    label:'Stock / Materials',  hint:'Semi Gloss Paper, White BOPP, Clear BOPP' },
-              { key:'lbl_ink',       label:'Ink Colours',        hint:'CMYK (Full Colour), Black Only' },
-              { key:'lbl_finishing', label:'Finishing Options',  hint:'Standard, Matte Lamination, Gloss Lamination, Spot UV' },
-            ].map(({ key, label, hint }) => (
-              <div key={key} className="aform-grp">
-                <label className="aform-lbl">{label}</label>
-                <input className="ainp" placeholder={hint}
-                  value={Array.isArray(p[key]) ? p[key].join(', ') : (p[key] || '')}
-                  onChange={e => upd(key)(e.target.value.split(',').map(x => x.trim()).filter(Boolean))} />
-                <div style={{ fontSize:10, color:'var(--mu)', marginTop:3 }}>Separate options with commas</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Rush / Express availability */}
-      <div className="aform-section" style={{ marginBottom:18 }}>
-        <div className="aform-title">⚡ Turnaround Availability</div>
-        <p style={{ fontSize:11, color:'var(--mu)', marginBottom:12, lineHeight:1.65 }}>
-          Control which turnaround options customers can select for this product on the product page.
-        </p>
-        <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-          {[
-            { key:'rush_ok',    label:'Rush (2–3 days)',    ico:'⚡', pct: Math.round((pricing?.rush_pct??0.25)*100) },
-            { key:'express_ok', label:'Express (same/next day)', ico:'🚀', pct: Math.round((pricing?.express_pct??0.50)*100) },
-          ].map(({ key, label, ico, pct }) => {
-            const val = p[key] !== false;
-            return (
-              <div key={key} onClick={() => upd(key)(!val)}
-                style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 18px', borderRadius:10, border:`2px solid ${val ? 'var(--o)' : 'var(--bd)'}`, background: val ? 'rgba(249,115,22,.08)' : 'var(--s2)', cursor:'pointer', transition:'all .15s', userSelect:'none' }}>
-                <div style={{ fontSize:22 }}>{ico}</div>
-                <div>
-                  <div style={{ fontWeight:700, fontSize:13 }}>{label}</div>
-                  <div style={{ fontSize:11, color:'var(--mu)' }}>+{pct}% surcharge</div>
-                </div>
-                <div style={{ marginLeft:8, width:22, height:22, borderRadius:6, background: val ? 'var(--o)' : 'var(--bd)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color: val ? '#000' : 'var(--mu)', fontWeight:800, transition:'all .15s' }}>
-                  {val ? '✓' : '✗'}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
 
       <div style={{ display:'flex', gap:10, marginTop:18 }}>
         <button className="abtn abtn-add" onClick={() => onSave(p)} style={{ fontSize:14, padding:'10px 24px' }}>💾 Save All Changes</button>
