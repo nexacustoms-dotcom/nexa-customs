@@ -1,3 +1,4 @@
+// Nexa Customs Admin Panel v2
 import { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 
