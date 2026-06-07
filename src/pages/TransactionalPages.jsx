@@ -104,28 +104,41 @@ export function CheckoutPage() {
 
   useEffect(() => {
     if (payMethod !== 'stripe' || step !== 4) return;
-    const pk = cfg.stripePk();
-    if (!pk || pk.length < 10 || typeof window.Stripe === 'undefined') {
-      // Give Stripe script time to load, then mark check done
-      setTimeout(() => setStripeCheckDone(true), 3000);
-      return;
+    setStripeReady(false);
+    setStripeCheckDone(false);
+
+    function initStripe() {
+      const pk = cfg.stripePk();
+      if (!pk || pk.length < 10) { setStripeCheckDone(true); return; }
+      if (typeof window.Stripe === 'undefined') return false; // not loaded yet
+      try {
+        const stripe = window.Stripe(pk);
+        const elements = stripe.elements({ appearance: { theme: 'night', variables: { colorPrimary: '#f97316', colorBackground: '#242429', colorText: '#f0ede8', borderRadius: '9px' } } });
+        const card = elements.create('card', {
+          hidePostalCode: true,
+          style: { base: { color: '#f0ede8', fontSize: '14px', fontFamily: 'DM Sans,sans-serif', '::placeholder': { color: '#7c7c8a' } } }
+        });
+        setTimeout(() => {
+          try { card.mount('#stripe-card-el'); setStripeReady(true); } catch(e) { console.warn('Card mount:', e.message); }
+          setStripeCheckDone(true);
+        }, 300);
+        card.on('change', e => setStripeErr(e.error?.message || ''));
+        stripeRef.current = stripe; cardRef.current = card;
+        return true;
+      } catch (e) { console.warn('Stripe init:', e.message); setStripeCheckDone(true); return true; }
     }
-    try {
-      const stripe = window.Stripe(pk);
-      const elements = stripe.elements({ appearance: { theme: 'night', variables: { colorPrimary: '#f97316', colorBackground: '#242429', colorText: '#f0ede8', borderRadius: '9px' } } });
-      const card = elements.create('card', {
-        hidePostalCode: true,
-        style: { base: { color: '#f0ede8', fontSize: '14px', fontFamily: 'DM Sans,sans-serif', '::placeholder': { color: '#7c7c8a' } } }
-      });
-      setTimeout(() => {
-        try { card.mount('#stripe-card-el'); setStripeReady(true); } catch {}
-        setStripeCheckDone(true);
-      }, 500);
-      card.on('change', e => setStripeErr(e.error?.message || ''));
-      stripeRef.current = stripe; cardRef.current = card;
-    } catch (e) {
-      console.warn('Stripe:', e.message);
-      setTimeout(() => setStripeCheckDone(true), 3000);
+
+    // Try immediately, then poll every 200ms for up to 8 seconds
+    if (!initStripe()) {
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (initStripe() || attempts > 40) {
+          clearInterval(interval);
+          if (attempts > 40) setStripeCheckDone(true);
+        }
+      }, 200);
+      return () => clearInterval(interval);
     }
   }, [payMethod, step]);
 
