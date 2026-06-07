@@ -1,3 +1,4 @@
+// Nexa Customs Admin Panel v2
 import { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 
@@ -1026,175 +1027,109 @@ function PricingTab() {
 function FullProductEditor({ prod, onSave, onCancel }) {
   const { pricing } = useApp();
   const [p, setP] = useState(JSON.parse(JSON.stringify(prod)));
-  const [selectedOptKey, setSelectedOptKey] = useState(null); // which size option is selected for per-size pricing
+  const [selectedOptKey, setSelectedOptKey] = useState(null);
   const upd = k => v => setP(prev => ({ ...prev, [k]: v }));
-
-  // Tier helpers
   function updTierPrice(ti, val) { const np=[...p.pricing]; np[ti]={...np[ti],p:parseFloat(val)||0}; upd('pricing')(np); }
   function updTierQty(ti, val) { const np=[...p.pricing]; np[ti]={...np[ti],q:parseInt(val)||0}; upd('pricing')(np); }
   function addTier() { upd('pricing')([...p.pricing, { q:0, p:0 }]); }
   function removeTier(ti) { upd('pricing')(p.pricing.filter((_,i)=>i!==ti)); }
-
-  // Option helpers
   function addGroup() { upd('opts')([...(p.opts||[]), { key:'group-'+Date.now(), label:'New Group', opts:[{id:'opt1',l:'Option 1',price_type:'multiplier',price_val:1.0,m:1.0}] }]); }
   function removeGroup(gi) { upd('opts')((p.opts||[]).filter((_,i)=>i!==gi)); }
   function updGroup(gi, field, val) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],[field]:val}; upd('opts')(ng); }
   function addOption(gi) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],opts:[...ng[gi].opts,{id:'opt-'+Date.now(),l:'New Choice',price_type:'multiplier',price_val:1.0,m:1.0}]}; upd('opts')(ng); }
-  function removeOption(gi, oi) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],opts:ng[gi].opts.filter((_,i)=>i!==oi)}; upd('opts')(ng); }
-  function updOption(gi, oi, field, val) { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],[field]:val}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }
-
-  // Per-size pricing helpers — stores prices per size option id
-  function getSizeMultiplier(optId) {
-    const g = (p.opts||[]).find(g => g.key === 'size');
-    const o = g?.opts?.find(o => o.id === optId);
-    return o ? (o.price_val ?? o.m ?? 1) : 1;
+  function removeOption(gi,oi) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],opts:ng[gi].opts.filter((_,i)=>i!==oi)}; upd('opts')(ng); }
+  function updOption(gi,oi,field,val) { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],[field]:val}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }
+  function setSizePrices(optId,tierIdx,price) {
+    const ng=[...(p.opts||[])]; const gi=ng.findIndex(g=>g.key==='size'); if(gi===-1)return;
+    const no=[...ng[gi].opts]; const oi=no.findIndex(o=>o.id===optId); if(oi===-1)return;
+    no[oi]={...no[oi],size_prices:{...(no[oi].size_prices||{}),[tierIdx]:parseFloat(price)||0}};
+    ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
   }
-  function setSizePrices(optId, tierIdx, price) {
-    // Store as a multiplier relative to base tier[0] price
-    const base = p.pricing?.[0]?.p || 1;
-    const ng = [...(p.opts||[])];
-    const gi = ng.findIndex(g => g.key === 'size');
-    if (gi === -1) return;
-    const no = [...ng[gi].opts];
-    const oi = no.findIndex(o => o.id === optId);
-    if (oi === -1) return;
-    // Store per-size tier prices as size_prices: { tierIdx: price }
-    no[oi] = { ...no[oi], size_prices: { ...(no[oi].size_prices || {}), [tierIdx]: parseFloat(price) || 0 } };
-    ng[gi] = { ...ng[gi], opts: no };
-    upd('opts')(ng);
-  }
-  function getSizePrice(optId, tierIdx) {
-    const g = (p.opts||[]).find(g => g.key === 'size');
-    const o = g?.opts?.find(o => o.id === optId);
+  function getSizePrice(optId,tierIdx) {
+    const g=(p.opts||[]).find(g=>g.key==='size'); const o=g?.opts?.find(o=>o.id===optId);
     return o?.size_prices?.[tierIdx] ?? '';
   }
-
   const isSqft = p.sqft?.enabled;
-  const hasSizeGroup = (p.opts||[]).some(g => g.key === 'size');
-  const sizeGroup = (p.opts||[]).find(g => g.key === 'size');
-  const selectedSizeOpt = sizeGroup?.opts?.find(o => o.id === selectedOptKey);
-
+  const hasSizeGroup = (p.opts||[]).some(g=>g.key==='size');
+  const sizeGroup = (p.opts||[]).find(g=>g.key==='size');
+  const selectedSizeOpt = sizeGroup?.opts?.find(o=>o.id===selectedOptKey);
   const inp = { width:'100%', background:'var(--s2)', border:'1px solid var(--bd)', color:'var(--tx)', padding:'7px 10px', borderRadius:6, fontSize:12, outline:'none', fontFamily:"'DM Sans',sans-serif" };
-  const sl = { ...inp, appearance:'none', backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none'/%3E%3C/svg%3E\")", backgroundRepeat:'no-repeat', backgroundPosition:'right 10px center', paddingRight:28 };
-
+  const sl = { ...inp, appearance:'none', backgroundRepeat:'no-repeat', backgroundPosition:'right 10px center', paddingRight:28 };
   return (
     <div>
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:22 }}>
-        <button className="abtn" onClick={onCancel}>← Back to List</button>
+        <button className="abtn" onClick={onCancel}>back Back to List</button>
         <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:22 }}>Editing: {prod.name}</h2>
       </div>
-
-      {/* Label Configurator Settings */}
       {p.label_configurator && (
         <div className="aform-section" style={{ marginBottom:18 }}>
-          <div className="aform-title">🏷️ Label Configurator Settings</div>
-          <p style={{ fontSize:11, color:'var(--mu)', marginBottom:14, lineHeight:1.65 }}>Controls the label configurator shown to customers. Separate options with commas.</p>
+          <div className="aform-title">Label Configurator Settings</div>
           <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            {[
-              { key:'lbl_shapes', label:'Available Shapes', hint:'Circle, Oval, Square, Rectangle, Custom' },
-              { key:'lbl_sizes', label:'Preset Sizes (in)', hint:'2" × 2", 3" × 3", 4" × 4", 4" × 6"' },
-              { key:'lbl_stocks', label:'Stock / Materials', hint:'Semi Gloss Paper, White BOPP, Clear BOPP' },
-              { key:'lbl_ink', label:'Ink Colours', hint:'CMYK (Full Colour), Black Only' },
-              { key:'lbl_finishing', label:'Finishing Options', hint:'Standard, Matte Lamination, Gloss Lamination, Spot UV' },
-            ].map(({ key, label, hint }) => (
+            {[['lbl_shapes','Shapes','Circle, Oval, Square'],['lbl_sizes','Sizes','2x2, 3x3'],['lbl_stocks','Materials','Semi Gloss'],['lbl_ink','Ink','CMYK'],['lbl_finishing','Finishing','Standard']].map(([key,label,hint]) => (
               <div key={key} className="aform-grp">
                 <label className="aform-lbl">{label}</label>
-                <input className="ainp" placeholder={hint}
-                  value={Array.isArray(p[key]) ? p[key].join(', ') : (p[key] || '')}
-                  onChange={e => upd(key)(e.target.value.split(',').map(x => x.trim()).filter(Boolean))} />
+                <input className="ainp" placeholder={hint} value={Array.isArray(p[key]) ? p[key].join(', ') : (p[key]||'')} onChange={e => upd(key)(e.target.value.split(',').map(x=>x.trim()).filter(Boolean))} />
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* Rush / Express availability */}
       <div className="aform-section" style={{ marginBottom:18 }}>
-        <div className="aform-title">⚡ Turnaround Availability</div>
+        <div className="aform-title">Turnaround Availability</div>
         <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-          {[
-            { key:'rush_ok', label:'Rush (2–3 days)', ico:'⚡', pct: Math.round((pricing?.rush_pct??0.25)*100) },
-            { key:'express_ok', label:'Express (same/next day)', ico:'🚀', pct: Math.round((pricing?.express_pct??0.50)*100) },
-          ].map(({ key, label, ico, pct }) => {
+          {[['rush_ok','Rush (2-3 days)','R',Math.round((pricing?.rush_pct??0.25)*100)],['express_ok','Express (same/next)','E',Math.round((pricing?.express_pct??0.50)*100)]].map(([key,label,ico,pct]) => {
             const val = p[key] !== false;
             return (
-              <div key={key} onClick={() => upd(key)(!val)}
-                style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 18px', borderRadius:10, border:`2px solid ${val ? 'var(--o)' : 'var(--bd)'}`, background: val ? 'rgba(249,115,22,.08)' : 'var(--s2)', cursor:'pointer', transition:'all .15s', userSelect:'none' }}>
-                <div style={{ fontSize:22 }}>{ico}</div>
-                <div><div style={{ fontWeight:700, fontSize:13 }}>{label}</div><div style={{ fontSize:11, color:'var(--mu)' }}>+{pct}% surcharge</div></div>
-                <div style={{ marginLeft:8, width:22, height:22, borderRadius:6, background: val ? 'var(--o)' : 'var(--bd)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color: val ? '#000' : 'var(--mu)', fontWeight:800 }}>{val ? '✓' : '✗'}</div>
+              <div key={key} onClick={() => upd(key)(!val)} style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 18px', borderRadius:10, border:'2px solid '+(val ? 'var(--o)' : 'var(--bd)'), background:val ? 'rgba(249,115,22,.08)' : 'var(--s2)', cursor:'pointer', userSelect:'none' }}>
+                <div style={{ fontWeight:700, fontSize:13 }}>{label}</div>
+                <div style={{ fontSize:11, color:'var(--mu)' }}>+{pct}%</div>
+                <div style={{ width:22, height:22, borderRadius:6, background:val ? 'var(--o)' : 'var(--bd)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:val ? '#000' : 'var(--mu)', fontWeight:800 }}>{val ? 'Y' : 'N'}</div>
               </div>
             );
           })}
         </div>
       </div>
-
-      {/* ── NEW PRICING INTERFACE ── */}
-      <div style={{ display:'grid', gridTemplateColumns: hasSizeGroup ? '1fr 1fr' : '1fr', gap:16, marginBottom:18 }} className="ed-grid">
-
-        {/* LEFT: Quantity tiers + prices */}
+      <div style={{ display:'grid', gridTemplateColumns:hasSizeGroup ? '1fr 1fr' : '1fr', gap:16, marginBottom:18 }}>
         <div className="aform-section">
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-            <div className="aform-title" style={{ margin:0 }}>
-              💰 {hasSizeGroup && selectedSizeOpt ? `Prices for "${selectedSizeOpt.l}"` : 'Quantity Tiers & Prices'}
-            </div>
+            <div className="aform-title" style={{ margin:0 }}>Quantity Tiers</div>
             <button className="abtn abtn-add" style={{ fontSize:11, padding:'5px 10px' }} onClick={addTier}>+ Add Tier</button>
           </div>
-
           {hasSizeGroup && !selectedSizeOpt && (
             <div style={{ fontSize:12, color:'var(--mu)', background:'var(--s2)', borderRadius:8, padding:'10px 12px', marginBottom:12, borderLeft:'3px solid var(--o)' }}>
-              👆 Click a size option on the right to enter prices for that size, or edit the base prices below (used when no size is selected).
+              Click a size on the right to enter prices for it.
             </div>
           )}
           {hasSizeGroup && selectedSizeOpt && (
             <div style={{ fontSize:12, color:'var(--o)', background:'var(--ol)', borderRadius:8, padding:'10px 12px', marginBottom:12, fontWeight:600 }}>
-              ✏️ Editing prices for <strong>{selectedSizeOpt.l}</strong> — enter the actual dollar price per quantity tier.
+              Editing prices for: {selectedSizeOpt.l}
             </div>
           )}
-
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:6, marginBottom:6 }}>
-            <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'.08em', color:'var(--mu)' }}>Quantity</div>
-            <div style={{ fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'.08em', color:'var(--mu)' }}>
-              {selectedSizeOpt ? `Price for ${selectedSizeOpt.l} ($)` : 'Base Price ($)'}
-            </div>
-            <div></div>
-          </div>
-
-          {(p.pricing || []).map((tier, ti) => (
+          {(p.pricing||[]).map((tier,ti) => (
             <div key={ti} style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:6, marginBottom:6, alignItems:'center' }}>
-              <input type="number" style={inp} value={tier.q}
-                onChange={e => updTierQty(ti, e.target.value)} placeholder="Qty" />
-              {selectedSizeOpt ? (
-                <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                  <span style={{ color:'var(--mu)', fontSize:12 }}>$</span>
-                  <input type="number" step="0.01" style={{ ...inp, flex:1 }}
-                    value={getSizePrice(selectedSizeOpt.id, ti)}
-                    onChange={e => setSizePrices(selectedSizeOpt.id, ti, e.target.value)}
-                    placeholder={tier.p > 0 ? `base: $${tier.p}` : '0.00'} />
-                </div>
-              ) : (
-                <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                  <span style={{ color:'var(--mu)', fontSize:12 }}>$</span>
-                  <input type="number" step="0.01" style={{ ...inp, flex:1 }}
-                    value={tier.p} onChange={e => updTierPrice(ti, e.target.value)} />
-                </div>
-              )}
-              <button onClick={() => removeTier(ti)} style={{ padding:'5px 9px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12 }}>✕</button>
+              <input type="number" style={inp} value={tier.q} onChange={e => updTierQty(ti,e.target.value)} placeholder="Qty" />
+              <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                <span style={{ color:'var(--mu)', fontSize:12 }}>$</span>
+                {selectedSizeOpt
+                  ? <input type="number" step="0.01" style={{ ...inp, flex:1 }} value={getSizePrice(selectedSizeOpt.id,ti)} onChange={e => setSizePrices(selectedSizeOpt.id,ti,e.target.value)} placeholder={'base:'+tier.p} />
+                  : <input type="number" step="0.01" style={{ ...inp, flex:1 }} value={tier.p} onChange={e => updTierPrice(ti,e.target.value)} />
+                }
+              </div>
+              <button onClick={() => removeTier(ti)} style={{ padding:'5px 9px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12 }}>X</button>
             </div>
           ))}
-
-          {/* Preview */}
-          {!isSqft && p.pricing?.length > 0 && (
+          {!isSqft && (p.pricing||[]).length > 0 && (
             <div style={{ marginTop:12, background:'var(--s2)', borderRadius:8, padding:'10px 12px' }}>
-              <div style={{ fontSize:10, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', letterSpacing:'.08em', marginBottom:6 }}>Preview</div>
+              <div style={{ fontSize:10, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:6 }}>Preview</div>
               <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-                {p.pricing.map((tier, ti) => {
-                  const price = selectedSizeOpt ? (getSizePrice(selectedSizeOpt.id, ti) || tier.p) : tier.p;
+                {(p.pricing||[]).map((tier,ti) => {
+                  const sp = selectedSizeOpt ? getSizePrice(selectedSizeOpt.id,ti) : null;
+                  const prNum = parseFloat(sp||tier.p||0);
                   return (
                     <div key={ti} style={{ padding:'5px 10px', borderRadius:6, background:'var(--sf)', border:'1px solid var(--bd)', fontSize:11, textAlign:'center' }}>
-                      <div style={{ fontWeight:700 }}>{tier.q.toLocaleString()}</div>
-                      <div style={{ color:'var(--o)', fontWeight:700 }}>${parseFloat(price||0).toFixed(2)}</div>
-                      <div style={{ fontSize:9, color:'var(--mu)' }}>${tier.q > 0 ? (parseFloat(price||0)/tier.q).toFixed(3) : '0'}/ea</div>
+                      <div style={{ fontWeight:700 }}>{(tier.q||0).toLocaleString()}</div>
+                      <div style={{ color:'var(--o)', fontWeight:700 }}>{'$'+prNum.toFixed(2)}</div>
+                      <div style={{ fontSize:9, color:'var(--mu)' }}>{tier.q > 0 ? '$'+(prNum/tier.q).toFixed(3)+'/ea' : ''}</div>
                     </div>
                   );
                 })}
@@ -1202,77 +1137,53 @@ function FullProductEditor({ prod, onSave, onCancel }) {
             </div>
           )}
         </div>
-
-        {/* RIGHT: Option groups — sizes clickable */}
         <div className="aform-section">
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-            <div className="aform-title" style={{ margin:0 }}>🔧 Option Groups</div>
+            <div className="aform-title" style={{ margin:0 }}>Option Groups</div>
             <button className="abtn abtn-add" style={{ fontSize:11, padding:'5px 10px' }} onClick={addGroup}>+ Add Group</button>
           </div>
-
-          {(p.opts || []).map((g, gi) => {
+          {(p.opts||[]).map((g,gi) => {
             const isSize = g.key === 'size';
             return (
-              <div key={gi} style={{ border:`1px solid ${isSize ? 'var(--o)' : 'var(--bd)'}`, borderRadius:10, padding:12, marginBottom:12, background: isSize ? 'rgba(249,115,22,.03)' : 'var(--s2)' }}>
-                {/* Group header */}
+              <div key={gi} style={{ border:'1px solid '+(isSize ? 'var(--o)' : 'var(--bd)'), borderRadius:10, padding:12, marginBottom:12, background:isSize ? 'rgba(249,115,22,.03)' : 'var(--s2)' }}>
                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:8, marginBottom:10, alignItems:'center' }}>
                   <div>
-                    <div style={{ fontSize:9, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>Group Label</div>
-                    <input style={inp} value={g.label} onChange={e => updGroup(gi,'label',e.target.value)} placeholder="e.g. Paper Stock" />
+                    <div style={{ fontSize:9, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>Label</div>
+                    <input style={inp} value={g.label} onChange={e => updGroup(gi,'label',e.target.value)} />
                   </div>
                   <div>
-                    <div style={{ fontSize:9, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>Key (no spaces)</div>
-                    <input style={inp} value={g.key} onChange={e => updGroup(gi,'key',e.target.value.toLowerCase().replace(/\s+/g,'-'))} placeholder="paper" />
+                    <div style={{ fontSize:9, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>Key</div>
+                    <input style={inp} value={g.key} onChange={e => updGroup(gi,'key',e.target.value.toLowerCase().replace(/\s+/g,'-'))} />
                   </div>
-                  <button onClick={() => removeGroup(gi)} style={{ padding:'5px 9px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12, alignSelf:'flex-end' }}>✕ Remove</button>
+                  <button onClick={() => removeGroup(gi)} style={{ padding:'5px 9px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12, alignSelf:'flex-end' }}>X</button>
                 </div>
-
-                {isSize && (
-                  <div style={{ fontSize:10, color:'var(--o)', marginBottom:8, fontWeight:600 }}>
-                    👆 Click a size below to enter its prices on the left
-                  </div>
-                )}
-
-                {/* Options */}
-                {(g.opts || []).map((o, oi) => {
+                {isSize && <div style={{ fontSize:10, color:'var(--o)', marginBottom:8, fontWeight:600 }}>Click a size to set its prices on the left</div>}
+                {(g.opts||[]).map((o,oi) => {
                   const pt = o.price_type || 'multiplier';
                   const pv = o.price_val ?? o.m ?? 1;
                   const isSel = isSize && selectedOptKey === o.id;
+                  const sp0 = getSizePrice(o.id, 0);
                   return (
                     <div key={oi} style={{ marginBottom:8 }}>
-                      {/* Size option — big clickable button */}
                       {isSize ? (
-                        <div onClick={() => setSelectedOptKey(isSel ? null : o.id)}
-                          style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 12px', borderRadius:8, border:`2px solid ${isSel ? 'var(--o)' : 'var(--bd)'}`, background: isSel ? 'var(--ol)' : 'var(--sf)', cursor:'pointer', transition:'all .15s', userSelect:'none' }}>
-                          <div style={{ flex:1 }}>
-                            <input style={{ ...inp, background:'transparent', border:'none', padding:0, fontWeight: isSel ? 700 : 400, color: isSel ? 'var(--o)' : 'var(--tx)', fontSize:13 }}
-                              value={o.l} onChange={e => { e.stopPropagation(); updOption(gi,oi,'l',e.target.value); }}
-                              onClick={e => e.stopPropagation()} placeholder="e.g. 4×6 inches" />
-                          </div>
-                          <div style={{ fontSize:10, color: isSel ? 'var(--o)' : 'var(--mu)', fontWeight:600 }}>
-                            {getSizePrice(o.id, 0) ? `from $${getSizePrice(o.id,0)}` : 'click to set prices'}
-                          </div>
-                          <div style={{ width:18, height:18, borderRadius:4, background: isSel ? 'var(--o)' : 'var(--bd)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, color: isSel ? '#000' : 'var(--mu)', fontWeight:800, flexShrink:0 }}>
-                            {isSel ? '✓' : '→'}
-                          </div>
-                          <button onClick={e => { e.stopPropagation(); removeOption(gi,oi); }} style={{ padding:'3px 6px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>✕</button>
+                        <div onClick={() => setSelectedOptKey(isSel ? null : o.id)} style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 12px', borderRadius:8, border:'2px solid '+(isSel ? 'var(--o)' : 'var(--bd)'), background:isSel ? 'var(--ol)' : 'var(--sf)', cursor:'pointer', userSelect:'none' }}>
+                          <input style={{ ...inp, background:'transparent', border:'none', padding:0, fontWeight:isSel ? 700 : 400, color:isSel ? 'var(--o)' : 'var(--tx)', fontSize:13, flex:1 }} value={o.l} onChange={e => { e.stopPropagation(); updOption(gi,oi,'l',e.target.value); }} onClick={e => e.stopPropagation()} placeholder="Size label" />
+                          <span style={{ fontSize:10, color:isSel ? 'var(--o)' : 'var(--mu)', fontWeight:600 }}>{sp0 ? 'from $'+sp0 : 'click to set'}</span>
+                          <div style={{ width:18, height:18, borderRadius:4, background:isSel ? 'var(--o)' : 'var(--bd)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, color:isSel ? '#000' : 'var(--mu)', fontWeight:800 }}>{isSel ? 'Y' : '>'}</div>
+                          <button onClick={e => { e.stopPropagation(); removeOption(gi,oi); }} style={{ padding:'3px 6px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>X</button>
                         </div>
                       ) : (
-                        /* Regular option — label + price type + value */
-                        <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr 100px 70px auto', gap:5, alignItems:'center' }}>
-                          <input style={{...inp,fontSize:11}} value={o.l} onChange={e => updOption(gi,oi,'l',e.target.value)} placeholder="Option label" />
-                          <input style={{...inp,fontSize:10,fontFamily:"'DM Mono',monospace"}} value={o.id} onChange={e => updOption(gi,oi,'id',e.target.value.toLowerCase().replace(/\s+/g,'-'))} placeholder="key-id" />
-                          <select value={pt} style={{...sl,fontSize:10,padding:'6px 24px 6px 7px'}}
-                            onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; const defaults={multiplier:1.0,percent:10,fixed:5,linear_ft:2.5}; no[oi]={...no[oi],price_type:e.target.value,price_val:defaults[e.target.value],m:e.target.value==='multiplier'?(no[oi].price_val||1):1}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }}>
-                            <option value="multiplier">× Multiplier</option>
-                            <option value="percent">% Percent</option>
+                        <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr 90px 65px auto', gap:5, alignItems:'center' }}>
+                          <input style={{...inp,fontSize:11}} value={o.l} onChange={e => updOption(gi,oi,'l',e.target.value)} placeholder="Label" />
+                          <input style={{...inp,fontSize:10}} value={o.id} onChange={e => updOption(gi,oi,'id',e.target.value.toLowerCase().replace(/\s+/g,'-'))} placeholder="key" />
+                          <select value={pt} style={{...sl,fontSize:10,padding:'6px 8px'}} onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; const defs={multiplier:1.0,percent:10,fixed:5,linear_ft:2.5}; no[oi]={...no[oi],price_type:e.target.value,price_val:defs[e.target.value],m:e.target.value==='multiplier'?(no[oi].price_val||1):1}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }}>
+                            <option value="multiplier">x Mult</option>
+                            <option value="percent">% Pct</option>
                             <option value="fixed">$ Fixed</option>
-                            <option value="linear_ft">$/ft Linear</option>
+                            <option value="linear_ft">ft</option>
                           </select>
-                          <input type="number" step={pt==='multiplier'?'0.01':'1'} style={{...inp,fontSize:11,textAlign:'center'}}
-                            value={pv}
-                            onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; const v=parseFloat(e.target.value)||0; no[oi]={...no[oi],price_val:v,m:pt==='multiplier'?v:1,price_type:pt}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }} />
-                          <button onClick={() => removeOption(gi,oi)} style={{ padding:'5px 7px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>✕</button>
+                          <input type="number" step={pt==='multiplier' ? '0.01' : '1'} style={{...inp,fontSize:11,textAlign:'center'}} value={pv} onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; const v=parseFloat(e.target.value)||0; no[oi]={...no[oi],price_val:v,m:pt==='multiplier'?v:1,price_type:pt}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }} />
+                          <button onClick={() => removeOption(gi,oi)} style={{ padding:'5px 7px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>X</button>
                         </div>
                       )}
                     </div>
@@ -1284,14 +1195,76 @@ function FullProductEditor({ prod, onSave, onCancel }) {
           })}
         </div>
       </div>
-
       <div style={{ display:'flex', gap:10, marginTop:18 }}>
-        <button className="abtn abtn-add" onClick={() => onSave(p)} style={{ fontSize:14, padding:'10px 24px' }}>💾 Save All Changes</button>
+        <button className="abtn abtn-add" onClick={() => onSave(p)} style={{ fontSize:14, padding:'10px 24px' }}>Save All Changes</button>
         <button className="abtn" onClick={onCancel}>Cancel</button>
       </div>
     </div>
   );
 }
+
+function printOrderSheet(o) {
+  const win = window.open('', '_blank');
+  const no = o.order_number || o.id;
+  const date = new Date(o.created_at || Date.now()).toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
+  const items = (o.items || '').split(',').map(i => '<li>' + i.trim() + '</li>').join('');
+  const statusColor = o.status === 'New' ? '#92400e' : o.status === 'In Progress' ? '#1e40af' : o.status === 'Ready' ? '#065f46' : '#374151';
+  const statusBg = o.status === 'New' ? '#fef3c7' : o.status === 'In Progress' ? '#dbeafe' : o.status === 'Ready' ? '#d1fae5' : '#f3f4f6';
+  const html = '<!DOCTYPE html><html><head><title>Order ' + no + '</title>'
+    + '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:32px;max-width:720px;margin:0 auto}'
+    + '.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #f97316}'
+    + '.logo{font-size:22px;font-weight:900}.logo span{color:#f97316}'
+    + '.ono{font-size:28px;font-weight:900;color:#f97316;font-family:monospace}'
+    + '.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;background:' + statusBg + ';color:' + statusColor + '}'
+    + '.sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#666;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #eee}'
+    + '.row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f5f5f5}'
+    + '.items{background:#fff8f0;border:1px solid #f97316;border-radius:8px;padding:14px;margin-bottom:20px}'
+    + '.items ul{list-style:none;padding:0}.items li{padding:5px 0;font-size:13px;border-bottom:1px solid #ffe4cc}'
+    + '.total{font-size:28px;font-weight:900;color:#f97316}'
+    + '.notes{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;font-size:13px;min-height:60px}'
+    + '.artwork{background:#fffbeb;border:2px dashed #f59e0b;border-radius:8px;padding:12px}'
+    + '.footer{margin-top:32px;padding-top:16px;border-top:2px solid #f97316;display:flex;justify-content:space-between;font-size:11px;color:#666}'
+    + '.print-tip{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px;font-size:12px;color:#166534;margin-bottom:20px}'
+    + '@media print{.print-tip{display:none}}'
+    + '</style></head><body>'
+    + '<div class="print-tip">Print Tip: Press Ctrl+P, set margins to Minimum, then Print.</div>'
+    + '<div class="hdr"><div><div class="logo">NEXA <span>CUSTOMS</span> INC.</div>'
+    + '<div style="font-size:12px;color:#666;margin-top:4px">Print · Signs · Graphics · Mississauga</div>'
+    + '<div style="font-size:12px;color:#666">(437) 997-9921 · info@nexacustoms.ca</div></div>'
+    + '<div style="text-align:right"><div class="ono">' + no + '</div>'
+    + '<div style="margin-top:4px"><span class="badge">' + (o.status || 'New') + '</span></div>'
+    + '<div style="font-size:12px;color:#666;margin-top:4px">' + date + '</div></div></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">'
+    + '<div><div class="sec-title">Customer Info</div>'
+    + '<div class="row"><span style="color:#666">Name</span><strong>' + (o.customer_name || '') + '</strong></div>'
+    + '<div class="row"><span style="color:#666">Email</span><strong>' + (o.customer_email || '') + '</strong></div>'
+    + '<div class="row"><span style="color:#666">Phone</span><strong>' + (o.customer_phone || '') + '</strong></div>'
+    + '</div><div><div class="sec-title">Order Details</div>'
+    + '<div class="row"><span style="color:#666">Delivery</span><strong>' + (o.delivery || o.shipping_address || '') + '</strong></div>'
+    + '<div class="row"><span style="color:#666">Turnaround</span><strong>' + (o.turnaround || '') + '</strong></div>'
+    + '<div class="row"><span style="color:#666">Payment</span><strong>' + (o.payment_method || '') + '</strong></div>'
+    + (o.shipping_address && o.shipping_address !== 'Pickup' ? '<div class="row"><span style="color:#666">Ship To</span><strong style="font-size:11px">' + o.shipping_address + '</strong></div>' : '')
+    + '</div></div>'
+    + '<div class="sec-title">Items Ordered</div>'
+    + '<div class="items"><ul>' + items + '</ul></div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">'
+    + '<div><div style="font-size:11px;color:#666;text-transform:uppercase;font-weight:700;letter-spacing:.1em">Order Total</div>'
+    + '<div class="total">$' + parseFloat(o.total || 0).toFixed(2) + ' CAD</div></div>'
+    + '<div style="text-align:right;font-size:12px;color:#666"><div>HST included</div><div>Payment: ' + (o.payment_method || 'N/A') + '</div></div></div>'
+    + '<div class="sec-title">Artwork</div>'
+    + '<div class="artwork" style="margin-bottom:20px">'
+    + (o.artwork_files ? '<div style="font-size:12px;font-weight:700">Files: ' + o.artwork_files + '</div>' : '<div style="font-size:12px;font-weight:700;color:#92400e">No artwork uploaded — customer will email to info@nexacustoms.ca</div>')
+    + '</div>'
+    + '<div class="sec-title">Notes</div>'
+    + '<div class="notes">' + (o.notes || '—') + '</div>'
+    + '<div class="footer"><div>Nexa Customs Inc. · 6033 Shawson Dr, Unit 40, Mississauga, ON L5T 1J6</div>'
+    + '<div>Printed: ' + new Date().toLocaleString('en-CA') + '</div></div>'
+    + '</body></html>';
+  win.document.write(html);
+  win.document.close();
+  setTimeout(function() { win.print(); }, 500);
+}
+
 
 // ── ORDERS TAB ─────────────────────────────────────────────────────────────────
 function OrdersTab() {
@@ -1299,110 +1272,6 @@ function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null);
-
-  function printOrderSheet(o) {
-    const win = window.open('', '_blank');
-    const items = (o.items || '').split(',').map(i => `<li style="padding:4px 0;border-bottom:1px solid #eee">${i.trim()}</li>`).join('');
-    win.document.write(`<!DOCTYPE html><html><head><title>Order ${o.order_number}</title>
-    <style>
-      *{margin:0;padding:0;box-sizing:border-box}
-      body{font-family:Arial,sans-serif;color:#111;padding:32px;max-width:720px;margin:0 auto}
-      .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #f97316}
-      .logo{font-size:22px;font-weight:900;letter-spacing:-.5px}
-      .logo span{color:#f97316}
-      .order-no{font-size:28px;font-weight:900;color:#f97316;font-family:monospace}
-      .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-      .badge-new{background:#fef3c7;color:#92400e}
-      .badge-inprog{background:#dbeafe;color:#1e40af}
-      .badge-ready{background:#d1fae5;color:#065f46}
-      .badge-done{background:#f3f4f6;color:#374151}
-      .section{margin-bottom:20px}
-      .section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#666;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #eee}
-      .row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f5f5f5}
-      .row strong{color:#111}
-      .items{background:#fff8f0;border:1px solid #f97316;border-radius:8px;padding:14px;margin-bottom:20px}
-      .items ul{list-style:none;padding:0}
-      .items li{padding:5px 0;font-size:13px;border-bottom:1px solid #ffe4cc}
-      .items li:last-child{border:none}
-      .total{font-size:28px;font-weight:900;color:#f97316}
-      .notes{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;font-size:13px;color:#374151;min-height:60px}
-      .footer{margin-top:32px;padding-top:16px;border-top:2px solid #f97316;display:flex;justify-content:space-between;font-size:11px;color:#666}
-      .artwork-box{background:#fffbeb;border:2px dashed #f59e0b;border-radius:8px;padding:12px;margin-top:10px}
-      .print-instructions{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px;font-size:12px;color:#166534;margin-bottom:20px}
-      @media print{body{padding:16px}.print-instructions{display:none}}
-    </style></head><body>
-    <div class="print-instructions">📄 <strong>Print Tip:</strong> Press Ctrl+P (or Cmd+P on Mac) → set margins to Minimum → Print. This sheet fits on one A4 page.</div>
-    <div class="header">
-      <div>
-        <div class="logo">NEXA <span>CUSTOMS</span> INC.</div>
-        <div style="font-size:12px;color:#666;margin-top:4px">Print · Signs · Graphics · Mississauga</div>
-        <div style="font-size:12px;color:#666">(437) 997-9921 · info@nexacustoms.ca</div>
-      </div>
-      <div style="text-align:right">
-        <div class="order-no">${o.order_number || o.id}</div>
-        <div style="margin-top:4px"><span class="badge badge-${o.status === 'New' ? 'new' : o.status === 'In Progress' ? 'inprog' : o.status === 'Ready' ? 'ready' : 'done'}">${o.status || 'New'}</span></div>
-        <div style="font-size:12px;color:#666;margin-top:4px">${new Date(o.created_at || Date.now()).toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' })}</div>
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
-      <div class="section">
-        <div class="section-title">Customer Info</div>
-        ${[['Name', o.customer_name],['Email', o.customer_email],['Phone', o.customer_phone],['Company', o.company]].filter(([,v])=>v).map(([l,v])=>`<div class="row"><span style="color:#666">${l}</span><strong>${v}</strong></div>`).join('')}
-      </div>
-      <div class="section">
-        <div class="section-title">Order Details</div>
-        ${[['Delivery', o.delivery || (o.shipping_address === 'Pickup' ? 'Free Pickup' : o.shipping_address)],['Turnaround', o.turnaround],['Payment', o.payment_method],['Source', o.source]].filter(([,v])=>v).map(([l,v])=>`<div class="row"><span style="color:#666">${l}</span><strong>${v}</strong></div>`).join('')}
-        ${o.shipping_address && o.shipping_address !== 'Pickup' ? `<div class="row"><span style="color:#666">Ship To</span><strong style="font-size:11px">${o.shipping_address}</strong></div>` : ''}
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Items Ordered</div>
-      <div class="items"><ul>${items}</ul></div>
-    </div>
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <div>
-        <div style="font-size:11px;color:#666;text-transform:uppercase;font-weight:700;letter-spacing:.1em">Order Total</div>
-        <div class="total">$${parseFloat(o.total || 0).toFixed(2)} CAD</div>
-      </div>
-      <div style="text-align:right;font-size:12px;color:#666">
-        <div>HST included</div>
-        <div style="margin-top:2px">Payment: ${o.payment_method || 'N/A'}</div>
-      </div>
-    </div>
-
-    ${o.artwork_urls || o.artwork_files ? `
-    <div class="section">
-      <div class="section-title">Artwork</div>
-      <div class="artwork-box">
-        <div style="font-size:12px;font-weight:700;margin-bottom:4px">📎 Artwork Files</div>
-        <div style="font-size:12px;color:#666">${o.artwork_files || 'See attached files'}</div>
-        ${o.artwork_urls ? `<div style="font-size:11px;color:#0066cc;margin-top:4px;word-break:break-all">${o.artwork_urls}</div>` : ''}
-      </div>
-    </div>` : `
-    <div class="section">
-      <div class="section-title">Artwork</div>
-      <div class="artwork-box">
-        <div style="font-size:12px;font-weight:700;color:#92400e">⚠️ Artwork Not Uploaded</div>
-        <div style="font-size:12px;color:#666;margin-top:4px">Customer will send artwork to info@nexacustoms.ca with order number ${o.order_number}</div>
-      </div>
-    </div>`}
-
-    <div class="section">
-      <div class="section-title">Notes / Special Instructions</div>
-      <div class="notes">${o.notes || '—'}</div>
-    </div>
-
-    <div class="footer">
-      <div>Nexa Customs Inc. · 6033 Shawson Dr, Unit 40, Mississauga, ON L5T 1J6</div>
-      <div>Printed: ${new Date().toLocaleString('en-CA')}</div>
-    </div>
-    </body></html>`);
-    win.document.close();
-    setTimeout(() => win.print(), 500);
-  }
   const [filter, setFilter] = useState('all');
 
   async function loadOrders() {
