@@ -1,74 +1,11 @@
 # robots.txt — Nexa Customs Inc.
 # https://nexacustoms.ca
-# Last updated: 2026-06-02
 
-# ─── Allow all well-behaved crawlers ─────────────────────────────────────────
 User-agent: *
 Allow: /
-
-# Block low-value / duplicate WooCommerce pages from indexing
 Disallow: /cart
 Disallow: /checkout
 Disallow: /order-confirmed
 Disallow: /admin
 
-# ─── Google ──────────────────────────────────────────────────────────────────
-User-agent: Googlebot
-Allow: /
-Disallow: /cart
-Disallow: /checkout
-Disallow: /order-confirmed
-Disallow: /admin
-
-# ─── Bing ────────────────────────────────────────────────────────────────────
-User-agent: Bingbot
-Allow: /
-Disallow: /cart
-Disallow: /checkout
-Disallow: /order-confirmed
-Disallow: /admin
-
-# ─── AI assistants — allow (these refer customers to you) ────────────────────
-User-agent: anthropic-ai
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: YouBot
-Allow: /
-
-User-agent: DuckAssistBot
-Allow: /
-
-User-agent: cohere-ai
-Allow: /
-
-# ─── AI training scrapers — block (no SEO or referral value) ─────────────────
-User-agent: GPTBot
-Disallow: /
-
-User-agent: Google-Extended
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-User-agent: Applebot-Extended
-Disallow: /
-
-User-agent: FacebookBot
-Disallow: /
-
-User-agent: Bytespider
-Disallow: /
-
-User-agent: DataForSeoBot
-Disallow: /
-
-# ─── Sitemap locations ───────────────────────────────────────────────────────
 Sitemap: https://nexacustoms.ca/sitemap.xml
-Sitemap: https://nexacustoms.ca/sitemap_index.xml

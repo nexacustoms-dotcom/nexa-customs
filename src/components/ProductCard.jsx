@@ -22,7 +22,8 @@ export default function ProductCard({ prod, onOpen }) {
       </div>
       <div style={{ padding: '13px 15px 15px', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ fontSize: 10, color: 'var(--o)', fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 3 }}>{cat?.l}</div>
-        <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6, lineHeight: 1.35, flex: 1 }}>{prod.name}</div>
+        <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4, lineHeight: 1.35 }}>{prod.name}</div>
+        {prod.desc && <div style={{ fontSize: 11, color: 'var(--mu)', lineHeight: 1.5, marginBottom: 6, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', flex:1 }}>{prod.desc}</div>}
         <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 11 }}>
           from <strong style={{ color: 'var(--o)', fontSize: 15 }}>${fromPrice.toFixed(2)}</strong>
         </div>

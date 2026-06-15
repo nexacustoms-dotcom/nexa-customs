@@ -7,31 +7,8 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import ProductCard from './components/ProductCard';
 import AdminPage from './pages/AdminPage';
-import { CartPage, CheckoutPage, SuccessPage, QuotePage, ContactPage } from './pages/TransactionalPages';
+import { CartPage, CheckoutPage, SuccessPage, QuotePage, ContactPage, OrderStatusPage } from './pages/TransactionalPages';
 import { usePageSEO } from './hooks/usePageSEO';
-
-// ── POLICY DATA ───────────────────────────────────────────────────────────────
-const POLICY = {
-  faq: {
-    title: 'Frequently Asked Questions',
-    faqs: [
-      { q: 'What file formats do you accept?', a: 'We accept PDF, AI, EPS, PSD, PNG (300dpi+), and high-res JPG. PDF is preferred for print-ready files.' },
-      { q: 'Do you offer design services?', a: 'Yes! Free basic layout adjustments and affordable custom design. Email info@nexacustoms.ca with details.' },
-      { q: 'What is your standard turnaround time?', a: 'Standard is 5–7 business days from proof approval. Rush (2–3 days) and Express (same/next day) available at a surcharge.' },
-      { q: 'Do you ship across Canada?', a: 'Yes. We ship via Canada Post and courier. Local pickup is always free at our Mississauga location.' },
-      { q: 'What is your quality guarantee?', a: 'If there is a print defect on our end, we reprint at no charge. We send a free proof before every order.' },
-      { q: 'Can I get a proof before printing?', a: 'Absolutely — a digital PDF proof is free with every order. We print only after you approve it.' },
-      { q: 'What is the minimum order?', a: 'Business cards start at 100. Banners at 1 piece. Stickers at 10. Check each product page for specifics.' },
-      { q: 'Do you do same-day rush orders?', a: 'Yes! Call (437) 997-9921 to confirm availability before ordering.' },
-      { q: 'Can you match Pantone colours?', a: 'We print in CMYK. Provide your Pantone or hex codes and we adjust your proof accordingly.' },
-      { q: 'How do I send my artwork?', a: 'After placing your order, email files to info@nexacustoms.ca with your order number in the subject line.' },
-    ],
-  },
-  turnaround: { title: 'Turnaround Times', body: 'Standard turnaround is 5–7 business days from proof approval.\n\nRush (2–3 business days) and Express (same/next day) options are available at an additional fee applied at checkout.\n\nTurnaround begins after artwork approval, not order placement. Complex projects may require additional time.\n\nSame-day pickup available for orders placed before 10:30 AM with artwork approved by noon.' },
-  shipping: { title: 'Shipping Policy', body: 'We ship across Ontario and Canada via Canada Post and FedEx/UPS courier.\n\nFree local pickup at 6033 Shawson Dr, Unit 40, Mississauga (Mon–Fri 9AM–6PM).\n\nFlat-rate shipping: Canada Post $18 · Courier $45\n\nNexa Customs is not responsible for carrier delays once the package is in transit. Contact us within 5 business days if your order arrives damaged.' },
-  returns: { title: 'Return Policy', body: 'Due to the custom-printed nature of our products, we do not accept returns or exchanges.\n\nIf there is a manufacturing defect or error on our part, we will reprint at no charge.\n\nClaims must be made within 5 business days of delivery. Email info@nexacustoms.ca with photos.\n\nWe cannot reprint for customer-supplied artwork errors — this is why we always send a free proof first.' },
-  terms: { title: 'Terms & Conditions', body: 'By placing an order with Nexa Customs Inc., you agree to the following:\n\n1. Artwork Rights: You confirm you own or have rights to all artwork submitted.\n\n2. Colour Accuracy: Colours may vary slightly from screen due to CMYK printing. Review your proof carefully.\n\n3. Payment: All prices are in CAD. Orders are confirmed once payment is received or invoice is approved.\n\n4. Turnaround: Production begins after proof approval.\n\n5. Liability: Nexa Customs liability is limited to the value of the order.' },
-};
 
 // ── COMPONENTS ────────────────────────────────────────────────────────────────
 function FAQItem({ q, a }) {
@@ -208,6 +185,7 @@ function AppRoutes() {
         <Route path="/cart" element={<Layout><CartPage /></Layout>} />
         <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
         <Route path="/order-confirmed" element={<Layout><SuccessPage /></Layout>} />
+        <Route path="/order-status" element={<Layout><OrderStatusPage /></Layout>} />
         <Route path="/quote" element={<Layout><QuotePage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
 
@@ -218,9 +196,6 @@ function AppRoutes() {
         <Route path="/terms" element={<Layout><PolicyPage slug="terms" /></Layout>} />
         <Route path="/turnaround" element={<Layout><PolicyPage slug="turnaround" /></Layout>} />
         <Route path="/about" element={<Layout><PolicyPage slug="about" /></Layout>} />
-        <Route path="/p/:slug" element={<Layout><CustomPageRoute /></Layout>} />
-
-        {/* Admin-created custom pages */}
         <Route path="/p/:slug" element={<Layout><CustomPageRoute /></Layout>} />
 
         {/* 404 */}

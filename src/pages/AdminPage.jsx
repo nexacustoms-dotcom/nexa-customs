@@ -268,12 +268,30 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
             <div className="afg"><label className="aflbl">Product Name</label><input className="ainp" value={p.name} onChange={e => upd('name')(e.target.value)} /></div>
             <div className="afg"><label className="aflbl">Description</label><textarea className="ainp" rows="3" style={{ resize: 'vertical', minHeight: 70 }} value={p.desc || ''} onChange={e => upd('desc')(e.target.value)} /></div>
             <div className="afg"><label className="aflbl">Badge (optional)</label><input className="ainp" placeholder="Most Popular, Premium, 30% OFF…" value={p.badge || ''} onChange={e => upd('badge')(e.target.value)} /></div>
+            <div className="afg">
+              <label className="aflbl">Extended Description <span style={{fontWeight:400,color:'var(--mu)',textTransform:'none'}}>(shown under short desc on product page)</span></label>
+              <textarea className="ainp" rows="4" style={{resize:'vertical',minHeight:80}} value={p.long_desc||''} onChange={e => upd('long_desc')(e.target.value)} placeholder="Longer product description — materials, use cases, tips…" />
+            </div>
             <div className="afg"><label className="aflbl">Category</label>
               <select className="ainp" value={p.cat} onChange={e => upd('cat')(e.target.value)}>
                 {cats.map(c => <option key={c.id} value={c.id}>{c.l}</option>)}
               </select>
             </div>
           </div>
+          {/* Specifications */}
+          <div className="aform-section" style={{ marginTop: 16 }}>
+            <div className="aform-title">📋 Specifications</div>
+            <p style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 12, lineHeight: 1.6 }}>Key/value pairs shown in a specs table on the product page. e.g. "Material" → "16pt C2S Gloss"</p>
+            {(p.specs || []).map((sp, si) => (
+              <div key={si} style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:8, marginBottom:8, alignItems:'center' }}>
+                <input className="ainp" placeholder="e.g. Material" value={sp.k||''} onChange={e => { const ns=[...(p.specs||[])]; ns[si]={...ns[si],k:e.target.value}; upd('specs')(ns); }} />
+                <input className="ainp" placeholder="e.g. 16pt C2S Gloss" value={sp.v||''} onChange={e => { const ns=[...(p.specs||[])]; ns[si]={...ns[si],v:e.target.value}; upd('specs')(ns); }} />
+                <button onClick={() => upd('specs')((p.specs||[]).filter((_,i)=>i!==si))} style={{ padding:'7px 10px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12 }}>✕</button>
+              </div>
+            ))}
+            <button className="abtn abtn-add" style={{fontSize:12,padding:'6px 12px',marginTop:4}} onClick={() => upd('specs')([...(p.specs||[]),{k:'',v:''}])}>+ Add Spec Row</button>
+          </div>
+
           {/* Product Images */}
           <div className="aform-section" style={{ marginTop: 16 }}>
             <div className="aform-title">📸 Product Images</div>
@@ -980,39 +998,67 @@ function PricingTab() {
 
   return (
     <div>
-      <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:24, marginBottom:20 }}>Pricing & Options Editor</h2>
+      <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:24, marginBottom:20 }}>Pricing & Options</h2>
+
       <div className="aform-section" style={{ maxWidth:560, marginBottom:28 }}>
         <div className="aform-title">⚙️ Global Settings</div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-          {[['hst','HST Rate','0.13 = 13%'],['shipping_post','Canada Post ($)','flat'],['shipping_courier','Courier ($)','FedEx/UPS'],['rush_pct','Rush Surcharge','0.25=25%'],['express_pct','Express Surcharge','0.50=50%']].map(([k,l,n]) => (
+          {[
+            ['hst',             'HST Rate',          '0.13 = 13%'],
+            ['shipping_post',   'Canada Post ($)',    'flat rate'],
+            ['shipping_courier','Courier ($)',        'FedEx/UPS'],
+            ['rush_pct',        'Rush Surcharge',    '0.25 = 25%'],
+            ['express_pct',     'Express Surcharge', '0.50 = 50%'],
+          ].map(([k,l,n]) => (
             <div key={k} className="afg">
               <label className="aflbl">{l} <span style={{ color:'var(--mu)', fontWeight:400, textTransform:'none' }}>({n})</span></label>
-              <input type="number" step="0.01" className="ainp" value={cfg[k]} onChange={e => setCfg(c=>({...c,[k]:parseFloat(e.target.value)||0}))} />
+              <input type="number" step="0.01" className="ainp" value={cfg[k]}
+                onChange={e => setCfg(c => ({ ...c, [k]: parseFloat(e.target.value) || 0 }))} />
             </div>
           ))}
         </div>
         <button className="abtn abtn-add" style={{ marginTop:8 }} onClick={saveCfg}>💾 Save Global Config</button>
       </div>
+
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, gap:12, flexWrap:'wrap' }}>
         <div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:20 }}>Product Pricing & Options — {prods.length} Products</div>
-          <div style={{ fontSize:11, color:'var(--mu)', marginTop:2 }}>Click Full Edit on any product to control prices, qty tiers, options and multipliers.</div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:20 }}>Products — {prods.length} total</div>
+          <div style={{ fontSize:11, color:'var(--mu)', marginTop:2 }}>Click Edit on any product to update prices, qty tiers and options.</div>
         </div>
-        <input className="finp" style={{ width:220, fontSize:12 }} placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)} />
+        <input className="finp" style={{ width:220, fontSize:12 }} placeholder="Search products…"
+          value={search} onChange={e => setSearch(e.target.value)} />
       </div>
+
       <div style={{ background:'var(--sf)', border:'1px solid var(--bd)', borderRadius:'var(--rl)', overflow:'hidden' }}>
         <div style={{ overflowX:'auto' }}>
           <table className="atable">
-            <thead><tr><th>Product</th><th>Qty Tiers</th><th>Option Groups</th><th>Base Price</th><th>Type</th><th>Action</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Type</th>
+                <th>Tiers</th>
+                <th>Base Price</th>
+                <th>Options</th>
+                <th>Action</th>
+              </tr>
+            </thead>
             <tbody>
               {filtered.map(p => (
                 <tr key={p.id}>
                   <td style={{ fontWeight:600 }}>{p.name}</td>
-                  <td style={{ color:'var(--mu)', fontSize:12 }}>{p.pricing.length} tiers</td>
-                  <td style={{ color:'var(--mu)', fontSize:12 }}>{(p.opts||[]).length} groups · {(p.opts||[]).reduce((s,g)=>s+(g.opts||[]).length,0)} total options</td>
+                  <td>
+                    <span style={{ fontSize:10, padding:'2px 7px', borderRadius:6,
+                      background: p.sqft?.enabled ? 'rgba(96,165,250,.1)' : 'rgba(249,115,22,.1)',
+                      color: p.sqft?.enabled ? '#60a5fa' : 'var(--o)',
+                      border: `1px solid ${p.sqft?.enabled ? 'rgba(96,165,250,.3)' : 'rgba(249,115,22,.3)'}`,
+                      fontWeight:700 }}>
+                      {p.sqft?.enabled ? 'Sq Ft' : 'Tiered'}
+                    </span>
+                  </td>
+                  <td style={{ color:'var(--mu)', fontSize:12 }}>{p.pricing.length}</td>
                   <td style={{ color:'var(--o)', fontFamily:"'DM Mono',monospace" }}>${p.pricing[0]?.p.toFixed(2)}</td>
-                  <td><span style={{ fontSize:10, padding:'2px 7px', borderRadius:6, background:p.sqft?.enabled?'rgba(96,165,250,.1)':'rgba(249,115,22,.1)', color:p.sqft?.enabled?'#60a5fa':'var(--o)', border:`1px solid ${p.sqft?.enabled?'rgba(96,165,250,.3)':'rgba(249,115,22,.3)'}`, fontWeight:700 }}>{p.sqft?.enabled?'Sq Ft':'Tiered'}</span></td>
-                  <td><button className="abtn abtn-add" onClick={() => setEditingId(p.id)}>✏️ Full Edit</button></td>
+                  <td style={{ color:'var(--mu)', fontSize:12 }}>{(p.opts||[]).length} groups</td>
+                  <td><button className="abtn abtn-add" onClick={() => setEditingId(p.id)}>✏️ Edit</button></td>
                 </tr>
               ))}
             </tbody>
@@ -1023,180 +1069,382 @@ function PricingTab() {
   );
 }
 
-// ── FULL PRODUCT EDITOR ────────────────────────────────────────────────────────
 function FullProductEditor({ prod, onSave, onCancel }) {
   const { pricing } = useApp();
   const [p, setP] = useState(JSON.parse(JSON.stringify(prod)));
-  const [selectedOptKey, setSelectedOptKey] = useState(null);
+  const [activeSizeId, setActiveSizeId] = useState(null);
+
   const upd = k => v => setP(prev => ({ ...prev, [k]: v }));
+
+  // ── Tier helpers ──────────────────────────────────────────────────────────
   function updTierPrice(ti, val) { const np=[...p.pricing]; np[ti]={...np[ti],p:parseFloat(val)||0}; upd('pricing')(np); }
-  function updTierQty(ti, val) { const np=[...p.pricing]; np[ti]={...np[ti],q:parseInt(val)||0}; upd('pricing')(np); }
-  function addTier() { upd('pricing')([...p.pricing, { q:0, p:0 }]); }
-  function removeTier(ti) { upd('pricing')(p.pricing.filter((_,i)=>i!==ti)); }
-  function addGroup() { upd('opts')([...(p.opts||[]), { key:'group-'+Date.now(), label:'New Group', opts:[{id:'opt1',l:'Option 1',price_type:'multiplier',price_val:1.0,m:1.0}] }]); }
-  function removeGroup(gi) { upd('opts')((p.opts||[]).filter((_,i)=>i!==gi)); }
-  function updGroup(gi, field, val) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],[field]:val}; upd('opts')(ng); }
-  function addOption(gi) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],opts:[...ng[gi].opts,{id:'opt-'+Date.now(),l:'New Choice',price_type:'multiplier',price_val:1.0,m:1.0}]}; upd('opts')(ng); }
-  function removeOption(gi,oi) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],opts:ng[gi].opts.filter((_,i)=>i!==oi)}; upd('opts')(ng); }
-  function updOption(gi,oi,field,val) { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],[field]:val}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }
-  function setSizePrices(optId,tierIdx,price) {
+  function updTierQty(ti, val)   { const np=[...p.pricing]; np[ti]={...np[ti],q:parseInt(val)||0};   upd('pricing')(np); }
+  function addTier()             { upd('pricing')([...p.pricing, { q:0, p:0 }]); }
+  function removeTier(ti)        { upd('pricing')(p.pricing.filter((_,i)=>i!==ti)); }
+
+  // ── Size price helpers ────────────────────────────────────────────────────
+  function getSizePrice(optId, ti) {
+    const g = (p.opts||[]).find(g=>g.key==='size');
+    const o = g?.opts?.find(o=>o.id===optId);
+    return o?.size_prices?.[ti] ?? '';
+  }
+  function setSizePrice(optId, ti, val) {
     const ng=[...(p.opts||[])]; const gi=ng.findIndex(g=>g.key==='size'); if(gi===-1)return;
     const no=[...ng[gi].opts]; const oi=no.findIndex(o=>o.id===optId); if(oi===-1)return;
-    no[oi]={...no[oi],size_prices:{...(no[oi].size_prices||{}),[tierIdx]:parseFloat(price)||0}};
+    no[oi]={...no[oi],size_prices:{...(no[oi].size_prices||{}),[ti]:parseFloat(val)||0}};
     ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
   }
-  function getSizePrice(optId,tierIdx) {
-    const g=(p.opts||[]).find(g=>g.key==='size'); const o=g?.opts?.find(o=>o.id===optId);
-    return o?.size_prices?.[tierIdx] ?? '';
+
+  // ── Option group helpers ──────────────────────────────────────────────────
+  function addSizeGroup() {
+    // Adds a proper size group with key='size' and default common sizes
+    const existing = (p.opts||[]).find(g=>g.key==='size');
+    if (existing) return; // already has one
+    upd('opts')([
+      { key:'size', label:'Size', opts:[
+        { id:'s-1', l:'4x6"',  price_type:'multiplier', price_val:1.0, m:1.0, size_prices:{} },
+        { id:'s-2', l:'5x7"',  price_type:'multiplier', price_val:1.0, m:1.0, size_prices:{} },
+        { id:'s-3', l:'8.5x11"', price_type:'multiplier', price_val:1.0, m:1.0, size_prices:{} },
+        { id:'s-4', l:'8.5x14"', price_type:'multiplier', price_val:1.0, m:1.0, size_prices:{} },
+        { id:'s-5', l:'11x17"', price_type:'multiplier', price_val:1.0, m:1.0, size_prices:{} },
+      ]},
+      ...(p.opts||[]),
+    ]);
   }
-  const isSqft = p.sqft?.enabled;
-  const hasSizeGroup = (p.opts||[]).some(g=>g.key==='size');
-  const sizeGroup = (p.opts||[]).find(g=>g.key==='size');
-  const selectedSizeOpt = sizeGroup?.opts?.find(o=>o.id===selectedOptKey);
-  const inp = { width:'100%', background:'var(--s2)', border:'1px solid var(--bd)', color:'var(--tx)', padding:'7px 10px', borderRadius:6, fontSize:12, outline:'none', fontFamily:"'DM Sans',sans-serif" };
-  const sl = { ...inp, appearance:'none', backgroundRepeat:'no-repeat', backgroundPosition:'right 10px center', paddingRight:28 };
+  function addGroup() {
+    upd('opts')([...(p.opts||[]), { key:'group-'+Date.now(), label:'New Group', opts:[{id:'opt1',l:'Option 1',price_type:'multiplier',price_val:1.0,m:1.0}] }]);
+  }
+  function removeGroup(gi)        { upd('opts')((p.opts||[]).filter((_,i)=>i!==gi)); }
+  function updGroup(gi,field,val) { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],[field]:val}; upd('opts')(ng); }
+  function moveGroup(gi, dir) {
+    const ng=[...(p.opts||[])]; const ti=gi+dir;
+    if(ti<0||ti>=ng.length) return;
+    [ng[gi],ng[ti]]=[ng[ti],ng[gi]]; upd('opts')(ng);
+  }
+  function addOption(gi) {
+    const ng=[...(p.opts||[])];
+    const isSize = ng[gi].key==='size';
+    const newOpt = isSize
+      ? { id:'s-'+Date.now(), l:'New Size', price_type:'multiplier', price_val:1.0, m:1.0, size_prices:{} }
+      : { id:'opt-'+Date.now(), l:'New Choice', price_type:'multiplier', price_val:1.0, m:1.0 };
+    ng[gi]={...ng[gi],opts:[...ng[gi].opts, newOpt]}; upd('opts')(ng);
+  }
+  function removeOption(gi,oi)   { const ng=[...(p.opts||[])]; ng[gi]={...ng[gi],opts:ng[gi].opts.filter((_,i)=>i!==oi)}; upd('opts')(ng); }
+  function updOption(gi,oi,field,val) { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; no[oi]={...no[oi],[field]:val}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }
+  function moveOption(gi,oi,dir) {
+    const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; const ti=oi+dir;
+    if(ti<0||ti>=no.length) return;
+    [no[oi],no[ti]]=[no[ti],no[oi]]; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
+  }
+
+  const isSqft        = p.sqft?.enabled;
+  const sizeGroup     = (p.opts||[]).find(g=>g.key==='size');
+  const hasSizeGroup  = !!sizeGroup;
+  const activeSizeOpt = sizeGroup?.opts?.find(o=>o.id===activeSizeId);
+
+  const INP  = { width:'100%', background:'var(--s2)', border:'1px solid var(--bd)', color:'var(--tx)', padding:'8px 11px', borderRadius:7, fontSize:13, outline:'none' };
+  const SL   = { ...INP, appearance:'none', cursor:'pointer' };
+  const ARRW = { padding:'4px 7px', borderRadius:5, border:'1px solid var(--bd)', background:'var(--s2)', color:'var(--mu)', cursor:'pointer', fontSize:12, lineHeight:1 };
+
   return (
-    <div>
-      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:22 }}>
-        <button className="abtn" onClick={onCancel}>back Back to List</button>
-        <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:22 }}>Editing: {prod.name}</h2>
+    <div style={{ maxWidth:760 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24 }}>
+        <button className="abtn" onClick={onCancel}>← Back</button>
+        <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:22, margin:0 }}>
+          Editing: {prod.name}
+        </h2>
       </div>
+
+      {/* ── Turnaround ── */}
+      <div className="aform-section" style={{ marginBottom:18 }}>
+        <div className="aform-title">⏱ Turnaround Options</div>
+        <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+          {[
+            ['rush_ok',    'Rush (2–3 days)',     Math.round((pricing?.rush_pct    ?? 0.25)*100)],
+            ['express_ok', 'Express (same/next)', Math.round((pricing?.express_pct ?? 0.50)*100)],
+          ].map(([key,label,pct]) => {
+            const val = p[key] !== false;
+            return (
+              <div key={key} onClick={() => upd(key)(!val)}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px', borderRadius:10,
+                  border:'2px solid '+(val?'var(--o)':'var(--bd)'),
+                  background:val?'rgba(249,115,22,.08)':'var(--s2)',
+                  cursor:'pointer', userSelect:'none' }}>
+                <span style={{ fontWeight:700, fontSize:13 }}>{label}</span>
+                <span style={{ fontSize:11, color:'var(--mu)' }}>+{pct}%</span>
+                <span style={{ width:22, height:22, borderRadius:6,
+                  background:val?'var(--o)':'var(--bd)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:12, color:val?'#000':'var(--mu)', fontWeight:800 }}>
+                  {val ? '✓' : '✗'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Label configurator ── */}
       {p.label_configurator && (
         <div className="aform-section" style={{ marginBottom:18 }}>
-          <div className="aform-title">Label Configurator Settings</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-            {[['lbl_shapes','Shapes','Circle, Oval, Square'],['lbl_sizes','Sizes','2x2, 3x3'],['lbl_stocks','Materials','Semi Gloss'],['lbl_ink','Ink','CMYK'],['lbl_finishing','Finishing','Standard']].map(([key,label,hint]) => (
+          <div className="aform-title">🏷️ Label Configurator Settings</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            {[
+              ['lbl_shapes',   'Shapes',    'Circle, Oval, Square'],
+              ['lbl_sizes',    'Sizes',     '2x2, 3x3'],
+              ['lbl_stocks',   'Materials', 'Semi Gloss'],
+              ['lbl_ink',      'Ink',       'CMYK'],
+              ['lbl_finishing','Finishing', 'Standard'],
+            ].map(([key,label,hint]) => (
               <div key={key} className="aform-grp">
                 <label className="aform-lbl">{label}</label>
-                <input className="ainp" placeholder={hint} value={Array.isArray(p[key]) ? p[key].join(', ') : (p[key]||'')} onChange={e => upd(key)(e.target.value.split(',').map(x=>x.trim()).filter(Boolean))} />
+                <input className="ainp" placeholder={hint}
+                  value={Array.isArray(p[key]) ? p[key].join(', ') : (p[key]||'')}
+                  onChange={e => upd(key)(e.target.value.split(',').map(x=>x.trim()).filter(Boolean))} />
               </div>
             ))}
           </div>
         </div>
       )}
+
+      {/* ── Pricing ── */}
       <div className="aform-section" style={{ marginBottom:18 }}>
-        <div className="aform-title">Turnaround Availability</div>
-        <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-          {[['rush_ok','Rush (2-3 days)','R',Math.round((pricing?.rush_pct??0.25)*100)],['express_ok','Express (same/next)','E',Math.round((pricing?.express_pct??0.50)*100)]].map(([key,label,ico,pct]) => {
-            const val = p[key] !== false;
-            return (
-              <div key={key} onClick={() => upd(key)(!val)} style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 18px', borderRadius:10, border:'2px solid '+(val ? 'var(--o)' : 'var(--bd)'), background:val ? 'rgba(249,115,22,.08)' : 'var(--s2)', cursor:'pointer', userSelect:'none' }}>
-                <div style={{ fontWeight:700, fontSize:13 }}>{label}</div>
-                <div style={{ fontSize:11, color:'var(--mu)' }}>+{pct}%</div>
-                <div style={{ width:22, height:22, borderRadius:6, background:val ? 'var(--o)' : 'var(--bd)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:val ? '#000' : 'var(--mu)', fontWeight:800 }}>{val ? 'Y' : 'N'}</div>
+        <div className="aform-title">💰 Pricing</div>
+
+        {/* Size chips */}
+        {hasSizeGroup && (
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:12, color:'var(--mu)', marginBottom:8 }}>
+              <strong>Step 1:</strong> Pick a size chip to enter prices for it. "Base tiers" sets the fallback price used when no size-specific price is set.
+            </div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+              <button onClick={() => setActiveSizeId(null)}
+                style={{ padding:'6px 14px', borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer',
+                  border:'2px solid '+(!activeSizeId?'var(--o)':'var(--bd)'),
+                  background:!activeSizeId?'rgba(249,115,22,.1)':'var(--s2)',
+                  color:!activeSizeId?'var(--o)':'var(--tx)' }}>
+                Base tiers
+              </button>
+              {sizeGroup.opts.map(o => {
+                const active    = activeSizeId === o.id;
+                const hasPrices = Object.values(o.size_prices||{}).some(v=>v>0);
+                return (
+                  <button key={o.id} onClick={() => setActiveSizeId(active ? null : o.id)}
+                    style={{ padding:'6px 14px', borderRadius:7, fontSize:12, fontWeight:600, cursor:'pointer',
+                      border:'2px solid '+(active?'var(--o)':hasPrices?'rgba(34,197,94,.5)':'var(--bd)'),
+                      background:active?'rgba(249,115,22,.1)':hasPrices?'rgba(34,197,94,.05)':'var(--s2)',
+                      color:active?'var(--o)':hasPrices?'#22c55e':'var(--tx)' }}>
+                    {o.l}{hasPrices ? ' ✓' : ''}
+                  </button>
+                );
+              })}
+            </div>
+            {activeSizeOpt && (
+              <div style={{ marginTop:8, fontSize:12, padding:'7px 12px', borderRadius:7,
+                background:'rgba(249,115,22,.07)', color:'var(--o)', fontWeight:600 }}>
+                Entering prices for: <strong>{activeSizeOpt.l}</strong>
               </div>
-            );
-          })}
+            )}
+          </div>
+        )}
+
+        {/* No size group — show prompt */}
+        {!hasSizeGroup && !isSqft && (
+          <div style={{ marginBottom:14, padding:'10px 14px', borderRadius:8, background:'var(--s2)', border:'1px dashed var(--bd)', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:10 }}>
+            <div style={{ fontSize:12, color:'var(--mu)' }}>
+              This product has no size variations. Want to add sizes (e.g. 4x6", 5x7", 8.5x11")?
+            </div>
+            <button onClick={addSizeGroup}
+              style={{ padding:'7px 14px', borderRadius:7, fontSize:12, fontWeight:700, cursor:'pointer',
+                border:'2px solid var(--o)', background:'rgba(249,115,22,.08)', color:'var(--o)', whiteSpace:'nowrap' }}>
+              + Add Size Group
+            </button>
+          </div>
+        )}
+
+        {/* Qty tier rows */}
+        <div style={{ display:'grid', gridTemplateColumns:'120px 1fr auto', gap:8, alignItems:'center', marginBottom:6 }}>
+          <div style={{ fontSize:11, fontWeight:700, color:'var(--mu)', textTransform:'uppercase' }}>Quantity</div>
+          <div style={{ fontSize:11, fontWeight:700, color:'var(--mu)', textTransform:'uppercase' }}>
+            {activeSizeOpt ? 'Price for "'+activeSizeOpt.l+'"' : 'Base Price ($)'}
+          </div>
+          <div />
         </div>
+        {(p.pricing||[]).map((tier,ti) => (
+          <div key={ti} style={{ display:'grid', gridTemplateColumns:'120px 1fr auto', gap:8, alignItems:'center', marginBottom:8 }}>
+            <input type="number" style={INP} value={tier.q} placeholder="Qty"
+              onChange={e => updTierQty(ti,e.target.value)} />
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <span style={{ color:'var(--mu)', fontSize:14, flexShrink:0 }}>$</span>
+              {activeSizeOpt
+                ? <input type="number" step="0.01" style={{ ...INP, flex:1 }}
+                    value={getSizePrice(activeSizeOpt.id,ti)}
+                    placeholder={'base: $'+tier.p.toFixed(2)}
+                    onChange={e => setSizePrice(activeSizeOpt.id,ti,e.target.value)} />
+                : <input type="number" step="0.01" style={{ ...INP, flex:1 }}
+                    value={tier.p}
+                    onChange={e => updTierPrice(ti,e.target.value)} />
+              }
+            </div>
+            <button onClick={() => removeTier(ti)}
+              style={{ padding:'7px 10px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)',
+                background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12 }}>✕</button>
+          </div>
+        ))}
+        <button className="abtn abtn-add" style={{ fontSize:12, padding:'6px 12px', marginTop:4 }} onClick={addTier}>
+          + Add Qty Tier
+        </button>
+
+        {/* Preview */}
+        {!isSqft && (p.pricing||[]).length > 0 && (
+          <div style={{ marginTop:14, background:'var(--s2)', borderRadius:8, padding:'12px 14px' }}>
+            <div style={{ fontSize:10, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:8 }}>Preview</div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+              {(p.pricing||[]).map((tier,ti) => {
+                const sp = activeSizeOpt ? getSizePrice(activeSizeOpt.id,ti) : null;
+                const pr = parseFloat(sp||tier.p||0);
+                return (
+                  <div key={ti} style={{ padding:'8px 12px', borderRadius:7, background:'var(--sf)', border:'1px solid var(--bd)', fontSize:12, textAlign:'center', minWidth:70 }}>
+                    <div style={{ fontWeight:700, color:'var(--mu)' }}>{(tier.q||0).toLocaleString()} qty</div>
+                    <div style={{ color:'var(--o)', fontWeight:800, fontSize:15 }}>${pr.toFixed(2)}</div>
+                    <div style={{ fontSize:10, color:'var(--mu)' }}>{tier.q > 0 ? '$'+(pr/tier.q).toFixed(3)+'/ea' : ''}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:hasSizeGroup ? '1fr 1fr' : '1fr', gap:16, marginBottom:18 }}>
-        <div className="aform-section">
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-            <div className="aform-title" style={{ margin:0 }}>Quantity Tiers</div>
-            <button className="abtn abtn-add" style={{ fontSize:11, padding:'5px 10px' }} onClick={addTier}>+ Add Tier</button>
+
+      {/* ── Option Groups ── */}
+      <div className="aform-section" style={{ marginBottom:18 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+          <div>
+            <div className="aform-title" style={{ margin:0 }}>⚙️ Option Groups</div>
+            <div style={{ fontSize:11, color:'var(--mu)', marginTop:3 }}>
+              e.g. Size, Paper, Laminate. Types: <strong>× Multiply</strong> multiplies base · <strong>% Add</strong> adds % · <strong>$ Flat</strong> adds fixed · <strong>ft</strong> per linear foot of perimeter. Use ↑↓ to reorder.
+            </div>
           </div>
-          {hasSizeGroup && !selectedSizeOpt && (
-            <div style={{ fontSize:12, color:'var(--mu)', background:'var(--s2)', borderRadius:8, padding:'10px 12px', marginBottom:12, borderLeft:'3px solid var(--o)' }}>
-              Click a size on the right to enter prices for it.
-            </div>
-          )}
-          {hasSizeGroup && selectedSizeOpt && (
-            <div style={{ fontSize:12, color:'var(--o)', background:'var(--ol)', borderRadius:8, padding:'10px 12px', marginBottom:12, fontWeight:600 }}>
-              Editing prices for: {selectedSizeOpt.l}
-            </div>
-          )}
-          {(p.pricing||[]).map((tier,ti) => (
-            <div key={ti} style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:6, marginBottom:6, alignItems:'center' }}>
-              <input type="number" style={inp} value={tier.q} onChange={e => updTierQty(ti,e.target.value)} placeholder="Qty" />
-              <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                <span style={{ color:'var(--mu)', fontSize:12 }}>$</span>
-                {selectedSizeOpt
-                  ? <input type="number" step="0.01" style={{ ...inp, flex:1 }} value={getSizePrice(selectedSizeOpt.id,ti)} onChange={e => setSizePrices(selectedSizeOpt.id,ti,e.target.value)} placeholder={'base:'+tier.p} />
-                  : <input type="number" step="0.01" style={{ ...inp, flex:1 }} value={tier.p} onChange={e => updTierPrice(ti,e.target.value)} />
-                }
-              </div>
-              <button onClick={() => removeTier(ti)} style={{ padding:'5px 9px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12 }}>X</button>
-            </div>
-          ))}
-          {!isSqft && (p.pricing||[]).length > 0 && (
-            <div style={{ marginTop:12, background:'var(--s2)', borderRadius:8, padding:'10px 12px' }}>
-              <div style={{ fontSize:10, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:6 }}>Preview</div>
-              <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-                {(p.pricing||[]).map((tier,ti) => {
-                  const sp = selectedSizeOpt ? getSizePrice(selectedSizeOpt.id,ti) : null;
-                  const prNum = parseFloat(sp||tier.p||0);
-                  return (
-                    <div key={ti} style={{ padding:'5px 10px', borderRadius:6, background:'var(--sf)', border:'1px solid var(--bd)', fontSize:11, textAlign:'center' }}>
-                      <div style={{ fontWeight:700 }}>{(tier.q||0).toLocaleString()}</div>
-                      <div style={{ color:'var(--o)', fontWeight:700 }}>{'$'+prNum.toFixed(2)}</div>
-                      <div style={{ fontSize:9, color:'var(--mu)' }}>{tier.q > 0 ? '$'+(prNum/tier.q).toFixed(3)+'/ea' : ''}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          <div style={{ display:'flex', gap:8, flexShrink:0 }}>
+            {!hasSizeGroup && (
+              <button onClick={addSizeGroup}
+                style={{ padding:'6px 12px', borderRadius:7, fontSize:12, fontWeight:700, cursor:'pointer',
+                  border:'2px solid var(--o)', background:'rgba(249,115,22,.08)', color:'var(--o)' }}>
+                + Size Group
+              </button>
+            )}
+            <button className="abtn abtn-add" style={{ fontSize:12, padding:'6px 12px' }} onClick={addGroup}>+ Group</button>
+          </div>
         </div>
-        <div className="aform-section">
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-            <div className="aform-title" style={{ margin:0 }}>Option Groups</div>
-            <button className="abtn abtn-add" style={{ fontSize:11, padding:'5px 10px' }} onClick={addGroup}>+ Add Group</button>
+
+        {(p.opts||[]).length === 0 && (
+          <div style={{ fontSize:12, color:'var(--mu)', padding:'12px', background:'var(--s2)', borderRadius:8 }}>
+            No option groups yet. Click "+ Size Group" to add sizes, or "+ Group" for any other option (Paper Stock, Laminate, etc.).
           </div>
-          {(p.opts||[]).map((g,gi) => {
-            const isSize = g.key === 'size';
-            return (
-              <div key={gi} style={{ border:'1px solid '+(isSize ? 'var(--o)' : 'var(--bd)'), borderRadius:10, padding:12, marginBottom:12, background:isSize ? 'rgba(249,115,22,.03)' : 'var(--s2)' }}>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:8, marginBottom:10, alignItems:'center' }}>
-                  <div>
-                    <div style={{ fontSize:9, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>Label</div>
-                    <input style={inp} value={g.label} onChange={e => updGroup(gi,'label',e.target.value)} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize:9, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>Key</div>
-                    <input style={inp} value={g.key} onChange={e => updGroup(gi,'key',e.target.value.toLowerCase().replace(/\s+/g,'-'))} />
-                  </div>
-                  <button onClick={() => removeGroup(gi)} style={{ padding:'5px 9px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12, alignSelf:'flex-end' }}>X</button>
+        )}
+
+        {(p.opts||[]).map((g,gi) => {
+          const isSize   = g.key==='size';
+          const isFirst  = gi===0;
+          const isLast   = gi===(p.opts||[]).length-1;
+          return (
+            <div key={gi} style={{ border:'1px solid '+(isSize?'var(--o)':'var(--bd)'), borderRadius:10, padding:14, marginBottom:14, background:isSize?'rgba(249,115,22,.03)':'var(--s2)' }}>
+              {/* Group header */}
+              <div style={{ display:'grid', gridTemplateColumns:'auto 1fr 160px auto', gap:10, marginBottom:12, alignItems:'flex-end' }}>
+                {/* Up/Down for group */}
+                <div style={{ display:'flex', flexDirection:'column', gap:3, paddingBottom:2 }}>
+                  <button style={ARRW} disabled={isFirst}  onClick={() => moveGroup(gi,-1)} title="Move group up">↑</button>
+                  <button style={ARRW} disabled={isLast}   onClick={() => moveGroup(gi, 1)} title="Move group down">↓</button>
                 </div>
-                {isSize && <div style={{ fontSize:10, color:'var(--o)', marginBottom:8, fontWeight:600 }}>Click a size to set its prices on the left</div>}
-                {(g.opts||[]).map((o,oi) => {
-                  const pt = o.price_type || 'multiplier';
-                  const pv = o.price_val ?? o.m ?? 1;
-                  const isSel = isSize && selectedOptKey === o.id;
-                  const sp0 = getSizePrice(o.id, 0);
-                  return (
-                    <div key={oi} style={{ marginBottom:8 }}>
-                      {isSize ? (
-                        <div onClick={() => setSelectedOptKey(isSel ? null : o.id)} style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 12px', borderRadius:8, border:'2px solid '+(isSel ? 'var(--o)' : 'var(--bd)'), background:isSel ? 'var(--ol)' : 'var(--sf)', cursor:'pointer', userSelect:'none' }}>
-                          <input style={{ ...inp, background:'transparent', border:'none', padding:0, fontWeight:isSel ? 700 : 400, color:isSel ? 'var(--o)' : 'var(--tx)', fontSize:13, flex:1 }} value={o.l} onChange={e => { e.stopPropagation(); updOption(gi,oi,'l',e.target.value); }} onClick={e => e.stopPropagation()} placeholder="Size label" />
-                          <span style={{ fontSize:10, color:isSel ? 'var(--o)' : 'var(--mu)', fontWeight:600 }}>{sp0 ? 'from $'+sp0 : 'click to set'}</span>
-                          <div style={{ width:18, height:18, borderRadius:4, background:isSel ? 'var(--o)' : 'var(--bd)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, color:isSel ? '#000' : 'var(--mu)', fontWeight:800 }}>{isSel ? 'Y' : '>'}</div>
-                          <button onClick={e => { e.stopPropagation(); removeOption(gi,oi); }} style={{ padding:'3px 6px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>X</button>
-                        </div>
-                      ) : (
-                        <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr 90px 65px auto', gap:5, alignItems:'center' }}>
-                          <input style={{...inp,fontSize:11}} value={o.l} onChange={e => updOption(gi,oi,'l',e.target.value)} placeholder="Label" />
-                          <input style={{...inp,fontSize:10}} value={o.id} onChange={e => updOption(gi,oi,'id',e.target.value.toLowerCase().replace(/\s+/g,'-'))} placeholder="key" />
-                          <select value={pt} style={{...sl,fontSize:10,padding:'6px 8px'}} onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; const defs={multiplier:1.0,percent:10,fixed:5,linear_ft:2.5}; no[oi]={...no[oi],price_type:e.target.value,price_val:defs[e.target.value],m:e.target.value==='multiplier'?(no[oi].price_val||1):1}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }}>
-                            <option value="multiplier">x Mult</option>
-                            <option value="percent">% Pct</option>
-                            <option value="fixed">$ Fixed</option>
-                            <option value="linear_ft">ft</option>
-                          </select>
-                          <input type="number" step={pt==='multiplier' ? '0.01' : '1'} style={{...inp,fontSize:11,textAlign:'center'}} value={pv} onChange={e => { const ng=[...(p.opts||[])]; const no=[...ng[gi].opts]; const v=parseFloat(e.target.value)||0; no[oi]={...no[oi],price_val:v,m:pt==='multiplier'?v:1,price_type:pt}; ng[gi]={...ng[gi],opts:no}; upd('opts')(ng); }} />
-                          <button onClick={() => removeOption(gi,oi)} style={{ padding:'5px 7px', borderRadius:5, border:'1px solid rgba(239,68,68,.3)', background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:11 }}>X</button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-                <button onClick={() => addOption(gi)} style={{ fontSize:11, padding:'5px 10px', borderRadius:6, border:'1px dashed var(--bd)', background:'transparent', color:'var(--mu)', cursor:'pointer', marginTop:4 }}>+ Add {isSize ? 'Size' : 'Choice'}</button>
+                <div>
+                  <label style={{ fontSize:11, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', display:'block', marginBottom:4 }}>Group Label</label>
+                  <input style={INP} value={g.label} placeholder="e.g. Paper Stock"
+                    onChange={e => updGroup(gi,'label',e.target.value)} />
+                </div>
+                <div>
+                  <label style={{ fontSize:11, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', display:'block', marginBottom:4 }}>Key (no spaces)</label>
+                  <input style={INP} value={g.key} placeholder="e.g. paper"
+                    onChange={e => updGroup(gi,'key',e.target.value.toLowerCase().replace(/\s+/g,'-'))} />
+                </div>
+                <button onClick={() => removeGroup(gi)}
+                  style={{ padding:'8px 11px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)',
+                    background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12, alignSelf:'flex-end' }}>✕</button>
               </div>
-            );
-          })}
-        </div>
+
+              {isSize && (
+                <div style={{ fontSize:11, color:'var(--o)', marginBottom:10, padding:'6px 10px', background:'rgba(249,115,22,.06)', borderRadius:6 }}>
+                  💡 This is the <strong>size</strong> group. Add/edit size labels below, then go to the Pricing section above and click each size chip to enter its prices per qty tier.
+                </div>
+              )}
+
+              {/* Option rows */}
+              {(g.opts||[]).map((o,oi) => {
+                const pt      = o.price_type||'multiplier';
+                const pv      = o.price_val ?? o.m ?? 1;
+                const optFirst = oi===0;
+                const optLast  = oi===(g.opts||[]).length-1;
+                return (
+                  <div key={oi} style={{ display:'grid', gridTemplateColumns:'auto 1.4fr 120px 110px 76px auto', gap:8, alignItems:'center', marginBottom:8 }}>
+                    {/* Up/Down for option */}
+                    <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                      <button style={ARRW} disabled={optFirst} onClick={() => moveOption(gi,oi,-1)} title="Move up">↑</button>
+                      <button style={ARRW} disabled={optLast}  onClick={() => moveOption(gi,oi, 1)} title="Move down">↓</button>
+                    </div>
+                    <div>
+                      {oi===0 && <div style={{ fontSize:10, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>Label</div>}
+                      <input style={INP} value={o.l} placeholder="Option label"
+                        onChange={e => updOption(gi,oi,'l',e.target.value)} />
+                    </div>
+                    <div>
+                      {oi===0 && <div style={{ fontSize:10, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>ID / Key</div>}
+                      <input style={INP} value={o.id} placeholder="key-id"
+                        onChange={e => updOption(gi,oi,'id',e.target.value.toLowerCase().replace(/\s+/g,'-'))} />
+                    </div>
+                    <div>
+                      {oi===0 && <div style={{ fontSize:10, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>Price Type</div>}
+                      <select style={SL} value={pt}
+                        onChange={e => {
+                          const ng=[...(p.opts||[])]; const no=[...ng[gi].opts];
+                          const defs={multiplier:1.0,percent:10,fixed:5,linear_ft:2.5};
+                          no[oi]={...no[oi],price_type:e.target.value,price_val:defs[e.target.value],m:e.target.value==='multiplier'?(no[oi].price_val||1):1};
+                          ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
+                        }}>
+                        <option value="multiplier">× Multiply</option>
+                        <option value="percent">% Add %</option>
+                        <option value="fixed">$ Flat add</option>
+                        <option value="linear_ft">ft Linear ft</option>
+                      </select>
+                    </div>
+                    <div>
+                      {oi===0 && <div style={{ fontSize:10, fontWeight:700, color:'var(--mu)', textTransform:'uppercase', marginBottom:3 }}>Value</div>}
+                      <input type="number" step={pt==='multiplier'?'0.01':'1'} style={INP} value={pv}
+                        onChange={e => {
+                          const ng=[...(p.opts||[])]; const no=[...ng[gi].opts];
+                          const v=parseFloat(e.target.value)||0;
+                          no[oi]={...no[oi],price_val:v,m:pt==='multiplier'?v:1,price_type:pt};
+                          ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
+                        }} />
+                    </div>
+                    <button onClick={() => removeOption(gi,oi)}
+                      style={{ padding:'7px 10px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)',
+                        background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12 }}>✕</button>
+                  </div>
+                );
+              })}
+              <button onClick={() => addOption(gi)}
+                style={{ fontSize:12, padding:'6px 12px', borderRadius:6, border:'1px dashed var(--bd)',
+                  background:'transparent', color:'var(--mu)', cursor:'pointer', marginTop:4 }}>
+                + Add {isSize ? 'Size' : 'Option'}
+              </button>
+            </div>
+          );
+        })}
       </div>
-      <div style={{ display:'flex', gap:10, marginTop:18 }}>
-        <button className="abtn abtn-add" onClick={() => onSave(p)} style={{ fontSize:14, padding:'10px 24px' }}>Save All Changes</button>
+
+      {/* ── Save / Cancel ── */}
+      <div style={{ display:'flex', gap:10, marginTop:8, paddingBottom:40 }}>
+        <button className="abtn abtn-add" style={{ fontSize:14, padding:'11px 26px' }}
+          onClick={() => onSave(p)}>💾 Save All Changes</button>
         <button className="abtn" onClick={onCancel}>Cancel</button>
       </div>
     </div>

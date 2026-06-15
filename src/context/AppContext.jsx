@@ -205,10 +205,16 @@ export function AppProvider({ children }) {
         imgs:               p.imgs || [],
         pricing:            p.pricing,
         sqft:               p.sqft || null,
-        opts:               p.opts || [],
+        opts:               (p.opts || []).map(g => ({
+          ...g,
+          opts: (g.opts || []).map(o => ({ ...o, size_prices: o.size_prices || {} })),
+        })),
         // Turnaround
         rush_ok:            p.rush_ok,
         express_ok:         p.express_ok,
+        // Specs & extended description
+        specs:              p.specs || [],
+        long_desc:          p.long_desc || '',
         // Label configurator
         label_configurator: p.label_configurator,
         lbl_shapes:         p.lbl_shapes,

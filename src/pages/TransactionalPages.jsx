@@ -24,22 +24,27 @@ export function CartPage() {
         <h1 className="D" style={{ fontSize: 'clamp(28px,4vw,46px)', marginBottom: 24 }}>Your Cart</h1>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 330px', gap: 24, alignItems: 'start' }} className="cart-layout">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {cart.map(item => (
-              <div key={item.cartId} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 16 }}>
-                <div style={{ flex: 1 }}>
+            {cart.map(item => {
+              const thumb = item.imgs?.find(x=>x?.length) || item.img || '';
+              return (
+              <div key={item.cartId} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 14 }}>
+                <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'var(--s2)', border: '1px solid var(--bd)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {thumb ? <img src={thumb} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 24 }}>🖨️</span>}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 5 }}>{item.name}</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                    <span style={{ fontSize: 10, background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 4, padding: '2px 7px', color: 'var(--mu)' }}>Qty: {item.qty}</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--mu)' }}>Qty: {item.qty}</span>
                     {(item.opts || []).map((o, i) => <span key={i} style={{ fontSize: 10, background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 4, padding: '2px 7px', color: 'var(--mu)' }}>{o}</span>)}
                   </div>
                 </div>
-                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 22, color: 'var(--o)', flexShrink: 0 }}>${item.price.toFixed(2)}</div>
-                <button onClick={() => removeFromCart(item.cartId)} style={{ color: 'var(--mu)', padding: 6, borderRadius: 6, fontSize: 15, cursor: 'pointer', background: 'none', border: 'none' }}
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 22, color: 'var(--o)', flexShrink: 0, minWidth: 72, textAlign: 'right' }}>${item.price.toFixed(2)}</div>
+                <button onClick={() => removeFromCart(item.cartId)} style={{ color: 'var(--mu)', padding: 6, borderRadius: 6, fontSize: 15, cursor: 'pointer', background: 'none', border: 'none', flexShrink: 0 }}
                   onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = 'rgba(239,68,68,.1)'; }}
                   onMouseLeave={e => { e.currentTarget.style.color = 'var(--mu)'; e.currentTarget.style.background = 'none'; }}
                 >✕</button>
               </div>
-            ))}
+            );})}
             <div style={{ background: 'rgba(249,115,22,.06)', border: '1px solid rgba(249,115,22,.15)', borderRadius: 10, padding: '13px 17px', fontSize: 13, color: 'var(--mu)' }}>
               <strong style={{ color: 'var(--tx)' }}>📎 Artwork:</strong> You can upload your files at checkout, or email them to <strong style={{ color: 'var(--o)' }}>info@nexacustoms.ca</strong> after ordering. We accept PDF, AI, EPS, PNG/JPG (300dpi+).
             </div>
@@ -402,6 +407,8 @@ export function CheckoutPage() {
       sessionStorage.setItem('last_delivery', delivery);
       sessionStorage.setItem('last_ship_addr', delivery !== 'pickup' ? `${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : '');
       clearCart();
+      sessionStorage.setItem('last_order_items', cart.map(i => i.qty+'x '+i.name).join('|'));
+      sessionStorage.setItem('last_order_total', '$'+total.toFixed(2));
       navigate('/order-confirmed');
     } catch (err) {
       console.error('Checkout error:', err);
@@ -875,34 +882,54 @@ export function CheckoutPage() {
 // ── SUCCESS ───────────────────────────────────────────────────────────────────
 export function SuccessPage() {
   const navigate = useNavigate();
-  const orderNo   = sessionStorage.getItem('last_order_no') || 'NCX—';
+  const orderNo      = sessionStorage.getItem('last_order_no') || '';
   const deliveryType = sessionStorage.getItem('last_delivery') || 'pickup';
-  const shipAddr  = sessionStorage.getItem('last_ship_addr') || '';
+  const shipAddr     = sessionStorage.getItem('last_ship_addr') || '';
+  const itemsRaw     = sessionStorage.getItem('last_order_items') || '';
+  const totalRaw     = sessionStorage.getItem('last_order_total') || '';
+  const items = itemsRaw ? itemsRaw.split('|').filter(Boolean) : [];
 
   return (
     <div style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 20px' }}>
       <div style={{ fontSize: 72, marginBottom: 20 }}>🎉</div>
-      <h1 className="D" style={{ fontSize: 'clamp(36px,5vw,60px)', marginBottom: 10, color: 'var(--gr)' }}>Order Confirmed!</h1>
+      <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,54px)', marginBottom: 10, color: 'var(--gr)' }}>Order Confirmed!</h1>
       <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 460, margin: '0 auto 12px', lineHeight: 1.7 }}>Your order has been received. We will be in touch within 1 business day with your proof.</p>
-      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 18, color: 'var(--o)', marginBottom: 28, background: 'rgba(249,115,22,.1)', border: '1px solid rgba(249,115,22,.2)', borderRadius: 8, padding: '10px 24px', display: 'inline-block' }}>{orderNo}</div>
-      <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 14, padding: 22, maxWidth: 440, width: '100%', marginBottom: 28, textAlign: 'left' }}>
-        {[
-          ['📎 Artwork', 'Email files to info@nexacustoms.ca with your order number'],
-          deliveryType === 'pickup'
-            ? ['📍 Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM']
-            : ['📦 Shipping To', `${shipAddr} · ${deliveryType === 'post' ? 'Canada Post 3–7 days' : 'Courier 1–2 days'}`],
-          ['📞 Questions?', 'Call or text (437) 997-9921'],
-        ].map(([k, v]) => (
-          <div key={k} style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--bd)' }}>
-            <span style={{ color: 'var(--o)', flexShrink: 0, fontWeight: 600 }}>{k}</span>
-            <span style={{ color: 'var(--mu)' }}>{v}</span>
+      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 20, color: 'var(--o)', marginBottom: 20, background: 'rgba(249,115,22,.1)', border: '1px solid rgba(249,115,22,.2)', borderRadius: 8, padding: '10px 28px', display: 'inline-block', letterSpacing: '.05em' }}>{orderNo || 'NCX—'}</div>
+      <div style={{ maxWidth: 480, width: '100%', marginBottom: 24 }}>
+        {items.length > 0 && (
+          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, padding: '16px 20px', marginBottom: 12, textAlign: 'left' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mu)', marginBottom: 10 }}>Order Summary</div>
+            {items.map((it, i) => (
+              <div key={i} style={{ fontSize: 13, paddingBottom: 7, marginBottom: 7, borderBottom: i < items.length - 1 ? '1px solid var(--bd)' : 'none', color: 'var(--tx)' }}>{it}</div>
+            ))}
+            {totalRaw && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 800, paddingTop: 8, borderTop: '1px solid var(--bd)', marginTop: 4 }}>
+                <span>Total Paid</span><span style={{ color: 'var(--o)' }}>{totalRaw}</span>
+              </div>
+            )}
           </div>
-        ))}
+        )}
+        <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, padding: '16px 20px', textAlign: 'left' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mu)', marginBottom: 10 }}>Next Steps</div>
+          {[
+            ['📎 Artwork', 'Email files to info@nexacustoms.ca with your order number'],
+            deliveryType === 'pickup'
+              ? ['📍 Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM']
+              : ['📦 Shipping', shipAddr + ' · ' + (deliveryType === 'post' ? 'Canada Post 3–7 days' : 'Courier 1–2 days')],
+            ['📞 Questions?', 'Call or text (437) 997-9921'],
+          ].map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid var(--bd)' }}>
+              <span style={{ color: 'var(--o)', flexShrink: 0, fontWeight: 600, minWidth: 90 }}>{k}</span>
+              <span style={{ color: 'var(--mu)' }}>{v}</span>
+            </div>
+          ))}
+        </div>
       </div>
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 12 }}>
         <button className="btn btn-primary" onClick={() => navigate('/products')}>Continue Shopping</button>
-        <button className="btn btn-ghost" onClick={() => navigate('/')}>Back to Home</button>
+        <button className="btn btn-ghost" onClick={() => navigate('/order-status')}>📦 Track Your Order</button>
       </div>
+      <div style={{ fontSize: 12, color: 'var(--mu)' }}>A confirmation has been sent to your email.</div>
     </div>
   );
 }
@@ -1160,6 +1187,138 @@ export function ContactPage() {
             </button>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── ORDER STATUS PAGE ─────────────────────────────────────────────────────────
+export function OrderStatusPage() {
+  const { cfg } = useApp();
+  const navigate = useNavigate();
+  const [orderNo, setOrderNo] = useState('');
+  const [email,   setEmail]   = useState('');
+  const [loading, setLoading] = useState(false);
+  const [order,   setOrder]   = useState(null);
+  const [error,   setError]   = useState('');
+
+  const STATUSES = ['New','In Progress','Ready','Completed'];
+  const STATUS_INFO = {
+    'New':         { icon: '📋', label: 'Order Received',             desc: 'We have your order and are reviewing your artwork.' },
+    'In Progress': { icon: '🖨️',  label: 'In Production',             desc: 'Your order is on the press and being printed.' },
+    'Ready':       { icon: '✅',  label: 'Ready for Pickup / Shipped', desc: "Your order is complete! Come pick it up or it's on its way." },
+    'Completed':   { icon: '🎉', label: 'Completed',                  desc: 'Order delivered. Thank you for choosing Nexa Customs!' },
+    'Cancelled':   { icon: '❌', label: 'Cancelled',                  desc: 'This order has been cancelled. Contact us if you have questions.' },
+  };
+
+  async function lookup() {
+    const no = orderNo.trim().toUpperCase();
+    const em = email.trim().toLowerCase();
+    if (!no || !em) { setError('Please enter your order number and email.'); return; }
+    if (!no.startsWith('NCX-') && !no.startsWith('QUO-')) { setError('Order numbers start with NCX- or QUO-'); return; }
+    setLoading(true); setError(''); setOrder(null);
+    const supaUrl = cfg.supaUrl(); const supaKey = cfg.supaKey();
+    if (!supaUrl || !supaKey) { setError('Order tracking unavailable — store not configured.'); setLoading(false); return; }
+    try {
+      const res = await fetch(
+        supaUrl + '/rest/v1/orders?order_number=eq.' + encodeURIComponent(no) + '&select=order_number,status,items,total,delivery,created_at,customer_name,customer_email',
+        { headers: { apikey: supaKey, Authorization: 'Bearer ' + supaKey } }
+      );
+      const data = await res.json();
+      if (!data || data.length === 0) { setError('No order found with that order number. Please double-check and try again.'); setLoading(false); return; }
+      const match = data.find(o => (o.customer_email||'').toLowerCase() === em);
+      if (!match) { setError('Email does not match our records for that order number.'); setLoading(false); return; }
+      setOrder(match);
+    } catch(e) { setError('Could not connect. Please try again.'); }
+    setLoading(false);
+  }
+
+  const st = order ? (STATUS_INFO[order.status] || STATUS_INFO['New']) : null;
+  const activeIdx = order ? STATUSES.indexOf(order.status) : -1;
+
+  return (
+    <div style={{ padding: '48px 0 80px' }}>
+      <div className="W" style={{ maxWidth: 580, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          <div className="badge-orange" style={{ marginBottom: 12 }}>Order Tracking</div>
+          <h1 className="D" style={{ fontSize: 'clamp(28px,5vw,48px)', marginBottom: 10 }}>Track Your Order</h1>
+          <p style={{ fontSize: 13, color: 'var(--mu)' }}>Enter your order number (NCX-XXXXX) and email to check your production status.</p>
+        </div>
+
+        <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 14, padding: 24, marginBottom: 24 }}>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--mu)', display: 'block', marginBottom: 6 }}>Order Number</label>
+            <input style={{ width: '100%', background: 'var(--s2)', border: '1px solid var(--bd)', color: 'var(--tx)', padding: '11px 14px', borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: "'DM Mono',monospace", letterSpacing: '.05em', boxSizing: 'border-box' }}
+              placeholder="NCX-12345" value={orderNo}
+              onChange={e => setOrderNo(e.target.value.toUpperCase())}
+              onKeyDown={e => e.key === 'Enter' && lookup()} />
+          </div>
+          <div style={{ marginBottom: 18 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--mu)', display: 'block', marginBottom: 6 }}>Email Address</label>
+            <input type="email" style={{ width: '100%', background: 'var(--s2)', border: '1px solid var(--bd)', color: 'var(--tx)', padding: '11px 14px', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+              placeholder="you@example.com" value={email}
+              onChange={e => setEmail(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && lookup()} />
+          </div>
+          {error && <div style={{ fontSize: 12, color: '#f87171', marginBottom: 12, padding: '8px 12px', background: 'rgba(239,68,68,.08)', borderRadius: 7 }}>{error}</div>}
+          <button onClick={lookup} disabled={loading}
+            style={{ width: '100%', padding: '13px', borderRadius: 9, background: 'var(--o)', color: '#000', border: 'none', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: "'DM Sans',sans-serif" }}>
+            {loading ? '🔍 Looking up…' : '🔍 Track Order'}
+          </button>
+        </div>
+
+        {order && st && (
+          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 14, padding: 24 }}>
+            <div style={{ textAlign: 'center', marginBottom: 28, padding: '20px', background: 'var(--s2)', borderRadius: 10 }}>
+              <div style={{ fontSize: 48, marginBottom: 8 }}>{st.icon}</div>
+              <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, marginBottom: 6 }}>{st.label}</div>
+              <div style={{ fontSize: 13, color: 'var(--mu)' }}>{st.desc}</div>
+            </div>
+
+            {order.status !== 'Cancelled' && (
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
+                  {STATUSES.map((s, i) => {
+                    const done    = i <= activeIdx;
+                    const current = i === activeIdx;
+                    return (
+                      <div key={s} style={{ textAlign: 'center' }}>
+                        <div style={{ height: 5, borderRadius: 4, background: done ? 'var(--o)' : 'var(--bd)', marginBottom: 6 }} />
+                        <div style={{ fontSize: 10, fontWeight: current ? 700 : 400, color: current ? 'var(--o)' : done ? 'var(--tx)' : 'var(--mu)' }}>
+                          {s === 'New' ? 'Received' : s === 'In Progress' ? 'Printing' : s === 'Ready' ? 'Ready' : 'Done'}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: 18 }}>
+              {[
+                ['Order #',  order.order_number],
+                ['Name',     order.customer_name || '—'],
+                ['Items',    order.items],
+                ['Total',    order.total ? '$'+parseFloat(order.total).toFixed(2) : '—'],
+                ['Delivery', order.delivery === 'pickup' ? 'Free Pickup — Mississauga' : order.delivery === 'post' ? 'Canada Post' : order.delivery === 'courier' ? 'Courier' : order.delivery || '—'],
+                ['Placed',   order.created_at ? new Date(order.created_at).toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'}) : '—'],
+              ].map(([k,v],i,arr) => (
+                <div key={k} style={{ display:'grid', gridTemplateColumns:'110px 1fr', gap:10, padding:'10px 0', borderBottom: i<arr.length-1?'1px solid var(--bd)':'none', fontSize:13 }}>
+                  <span style={{ color:'var(--mu)', fontWeight:600 }}>{k}</span>
+                  <span style={{ color:'var(--tx)' }}>{v}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ padding: '12px 14px', background: 'rgba(249,115,22,.06)', borderRadius: 8, fontSize: 12, color: 'var(--mu)', borderLeft: '3px solid var(--o)' }}>
+              📞 Questions? Call <a href="tel:+14379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>(437) 997-9921</a> or email <a href="mailto:info@nexacustoms.ca" style={{ color: 'var(--o)' }}>info@nexacustoms.ca</a>
+            </div>
+          </div>
+        )}
+
+        <div style={{ textAlign: 'center', marginTop: 24 }}>
+          <button onClick={() => navigate('/products')} style={{ background: 'none', border: 'none', color: 'var(--mu)', fontSize: 12, cursor: 'pointer' }}>← Back to Products</button>
+        </div>
       </div>
     </div>
   );
