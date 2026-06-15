@@ -180,8 +180,47 @@ function ProductsTab() {
     (!search.trim() || p.name.toLowerCase().includes(search.toLowerCase()))
   );
 
-  function saveEdit(updated) { setProds(prev => prev.map(p => p.id === updated.id ? updated : p)); setEditing(null); showToast('✅ Product saved!'); }
+  function saveEdit(updated) {
+    if (updated._isNew) {
+      // New product — add to list
+      const { _isNew, ...clean } = updated;
+      setProds(prev => [...prev, clean]);
+    } else {
+      setProds(prev => prev.map(p => p.id === updated.id ? updated : p));
+    }
+    setEditing(null);
+    showToast('✅ Product saved!');
+  }
   function toggleDisable(id) { setProds(prev => prev.map(p => p.id === id ? { ...p, disabled: !p.disabled } : p)); }
+
+  function startNewProduct() {
+    const slug = 'new-product-' + Date.now();
+    const blank = {
+      _isNew: true,
+      id:      slug,
+      name:    'New Product',
+      desc:    '',
+      long_desc: '',
+      badge:   '',
+      cat:     cats[0]?.id || 'business-cards',
+      imgs:    [],
+      specs:   [],
+      disabled: false,
+      rush_ok:  true,
+      express_ok: true,
+      label_configurator: false,
+      pricing: [
+        { q: 25,  p: 0 },
+        { q: 50,  p: 0 },
+        { q: 100, p: 0 },
+        { q: 250, p: 0 },
+        { q: 500, p: 0 },
+      ],
+      opts: [],
+      sqft: { enabled: false },
+    };
+    setEditing(blank);
+  }
 
   if (editing) return <ProductEditor prod={editing} cats={cats} onSave={saveEdit} onCancel={() => setEditing(null)} />;
 
@@ -189,12 +228,15 @@ function ProductsTab() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
         <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 24 }}>Products ({filtered.length} / {prods.length})</h2>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <select className="finp" style={{ width: 170, fontSize: 12, padding: '8px 10px' }} value={filterCat} onChange={e => setFilterCat(e.target.value)}>
             <option value="all">All Categories</option>
             {cats.map(c => <option key={c.id} value={c.id}>{c.l}</option>)}
           </select>
           <input className="finp" style={{ width: 200, fontSize: 12 }} placeholder="Search products…" value={search} onChange={e => setSearch(e.target.value)} />
+          <button className="abtn abtn-add" style={{ fontSize: 13, padding: '8px 16px', fontWeight: 700, whiteSpace: 'nowrap' }} onClick={startNewProduct}>
+            + New Product
+          </button>
         </div>
       </div>
       <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', overflow: 'hidden' }}>
@@ -220,6 +262,7 @@ function ProductsTab() {
                     <td style={{ display: 'flex', gap: 6 }}>
                       <button className="abtn" onClick={() => setEditing({ ...p, imgs: [...(p.imgs || [])] })}>✏️ Edit</button>
                       <button className="abtn" onClick={() => toggleDisable(p.id)} style={{ color: p.disabled ? 'var(--gr)' : '#f87171', borderColor: p.disabled ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)' }}>{p.disabled ? 'Show' : 'Hide'}</button>
+                      <button className="abtn" onClick={() => { if(window.confirm('Delete ' + p.name + '? This cannot be undone.')) { setProds(prev => prev.filter(x => x.id !== p.id)); showToast('🗑️ Product deleted'); } }} style={{ color: '#f87171', borderColor: 'rgba(239,68,68,.3)' }}>🗑️</button>
                     </td>
                   </tr>
                 );
@@ -258,7 +301,7 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22 }}>
         <button className="abtn" onClick={onCancel}>← Back</button>
-        <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 22 }}>Edit: {prod.name}</h2>
+        <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 22 }}>{prod._isNew ? '✨ New Product' : 'Edit: ' + prod.name}</h2>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }} className="ed-grid">
         {/* Left */}
