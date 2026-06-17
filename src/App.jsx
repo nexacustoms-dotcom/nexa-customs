@@ -213,6 +213,7 @@ function Layout({ children, noNav }) {
       <main style={{ flex: 1 }}>{children}</main>
       {!noNav && <Footer />}
       <Toast />
+      <FloatingButtons />
     </div>
   );
 }
