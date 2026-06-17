@@ -35,7 +35,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const count = cart.length;
 
-  const URL_MAP = { 'home':'/', 'products':'/products', 'cart':'/cart', 'checkout':'/checkout', 'success':'/order-confirmed', 'quote':'/quote', 'contact':'/contact', 'admin':'/admin', 'faq':'/faq', 'shipping':'/shipping', 'returns':'/returns', 'terms':'/terms', 'turnaround':'/turnaround', 'order-status':'/order-status' };
+  const URL_MAP = { 'home':'/', 'products':'/products', 'cart':'/cart', 'checkout':'/checkout', 'success':'/order-confirmed', 'quote':'/quote', 'contact':'/contact', 'admin':'/admin', 'faq':'/faq', 'shipping':'/shipping', 'returns':'/returns', 'terms':'/terms', 'turnaround':'/turnaround', 'order-status':'/order-status', 'privacy':'/privacy' };
   function navGo(p) { setOpen(false); document.body.style.overflow = ''; navigate(URL_MAP[p] || '/'+p); }
   function toggleHam() { setOpen(o => { document.body.style.overflow = !o ? 'hidden' : ''; return !o; }); }
 
@@ -131,7 +131,7 @@ export function Footer() {
   const { store, cats } = useApp();
   const navigate = useNavigate();
   function go(p) {
-    const map = { home:'/', products:'/products', cart:'/cart', checkout:'/checkout', quote:'/quote', contact:'/contact', admin:'/admin', faq:'/faq', shipping:'/shipping', returns:'/returns', terms:'/terms', turnaround:'/turnaround', about:'/about', 'order-status':'/order-status' };
+    const map = { home:'/', products:'/products', cart:'/cart', checkout:'/checkout', quote:'/quote', contact:'/contact', admin:'/admin', faq:'/faq', shipping:'/shipping', returns:'/returns', terms:'/terms', turnaround:'/turnaround', about:'/about', 'order-status':'/order-status', 'privacy':'/privacy' };
     navigate(map[p] || '/' + p);
   }
   const GTA = ['Mississauga','Toronto','Brampton','Oakville','Burlington','Vaughan','Markham','Richmond Hill','Etobicoke','North York','Scarborough','Milton','Georgetown','Pickering','Ajax','Hamilton'];
@@ -213,7 +213,7 @@ export function Footer() {
         <div style={{ borderTop: '1px solid var(--bd)', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'var(--mu)', flexWrap: 'wrap', gap: 10 }}>
           <span>{store.footer_copy}</span>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            {[['Terms','terms'],['Shipping','shipping'],['Returns','returns'],['FAQ','faq'],['About','about'],['Contact','contact']].map(([l, p]) => (
+            {[['Terms','terms'],['Privacy','privacy'],['Shipping','shipping'],['Returns','returns'],['FAQ','faq'],['About','about'],['Contact','contact']].map(([l, p]) => (
               <span key={l} onClick={() => go(p)} style={{ cursor: 'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.color = 'var(--tx)'}
                 onMouseLeave={e => e.currentTarget.style.color = 'var(--mu)'}

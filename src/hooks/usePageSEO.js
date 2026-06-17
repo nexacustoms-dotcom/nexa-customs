@@ -20,6 +20,8 @@ const TITLES = {
   '/checkout':       'Checkout — Nexa Customs',
   '/order-confirmed':'Order Confirmed! — Nexa Customs',
   '/order-status':   'Track Your Order — Nexa Customs',
+  '/privacy':        'Privacy Policy — Nexa Customs',
+  '/terms':          'Terms & Conditions — Nexa Customs',
 };
 
 const DESCRIPTIONS = {
@@ -31,6 +33,8 @@ const DESCRIPTIONS = {
   '/faq':        'Frequently asked questions about Nexa Customs print services. File formats, turnaround times, GTA pickup, Canada shipping, proofs and more.',
   '/shipping':   'Nexa Customs offers free pickup in Mississauga (GTA) and ships Canada-wide via Canada Post and FedEx. Fast, reliable delivery to all provinces.',
   '/order-status': 'Track your Nexa Customs print order in real time. Enter your order number to see production status — received, printing, ready, or shipped.',
+  '/privacy':    'Privacy Policy for Nexa Customs Inc. Learn how we collect, use, and protect your personal information. PIPEDA compliant.',
+  '/terms':      'Terms and Conditions for Nexa Customs Inc. Custom print orders, artwork rights, payment, turnaround, and liability.',
 };
 
 const CAT_TITLES = {

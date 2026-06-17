@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
-import { Topbar, Navbar, Footer, Toast } from './components/Layout';
+import { Topbar, Navbar, Footer, Toast, FloatingButtons } from './components/Layout';
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
@@ -29,12 +29,61 @@ function PolicyPage({ slug }) {
   const p = builtinPages?.[slug] || pages?.find(pg => pg.slug === slug);
   if (!p) return <NotFoundPage />;
   return (
-    <div className="W" style={{ padding: '40px 28px 76px', maxWidth: 820 }}>
-      <h1 className="D" style={{ fontSize: 'clamp(28px,4vw,50px)', marginBottom: 28 }}>{p.title}</h1>
-      {p.body && p.body.split('\n\n').map((para, i) => (
-        <p key={i} style={{ fontSize: 14, color: 'var(--mu)', lineHeight: 1.85, marginBottom: 16, whiteSpace: 'pre-line' }}>{para}</p>
-      ))}
+    <div className="W" style={{ padding: '48px 28px 80px', maxWidth: 820 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 36, paddingBottom: 24, borderBottom: '1px solid var(--bd)' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 10 }}>
+          {slug === 'shipping' ? 'Shipping & Delivery' : slug === 'returns' ? 'Returns & Refunds' : slug === 'faq' ? 'Help Center' : slug === 'terms' ? 'Legal' : slug === 'turnaround' ? 'Production Times' : 'Nexa Customs'}
+        </div>
+        <h1 className="D" style={{ fontSize: 'clamp(28px,4vw,48px)', marginBottom: 10 }}>{p.title}</h1>
+        <p style={{ fontSize: 13, color: 'var(--mu)' }}>Last updated: June 2026 · Nexa Customs Inc. · Mississauga, Ontario</p>
+      </div>
+      {/* Body */}
+      {p.body && p.body.split('\n\n').map((para, i) => {
+        // Section header: lines starting with ##
+        if (para.startsWith('## ')) {
+          return <h2 key={i} style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 22, marginTop: 32, marginBottom: 12, color: 'var(--tx)', paddingBottom: 8, borderBottom: '1px solid var(--bd)' }}>{para.slice(3)}</h2>;
+        }
+        // Info box: lines starting with >>>
+        if (para.startsWith('>>> ')) {
+          return <div key={i} style={{ padding: '14px 18px', background: 'rgba(249,115,22,.06)', borderLeft: '3px solid var(--o)', borderRadius: '0 8px 8px 0', marginBottom: 16, fontSize: 13, color: 'var(--mu)', lineHeight: 1.8 }}>{para.slice(4)}</div>;
+        }
+        // Table rows: lines starting with |
+        if (para.includes('\n') && para.split('\n').every(l => l.trim().startsWith('|'))) {
+          const rows = para.split('\n').filter(l => l.trim() && !l.includes('---'));
+          return (
+            <div key={i} style={{ overflowX: 'auto', marginBottom: 20 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                {rows.map((row, ri) => {
+                  const cells = row.split('|').filter(c => c.trim());
+                  const isHeader = ri === 0;
+                  return (
+                    <tr key={ri} style={{ borderBottom: '1px solid var(--bd)', background: isHeader ? 'var(--s2)' : 'transparent' }}>
+                      {cells.map((cell, ci) => isHeader
+                        ? <th key={ci} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--mu)' }}>{cell.trim()}</th>
+                        : <td key={ci} style={{ padding: '10px 14px', color: ci === 0 ? 'var(--tx)' : 'var(--mu)' }}>{cell.trim()}</td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </table>
+            </div>
+          );
+        }
+        return <p key={i} style={{ fontSize: 14, color: 'var(--mu)', lineHeight: 1.85, marginBottom: 16, whiteSpace: 'pre-line' }}>{para}</p>;
+      })}
       {p.faqs && p.faqs.map((item, i) => <FAQItem key={i} q={item.q} a={item.a} />)}
+      {/* Footer CTA */}
+      <div style={{ marginTop: 48, padding: '20px 24px', background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Have a question?</div>
+          <div style={{ fontSize: 12, color: 'var(--mu)' }}>Our team is here to help Mon–Fri 9AM–6PM</div>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <a href="tel:+14379979921" style={{ padding: '9px 18px', borderRadius: 8, background: 'var(--o)', color: '#000', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>📞 (437) 997-9921</a>
+          <a href="mailto:info@nexacustoms.ca" style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid var(--bd)', color: 'var(--tx)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>✉️ Email Us</a>
+        </div>
+      </div>
     </div>
   );
 }
@@ -194,6 +243,7 @@ function AppRoutes() {
         <Route path="/shipping" element={<Layout><PolicyPage slug="shipping" /></Layout>} />
         <Route path="/returns" element={<Layout><PolicyPage slug="returns" /></Layout>} />
         <Route path="/terms" element={<Layout><PolicyPage slug="terms" /></Layout>} />
+        <Route path="/privacy" element={<Layout><PolicyPage slug="privacy" /></Layout>} />
         <Route path="/turnaround" element={<Layout><PolicyPage slug="turnaround" /></Layout>} />
         <Route path="/about" element={<Layout><PolicyPage slug="about" /></Layout>} />
         <Route path="/p/:slug" element={<Layout><CustomPageRoute /></Layout>} />
@@ -205,10 +255,39 @@ function AppRoutes() {
   );
 }
 
+
+// ── ERROR BOUNDARY ────────────────────────────────────────────────────────────
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  componentDidCatch(error, info) { console.error('ErrorBoundary caught:', error, info); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 40, background: '#0c0c0e', color: '#fff' }}>
+          <div style={{ fontSize: 64, marginBottom: 20 }}>⚠️</div>
+          <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 36, marginBottom: 12 }}>Something went wrong</h1>
+          <p style={{ fontSize: 14, color: '#888', maxWidth: 400, lineHeight: 1.7, marginBottom: 28 }}>
+            We encountered an unexpected error. Please refresh the page or contact us at{' '}
+            <a href="tel:+14379979921" style={{ color: '#f97316' }}>(437) 997-9921</a> if the problem persists.
+          </p>
+          <button onClick={() => window.location.reload()}
+            style={{ padding: '12px 28px', background: '#f97316', color: '#000', border: 'none', borderRadius: 9, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
+            Refresh Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
+    <ErrorBoundary>
     <AppProvider>
       <AppRoutes />
     </AppProvider>
+    </ErrorBoundary>
   );
 }

@@ -938,15 +938,38 @@ export function SuccessPage() {
 export function QuotePage() {
   const { showToast, cats, cfg } = useApp();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ fname: '', lname: '', email: '', phone: '', cat: 'Business Cards', qty: '', deadline: '', desc: '' });
+  const [form, setForm] = useState({ fname: '', lname: '', email: '', phone: '', company: '', cat: 'Business Cards', qty: '', deadline: '', desc: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [quoteFile, setQuoteFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  async function uploadQuoteFile(file) {
+    if (!file) return null;
+    const supaUrl = cfg.supaUrl(); const supaKey = cfg.supaKey();
+    if (!supaUrl || !supaKey) return null;
+    setUploading(true);
+    const ext = file.name.split('.').pop().toLowerCase();
+    const fname = 'quotes/' + Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+    try {
+      const res = await fetch(supaUrl + '/storage/v1/object/nexa-media/' + fname, {
+        method: 'POST',
+        headers: { apikey: supaKey, Authorization: 'Bearer ' + supaKey, 'Content-Type': file.type, 'x-upsert': 'true' },
+        body: file,
+      });
+      setUploading(false);
+      if (res.ok) return supaUrl + '/storage/v1/object/public/nexa-media/' + fname;
+    } catch(e) { console.error('Quote file upload:', e); }
+    setUploading(false);
+    return null;
+  }
 
   async function submit() {
     if (!form.fname || !form.email || !form.desc) { showToast('Please fill in required fields'); return; }
     setSending(true);
     const id = 'QUO-' + Math.floor(10000 + Math.random() * 90000);
+    const fileUrl = quoteFile ? await uploadQuoteFile(quoteFile) : null;
 
     // Save to Supabase
     const supaUrl = cfg.supaUrl(); const supaKey = cfg.supaKey();
@@ -954,14 +977,14 @@ export function QuotePage() {
       fetch(supaUrl + '/rest/v1/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: supaKey, Authorization: 'Bearer ' + supaKey, Prefer: 'return=minimal' },
-        body: JSON.stringify({ id, order_number: id, customer_name: form.fname + ' ' + form.lname, customer_email: form.email, customer_phone: form.phone, items: form.cat + ': ' + form.desc.slice(0, 200), total: 0, status: 'Quote', source: 'Quote Form', notes: form.desc, created_at: new Date().toISOString() })
+        body: JSON.stringify({ id, order_number: id, customer_name: form.fname + ' ' + form.lname, customer_email: form.email, customer_phone: form.phone, company: form.company || '', items: form.cat + ': ' + form.desc.slice(0, 200), total: 0, status: 'Quote', source: 'Quote Form', notes: form.desc + (fileUrl ? '\n\nArtwork: ' + fileUrl : ''), created_at: new Date().toISOString() })
       }).catch(e => console.error('Supabase quote save:', e));
     }
 
     // Telegram
     const tok = cfg.tgToken(); const cid = cfg.tgChat();
     if (tok && cid) {
-      fetch(`https://api.telegram.org/bot${tok}/sendMessage?chat_id=${cid}&text=${encodeURIComponent(`📋 QUOTE REQUEST\n\nName: ${form.fname} ${form.lname}\nEmail: ${form.email}\nPhone: ${form.phone || 'N/A'}\nCategory: ${form.cat}\nQty: ${form.qty || 'N/A'}\nDeadline: ${form.deadline || 'N/A'}\n\n${form.desc.slice(0, 200)}`)}`).catch(() => {});
+      fetch(`https://api.telegram.org/bot${tok}/sendMessage?chat_id=${cid}&text=${encodeURIComponent(`📋 QUOTE REQUEST\n\nName: ${form.fname} ${form.lname}\nCompany: ${form.company || 'N/A'}\nEmail: ${form.email}\nPhone: ${form.phone || 'N/A'}\nCategory: ${form.cat}\nQty: ${form.qty || 'N/A'}\nDeadline: ${form.deadline || 'N/A'}\nFile: ${fileUrl || 'None'}\n\n${form.desc.slice(0, 200)}`)}`).catch(() => {});
     }
 
     // EmailJS
@@ -1041,6 +1064,7 @@ export function QuotePage() {
               <div className="fgrp"><label className="flbl">Email *</label><input className="finp" type="email" placeholder="ravi@nexacustoms.ca" value={form.email} onChange={upd('email')} /></div>
               <div className="fgrp"><label className="flbl">Phone</label><input className="finp" type="tel" placeholder="(437) 997-9921" value={form.phone} onChange={upd('phone')} /></div>
             </div>
+            <div className="fgrp"><label className="flbl">Company Name</label><input className="finp" placeholder="Your Company Inc." value={form.company} onChange={upd('company')} /></div>
           </div>
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, marginBottom: 14 }}>
             <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Project Details</div>
@@ -1056,9 +1080,26 @@ export function QuotePage() {
             </div>
             <div className="fgrp"><label className="flbl">Project Description *</label><textarea className="ftxt" rows="4" placeholder="Sizes, finishes, deadline, special requirements..." value={form.desc} onChange={upd('desc')} /></div>
           </div>
-          <button className="btn btn-primary" onClick={submit} disabled={sending}
-            style={{ width: '100%', justifyContent: 'center', fontSize: 14, padding: 14, borderRadius: 'var(--r)', opacity: sending ? 0.7 : 1 }}>
-            {sending ? 'Sending…' : 'Send Quote Request →'}
+          <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 20, marginBottom: 14 }}>
+            <div className="D" style={{ fontSize: 16, marginBottom: 4 }}>Attach Artwork <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--mu)' }}>(optional)</span></div>
+            <p style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 12 }}>Upload your logo, artwork, or reference file. PDF, AI, EPS, PNG, JPG accepted. Max 20MB.</p>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', border: '2px dashed var(--bd)', borderRadius: 10, cursor: 'pointer',
+              background: quoteFile ? 'rgba(34,197,94,.05)' : 'var(--s2)', borderColor: quoteFile ? 'rgba(34,197,94,.4)' : 'var(--bd)' }}>
+              <input type="file" accept=".pdf,.ai,.eps,.png,.jpg,.jpeg,.psd,.svg,.tiff" style={{ display: 'none' }}
+                onChange={e => setQuoteFile(e.target.files[0] || null)} />
+              <span style={{ fontSize: 24 }}>{quoteFile ? '✅' : '📎'}</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: quoteFile ? '#22c55e' : 'var(--tx)' }}>
+                  {quoteFile ? quoteFile.name : 'Click to attach a file'}
+                </div>
+                {quoteFile && <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 2 }}>{(quoteFile.size / 1024 / 1024).toFixed(2)} MB · Click to change</div>}
+              </div>
+            </label>
+            {uploading && <div style={{ fontSize: 12, color: 'var(--o)', marginTop: 8 }}>⏳ Uploading file…</div>}
+          </div>
+          <button className="btn btn-primary" onClick={submit} disabled={sending || uploading}
+            style={{ width: '100%', justifyContent: 'center', fontSize: 14, padding: 14, borderRadius: 'var(--r)', opacity: (sending || uploading) ? 0.7 : 1 }}>
+            {sending ? 'Sending…' : uploading ? 'Uploading…' : 'Send Quote Request →'}
           </button>
         </div>
         <div>
