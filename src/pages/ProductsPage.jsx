@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
+import { useApp, imgUrl } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
 
 export default function ProductsPage() {
@@ -97,7 +97,7 @@ function SidebarItem({ label, emoji, img, count, active, onClick }) {
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         {img
-          ? <img src={img} alt={label} style={{ width: 20, height: 20, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
+          ? <img src={imgUrl(img, 80)} alt={label} style={{ width: 20, height: 20, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} loading="lazy" />
           : <span style={{ fontSize: 14 }}>{emoji}</span>}
         <span>{label}</span>
       </div>

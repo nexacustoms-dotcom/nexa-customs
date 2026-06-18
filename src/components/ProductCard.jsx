@@ -1,4 +1,4 @@
-import { useApp } from '../context/AppContext';
+import { useApp, imgUrl } from '../context/AppContext';
 import { CAT_BG } from '../data/products';
 
 export default function ProductCard({ prod, onOpen }) {
@@ -11,9 +11,9 @@ export default function ProductCard({ prod, onOpen }) {
     <div className="card" onClick={onOpen} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: 118, background: CAT_BG[prod.cat] || 'var(--s2)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid var(--bd)', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
         {firstImg
-          ? <img src={firstImg} alt={prod.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ? <img src={imgUrl(firstImg, 400)} alt={prod.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
           : cat?.img
-            ? <img src={cat.img} alt={cat.l} style={{ width: '60%', height: '60%', objectFit: 'cover', borderRadius: 8, opacity: 0.6 }} />
+            ? <img src={imgUrl(cat.img, 400)} alt={cat.l} style={{ width: '60%', height: '60%', objectFit: 'cover', borderRadius: 8, opacity: 0.6 }} loading="lazy" />
             : <span style={{ fontSize: 42 }}>{cat?.i || '🖨️'}</span>
         }
         {prod.badge && (

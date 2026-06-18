@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
+import { useApp, imgUrl } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
 import { CAT_BG } from '../data/products';
 import LabelConfigurator from './LabelConfigurator';
@@ -101,7 +101,7 @@ export default function ProductDetailPage() {
           <div style={{ position: 'sticky', top: 82 }} className="det-img">
             <div style={{ background: CAT_BG[prod.cat] || 'var(--s2)', borderRadius: 14, overflow: 'hidden', marginBottom: 8 }}>
               {imgs.length > 0
-                ? <img src={imgs[imgIdx]} alt={prod.name} style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }} />
+                ? <img src={imgUrl(imgs[imgIdx], 800)} alt={prod.name} style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
                 : <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72 }}>{cat?.i || '🖨️'}</div>
               }
             </div>

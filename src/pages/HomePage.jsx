@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
+import { useApp, imgUrl } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
 
 const TESTIMONIALS = [
@@ -34,7 +34,7 @@ export default function HomePage() {
       {/* HERO */}
       <section style={{ position: 'relative', padding: '76px 0 100px' }}>
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-          {store.hero_bg && <img src={store.hero_bg} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }} />}
+          {store.hero_bg && <img src={imgUrl(store.hero_bg, 1200)} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }} />}
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(249,115,22,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,.04) 1px,transparent 1px)', backgroundSize: '54px 54px' }} />
           <div style={{ position: 'absolute', top: -120, right: -60, width: 640, height: 640, borderRadius: '50%', background: 'radial-gradient(circle,rgba(249,115,22,.1) 0%,transparent 68%)' }} />
         </div>
@@ -73,7 +73,7 @@ export default function HomePage() {
                   <div style={{ position: 'absolute', top: 10, right: 10, background: 'var(--o)', color: '#000', fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 20, zIndex: 2, letterSpacing: '.05em', textTransform: 'uppercase' }}>Shop Now →</div>
                 )}
                 {slides[slide]?.img
-                  ? <img src={slides[slide].img} alt={slides[slide].title} style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }} />
+                  ? <img src={imgUrl(slides[slide].img, 1200)} alt={slides[slide].title} style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
                   : (
                     <div style={{ padding: 36, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                       <div style={{ fontSize: 64, marginBottom: 16 }}>{slides[slide]?.ico || '🖨️'}</div>
@@ -117,7 +117,7 @@ export default function HomePage() {
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--bd)'; e.currentTarget.style.transform = ''; }}
               >
                 {c.img
-                  ? <img src={c.img} alt={c.l} style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }} />
+                  ? <img src={imgUrl(c.img, 400)} alt={c.l} style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }} loading="lazy" />
                   : <div style={{ width: '100%', height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, background: 'var(--s2)' }}>{c.i}</div>}
                 <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.3, padding: '10px 8px' }}>{c.l}</span>
               </div>

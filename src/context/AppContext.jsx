@@ -1,6 +1,16 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { DEFAULT_CATS, DEFAULT_PRODS, DEFAULT_STORE, DEFAULT_PRICING } from '../data/products';
 
+// ── IMAGE OPTIMISATION ────────────────────────────────────────────────────────
+// Supabase storage supports on-the-fly resize + WebP conversion
+// Usage: imgUrl(src, 800) → appends ?width=800&quality=75&format=origin
+export function imgUrl(src, width = 800, quality = 75) {
+  if (!src || !src.includes('supabase.co/storage')) return src;
+  const sep = src.includes('?') ? '&' : '?';
+  return `${src}${sep}width=${width}&quality=${quality}&resize=contain`;
+}
+
+
 const AppContext = createContext(null);
 
 const ls = {
