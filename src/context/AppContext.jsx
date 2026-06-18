@@ -135,8 +135,15 @@ export function AppProvider({ children }) {
     async function syncAll() {
       if (!isSupaReady()) return;
       setSyncing(true);
+      // Fetch all 5 config rows in parallel — saves ~1s vs sequential awaits
+      const [cr, catr, pr, pager, pcr] = await Promise.all([
+        supaGet('site_config', 'id=eq.main&limit=1'),
+        supaGet('site_config', 'id=eq.categories&limit=1'),
+        supaGet('site_config', 'id=eq.products&limit=1'),
+        supaGet('site_config', 'id=eq.builtin_pages&limit=1'),
+        supaGet('site_config', 'id=eq.pricing_cfg&limit=1'),
+      ]);
       // store config
-      const cr = await supaGet('site_config', 'id=eq.main&limit=1');
       if (cr?.length > 0 && cr[0].data) {
         const d = typeof cr[0].data === 'string' ? JSON.parse(cr[0].data) : cr[0].data;
         const m = { ...DEFAULT_STORE, ...d };
@@ -144,24 +151,22 @@ export function AppProvider({ children }) {
         if (m.favicon_img) applyFavicon(m.favicon_img);
       }
       // category overrides
-      const catr = await supaGet('site_config', 'id=eq.categories&limit=1');
       if (catr?.length > 0 && catr[0].data) {
         const d = typeof catr[0].data === 'string' ? JSON.parse(catr[0].data) : catr[0].data;
         ls.set('nxt_cats_overrides', d);
         setCatsState(mergeCatOverrides(DEFAULT_CATS, d));
       }
       // product overrides
-      const pr = await supaGet('site_config', 'id=eq.products&limit=1');
       if (pr?.length > 0 && pr[0].data) {
         const d = typeof pr[0].data === 'string' ? JSON.parse(pr[0].data) : pr[0].data;
         if (Array.isArray(d)) { ls.set('nxt_pricing', d); setProdsState(mergeOverrides(DEFAULT_PRODS, d)); }
       }
       // builtin pages
-      supaGet('site_config', 'id=eq.builtin_pages').then(d => {
-        if (d?.[0]?.data) { const merged = { ...DEFAULT_BUILTIN_PAGES, ...d[0].data }; ls.set('nxt_builtin_pages', merged); setBuiltinPagesState(merged); }
-      });
+      if (pager?.[0]?.data) {
+        const merged = { ...DEFAULT_BUILTIN_PAGES, ...pager[0].data };
+        ls.set('nxt_builtin_pages', merged); setBuiltinPagesState(merged);
+      }
       // pricing config
-      const pcr = await supaGet('site_config', 'id=eq.pricing_cfg&limit=1');
       if (pcr?.length > 0 && pcr[0].data) {
         const d = typeof pcr[0].data === 'string' ? JSON.parse(pcr[0].data) : pcr[0].data;
         const m = { ...DEFAULT_PRICING, ...d };
