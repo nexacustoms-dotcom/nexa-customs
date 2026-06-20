@@ -121,23 +121,7 @@ export default function ProductDetailPage() {
           <div>
             {prod.badge && <div className="badge-orange" style={{ marginBottom: 8 }}>{prod.badge}</div>}
             <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 30, margin: '6px 0 8px' }}>{prod.name}</h1>
-            <p style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.72, marginBottom: prod.long_desc || (prod.specs&&prod.specs.length>0) ? 12 : 20 }}>{prod.desc}</p>
-            {prod.long_desc && (
-              <p style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.8, marginBottom: prod.specs?.length>0 ? 12 : 20, padding:'10px 14px', background:'var(--s2)', borderRadius:8, borderLeft:'3px solid var(--o)' }}>{prod.long_desc}</p>
-            )}
-            {prod.specs && prod.specs.length > 0 && (
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--mu)', marginBottom: 8 }}>Specifications</div>
-                <div style={{ background: 'var(--s2)', borderRadius: 8, border: '1px solid var(--bd)', overflow: 'hidden' }}>
-                  {prod.specs.filter(s=>s.k&&s.v).map((s, i) => (
-                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '38% 1fr', borderBottom: i < prod.specs.filter(s=>s.k&&s.v).length - 1 ? '1px solid var(--bd)' : 'none' }}>
-                      <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 700, color: 'var(--mu)', borderRight: '1px solid var(--bd)', background: 'rgba(0,0,0,.15)' }}>{s.k}</div>
-                      <div style={{ padding: '8px 12px', fontSize: 11, color: 'var(--tx)' }}>{s.v}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <p style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.72, marginBottom: 20 }}>{prod.desc}</p>
 
             {/* Options */}
             {(prod.opts || []).map(g => (
@@ -229,6 +213,26 @@ export default function ProductDetailPage() {
                 })}
               </div>
             </div>
+
+            {/* Extended description */}
+            {prod.long_desc && (
+              <p style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.8, marginTop: 18, padding:'10px 14px', background:'var(--s2)', borderRadius:8, borderLeft:'3px solid var(--o)' }}>{prod.long_desc}</p>
+            )}
+
+            {/* Specifications */}
+            {prod.specs && prod.specs.length > 0 && (
+              <div style={{ marginTop: 18 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--mu)', marginBottom: 8 }}>Specifications</div>
+                <div style={{ background: 'var(--s2)', borderRadius: 8, border: '1px solid var(--bd)', overflow: 'hidden' }}>
+                  {prod.specs.filter(s=>s.k&&s.v).map((s, i) => (
+                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '38% 1fr', borderBottom: i < prod.specs.filter(s=>s.k&&s.v).length - 1 ? '1px solid var(--bd)' : 'none' }}>
+                      <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 700, color: 'var(--mu)', borderRight: '1px solid var(--bd)', background: 'rgba(0,0,0,.15)' }}>{s.k}</div>
+                      <div style={{ padding: '8px 12px', fontSize: 11, color: 'var(--tx)' }}>{s.v}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── COL 3: Sticky price summary ── */}
