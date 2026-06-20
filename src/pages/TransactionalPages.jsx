@@ -112,7 +112,7 @@ export function CheckoutPage() {
     setStripeReady(false);
     setStripeCheckDone(false);
 
-    function initStripe() {
+    async function initStripe() {
       const pk = cfg.stripePk();
       if (!pk || pk.length < 10) { setStripeCheckDone(true); return; }
       // Load Stripe dynamically if not already loaded (saves 253KB on non-checkout pages)
