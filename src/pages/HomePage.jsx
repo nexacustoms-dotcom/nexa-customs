@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, imgUrl } from '../context/AppContext';
+import { DEFAULT_STORE } from '../data/products';
 import ProductCard from '../components/ProductCard';
 
 const TESTIMONIALS = [
@@ -11,7 +12,8 @@ const TESTIMONIALS = [
 ];
 
 export default function HomePage() {
-  const { cats, prods, store, showProduct } = useApp();
+  const { cats, prods, store: _store, showProduct } = useApp();
+  const store = { ...DEFAULT_STORE, ..._store };
   const navigate = useNavigate();
   const [slide, setSlide] = useState(0);
   const [tIdx, setTIdx] = useState(0);

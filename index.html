@@ -154,7 +154,6 @@
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://js.stripe.com" />
     <link rel="preconnect" href="https://eogypbrsjfgurrobjomn.supabase.co" />
     <link rel="dns-prefetch" href="https://eogypbrsjfgurrobjomn.supabase.co" />
 
@@ -173,8 +172,7 @@
     </script>
   </head>
   <body>
-    <!-- Stripe.js — load before app -->
-    <script src="https://js.stripe.com/v3/" async></script>
+    <!-- Stripe.js loaded dynamically at checkout only (see TransactionalPages.jsx) -->
 
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

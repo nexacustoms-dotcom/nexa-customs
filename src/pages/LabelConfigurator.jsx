@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
+import { useApp, imgUrl } from '../context/AppContext';
 
 // ─── PRICING ENGINE ──────────────────────────────────────────────────────────
 // Price scales by √(L×B) — larger labels cost more but not linearly
@@ -189,18 +189,57 @@ export default function LabelConfigurator({ prod }) {
 
       {/* Product header */}
       <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: '22px 26px', marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          {prod.imgs?.[0] && <img src={prod.imgs[0]} alt={prod.name} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 10, flexShrink: 0 }} />}
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 5 }}>
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+
+          {/* Image gallery */}
+          {prod.imgs?.filter(x => x?.length).length > 0 && (
+            <div style={{ flexShrink: 0 }}>
+              {/* Main image */}
+              <div style={{ width: 200, height: 200, borderRadius: 12, overflow: 'hidden', background: 'var(--s2)', border: '1px solid var(--bd)', marginBottom: 8 }}>
+                <img
+                  src={imgUrl(prod.imgs.filter(x=>x?.length)[imgIdx] || prod.imgs[0], 400)}
+                  alt={prod.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              </div>
+              {/* Thumbnails */}
+              {prod.imgs.filter(x=>x?.length).length > 1 && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', maxWidth: 200 }}>
+                  {prod.imgs.filter(x=>x?.length).map((img, i) => (
+                    <button key={i} onClick={() => setImgIdx(i)}
+                      style={{ width: 44, height: 44, borderRadius: 7, overflow: 'hidden', padding: 0, border: '2px solid ' + (i === imgIdx ? 'var(--o)' : 'var(--bd)'), cursor: 'pointer', background: 'var(--s2)', flexShrink: 0 }}>
+                      <img src={imgUrl(img, 80)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Product info */}
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
               <h1 className="D" style={{ fontSize: 'clamp(20px,4vw,32px)', margin: 0 }}>{prod.name}</h1>
               {prod.badge && <span className="badge-orange">{prod.badge}</span>}
             </div>
-            <p style={{ fontSize: 13, color: 'var(--mu)', margin: 0, lineHeight: 1.7 }}>{prod.desc}</p>
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--mu)', flexShrink: 0, textAlign: 'right' }}>
-            <div>🇨🇦 Ships Canada-wide</div>
-            <div style={{ marginTop: 3 }}>✅ Free digital proof</div>
+            <p style={{ fontSize: 13, color: 'var(--mu)', marginBottom: prod.long_desc ? 10 : 0, lineHeight: 1.7 }}>{prod.desc}</p>
+            {prod.long_desc && (
+              <p style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.8, padding: '8px 12px', background: 'var(--s2)', borderRadius: 7, borderLeft: '3px solid var(--o)', marginBottom: 10 }}>{prod.long_desc}</p>
+            )}
+            {prod.specs && prod.specs.length > 0 && (
+              <div style={{ background: 'var(--s2)', borderRadius: 8, border: '1px solid var(--bd)', overflow: 'hidden', marginBottom: 10 }}>
+                {prod.specs.filter(s=>s.k&&s.v).map((s, i, arr) => (
+                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '38% 1fr', borderBottom: i < arr.length-1 ? '1px solid var(--bd)' : 'none' }}>
+                    <div style={{ padding: '7px 11px', fontSize: 11, fontWeight: 700, color: 'var(--mu)', borderRight: '1px solid var(--bd)', background: 'rgba(0,0,0,.15)' }}>{s.k}</div>
+                    <div style={{ padding: '7px 11px', fontSize: 11, color: 'var(--tx)' }}>{s.v}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ fontSize: 11, color: 'var(--mu)', display: 'flex', gap: 14 }}>
+              <span>🇨🇦 Ships Canada-wide</span>
+              <span>✅ Free digital proof</span>
+            </div>
           </div>
         </div>
       </div>

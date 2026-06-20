@@ -115,7 +115,16 @@ export function CheckoutPage() {
     function initStripe() {
       const pk = cfg.stripePk();
       if (!pk || pk.length < 10) { setStripeCheckDone(true); return; }
-      if (typeof window.Stripe === 'undefined') return false; // not loaded yet
+      // Load Stripe dynamically if not already loaded (saves 253KB on non-checkout pages)
+      if (typeof window.Stripe === 'undefined') {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://js.stripe.com/v3/';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
       try {
         const stripe = window.Stripe(pk);
         const elements = stripe.elements({ appearance: { theme: 'night', variables: { colorPrimary: '#f97316', colorBackground: '#242429', colorText: '#f0ede8', borderRadius: '9px' } } });

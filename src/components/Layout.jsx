@@ -195,18 +195,12 @@ export function Footer() {
           </div>
         </div>
 
-        {/* GTA Cities — SEO row */}
+        {/* GTA Cities — SEO row (single text node = minimal DOM) */}
         <div style={{ borderTop: '1px solid var(--bd)', padding: '16px 0' }}>
           <div style={{ fontSize: 10, color: 'var(--mu)', marginBottom: 7, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>Serving GTA — Free Pickup · Canada-Wide Shipping</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-            {GTA.map((city, i) => (
-              <span key={city} style={{ fontSize: 11, color: 'var(--mu)' }}>
-                {i > 0 && <span style={{ color: 'var(--bd)', margin: '0 5px' }}>·</span>}
-                {city}
-              </span>
-            ))}
-            <span style={{ fontSize: 11, color: 'var(--mu)' }}><span style={{ color: 'var(--bd)', margin: '0 5px' }}>·</span>All of Canada</span>
-          </div>
+          <p style={{ fontSize: 11, color: 'var(--mu)', lineHeight: 1.8, margin: 0 }}>
+            {GTA.join(' · ')} · All of Canada
+          </p>
         </div>
 
         {/* Bottom bar */}
