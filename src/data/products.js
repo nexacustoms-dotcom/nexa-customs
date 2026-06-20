@@ -29,7 +29,7 @@ export const DEFAULT_PRODS = [
     "name": "Best Value Business Cards",
     "badge": "Most Popular",
     "imgs": [],
-    "desc": "Professional full-colour business cards on 14pt C2S gloss stock — sharp, vibrant, and budget-friendly for any business.", "long_desc": "Our best-value business cards deliver professional results without the premium price tag. Printed in full-colour CMYK on 14pt coated two-sides (C2S) gloss card stock, these cards are ideal for networking events, trade shows, and everyday use. Standard 3.5" × 2" size fits every cardholder and wallet perfectly."×2\" cards at an unbeatable price. Choose paper, coating, and finish.",
+    "desc": "Professional full-colour business cards on 14pt C2S gloss stock — sharp, vibrant, and budget-friendly for any business.", "long_desc": "Our best-value business cards deliver professional results without the premium price tag. Printed in full-colour CMYK on 14pt coated two-sides (C2S) gloss card stock, these cards are ideal for networking events, trade shows, and everyday use. Standard 3.5″ × 2″ size fits every cardholder and wallet perfectly."×2\" cards at an unbeatable price. Choose paper, coating, and finish.",
     "opts": [
       {
         "key": "paper",
@@ -148,11 +148,11 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "14pt C2S Coated"},
       {"k": "Finish", "v": "Gloss coating both sides"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "File Format", "v": "PDF, AI, EPS, PNG 300dpi+"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
@@ -261,11 +261,11 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "16pt C2S Coated"},
       {"k": "Finish", "v": "Gloss UV coating front"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "File Format", "v": "PDF, AI, EPS, PNG 300dpi+"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
@@ -343,12 +343,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "16pt C2S Coated"},
       {"k": "Finish", "v": "Matte coating both sides"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Writable", "v": "Yes — matte surface accepts pen/pencil"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -425,12 +425,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "16pt C2S Coated"},
       {"k": "Finish", "v": "High-gloss UV both sides"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Best for", "v": "Photos, bold colours, graphics-heavy designs"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -507,12 +507,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "14pt Uncoated"},
       {"k": "Finish", "v": "No coating — natural paper feel"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Writable", "v": "Yes — ideal for stamps and handwriting"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -620,12 +620,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "18pt Extra Thick"},
       {"k": "Finish", "v": "Gloss UV or Matte (your choice)"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Thickness", "v": "18pt — 25% thicker than standard 14pt"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -635,7 +635,7 @@ export const DEFAULT_PRODS = [
     "name": "Folded Business Cards",
     "badge": null,
     "imgs": [],
-    "desc": "Folded business cards that open to reveal more content — double the space for menus, portfolios, appointment details, or service lists.", "long_desc": "Folded business cards are standard business card size when closed (3.5" × 2") but open to 3.5" × 4" — giving you double the content area. Perfect for hair stylists listing services, photographers showing portfolio samples, restaurants printing a mini-menu, or anyone who needs more information than a standard card allows."×4\" — show pricing, services, or a bold design inside.",
+    "desc": "Folded business cards that open to reveal more content — double the space for menus, portfolios, appointment details, or service lists.", "long_desc": "Folded business cards are standard business card size when closed (3.5″ × 2″) but open to 3.5″ × 4″ — giving you double the content area. Perfect for hair stylists listing services, photographers showing portfolio samples, restaurants printing a mini-menu, or anyone who needs more information than a standard card allows."×4\" — show pricing, services, or a bold design inside.",
     "opts": [
       {
         "key": "coat",
@@ -701,8 +701,8 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Closed Size", "v": "3.5\" × 2\""},
-      {"k": "Open Size", "v": "3.5\" × 4\""},
+      {"k": "Closed Size", "v": "3.5″ × 2″"},
+      {"k": "Open Size", "v": "3.5″ × 4″"},
       {"k": "Stock", "v": "16pt C2S Coated"},
       {"k": "Finish", "v": "Matte or Gloss UV"},
       {"k": "Print", "v": "Full colour CMYK, 4 panels"},
@@ -783,12 +783,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "16pt C2S Coated"},
       {"k": "Finish", "v": "Matte laminate film, front & back"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Durability", "v": "Scratch, moisture & bend resistant"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -865,7 +865,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "18pt C2S Coated"},
       {"k": "Finish", "v": "Soft-touch (suede) velvet laminate"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
@@ -931,7 +931,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "19pt Extra Thick"},
       {"k": "Base Finish", "v": "Matte laminate"},
       {"k": "Special Effect", "v": "Embossed + Spot UV highlights"},
@@ -997,7 +997,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "27pt Ultra Thick"},
       {"k": "Base Finish", "v": "Matte laminate"},
       {"k": "Special Effect", "v": "Embossed + Spot UV highlights"},
@@ -1089,7 +1089,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "18pt C2S Coated"},
       {"k": "Finish", "v": "Soft-touch or matte laminate base"},
       {"k": "Foil Options", "v": "Gold, Silver, Rose Gold, Copper, Holographic"},
@@ -1163,7 +1163,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "32pt Ultra Premium"},
       {"k": "Face Finish", "v": "Matte or soft-touch laminate"},
       {"k": "Edge", "v": "Hand-painted in your choice of colour"},
@@ -1229,7 +1229,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Material", "v": "14pt card stock with flexible magnetic backing"},
       {"k": "Finish", "v": "Gloss UV front"},
       {"k": "Print", "v": "Full colour CMYK front only"},
@@ -1291,12 +1291,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" (Standard)"},
+      {"k": "Size", "v": "3.5″ × 2″ (Standard)"},
       {"k": "Stock", "v": "14pt or 16pt C2S"},
       {"k": "Finish", "v": "Gloss UV or Matte"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Common Uses", "v": "Discount offers, loyalty punch cards, gift cards"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -1354,12 +1354,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5\" × 2\" or custom"},
+      {"k": "Size", "v": "3.5″ × 2″ or custom"},
       {"k": "Stock", "v": "14pt C2S Coated"},
       {"k": "Scratch Area", "v": "Silver scratch-off panel, custom position"},
       {"k": "Print", "v": "Full colour CMYK, front; B&W or colour back"},
       {"k": "Common Uses", "v": "Contests, discounts, loyalty rewards, events"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "7–10 business days"}
     ]
   },
@@ -1369,7 +1369,7 @@ export const DEFAULT_PRODS = [
     "name": "Flyers",
     "badge": "Best Seller",
     "imgs": [],
-    "desc": "Full-colour flyers on gloss or matte stock — the most cost-effective marketing tool for events, promotions, and local advertising.", "long_desc": "Flyers remain one of the highest-ROI marketing tools for local businesses. Distributed door-to-door, at events, or in-store, a well-designed flyer reaches your audience directly. Available in popular sizes from 4×6" to 11×17", printed on 100lb gloss text stock with UV coating for vivid colour reproduction.",
+    "desc": "Full-colour flyers on gloss or matte stock — the most cost-effective marketing tool for events, promotions, and local advertising.", "long_desc": "Flyers remain one of the highest-ROI marketing tools for local businesses. Distributed door-to-door, at events, or in-store, a well-designed flyer reaches your audience directly. Available in popular sizes from 4×6″ to 11×17″, printed on 100lb gloss text stock with UV coating for vivid colour reproduction.",
     "opts": [
       {
         "key": "size",
@@ -1467,11 +1467,11 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Sizes Available", "v": "4×6\", 5×7\", 5.5×8.5\", 8.5×11\", 11×17\""},
+      {"k": "Sizes Available", "v": "4×6″, 5×7″, 5.5×8.5″, 8.5×11″, 11×17″"},
       {"k": "Stock", "v": "100lb Gloss Text"},
       {"k": "Finish", "v": "Aqueous gloss coating"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "File Format", "v": "PDF, AI, EPS, PNG 300dpi+"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
@@ -1590,12 +1590,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Sizes Available", "v": "4×6\", 5×7\", 5.5×8.5\", 6×9\", 6×11\""},
+      {"k": "Sizes Available", "v": "4×6″, 5×7″, 5.5×8.5″, 6×9″, 6×11″"},
       {"k": "Stock", "v": "14pt C2S Coated"},
       {"k": "Finish", "v": "Gloss UV or Matte"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Mail Ready", "v": "Yes — Canada Post standard sizes available"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -1605,7 +1605,7 @@ export const DEFAULT_PRODS = [
     "name": "Brochures",
     "badge": "10% OFF",
     "imgs": [],
-    "desc": "Tri-fold and bi-fold brochures on gloss or matte stock — ideal for service menus, company profiles, and information packages.", "long_desc": "Brochures are the go-to format for presenting detailed information in an organized, professional way. Available as tri-fold (6 panels) or bi-fold (4 panels) in 8.5×11" or 8.5×14" formats. Printed on 100lb gloss or matte text stock for a professional finish that holds a clean fold.",
+    "desc": "Tri-fold and bi-fold brochures on gloss or matte stock — ideal for service menus, company profiles, and information packages.", "long_desc": "Brochures are the go-to format for presenting detailed information in an organized, professional way. Available as tri-fold (6 panels) or bi-fold (4 panels) in 8.5×11″ or 8.5×14″ formats. Printed on 100lb gloss or matte text stock for a professional finish that holds a clean fold.",
     "opts": [
       {
         "key": "fold",
@@ -1703,7 +1703,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Sizes", "v": "8.5×11\" or 8.5×14\""},
+      {"k": "Sizes", "v": "8.5×11″ or 8.5×14″"},
       {"k": "Fold Options", "v": "Tri-fold (letter fold) or Bi-fold"},
       {"k": "Stock", "v": "100lb Gloss or Matte Text"},
       {"k": "Finish", "v": "Aqueous gloss or matte coating"},
@@ -1800,12 +1800,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "3.5×8.5\" with die-cut hole (standard door hanger)"},
+      {"k": "Size", "v": "3.5×8.5″ with die-cut hole (standard door hanger)"},
       {"k": "Stock", "v": "14pt C2S Coated"},
       {"k": "Finish", "v": "Gloss UV or Matte"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Die Cut", "v": "Standard door hanger hole at top"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -1868,7 +1868,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Size", "v": "33\" × 81\" (most common) — custom sizes available"},
+      {"k": "Standard Size", "v": "33″ × 81″ (most common) — custom sizes available"},
       {"k": "Material", "v": "Scratch-resistant 10mil banner film"},
       {"k": "Print", "v": "Full colour CMYK"},
       {"k": "Hardware", "v": "Aluminium retractable base + carrying bag included"},
@@ -1883,7 +1883,7 @@ export const DEFAULT_PRODS = [
     "name": "X-Frame Banner Stands",
     "badge": null,
     "imgs": [],
-    "desc": "X-frame banner stands for retail, events, and indoor promotions — lightweight, portable, and easy to swap graphics.", "long_desc": "X-frame banner stands use a lightweight X-shaped frame that holds a printed fabric or vinyl graphic taut without creasing. Available in sizes from 24×63" to 32×71". The graphic attaches with bungee loops, making it easy to swap artwork for different promotions. Excellent for retail floors, showrooms, and indoor events.",
+    "desc": "X-frame banner stands for retail, events, and indoor promotions — lightweight, portable, and easy to swap graphics.", "long_desc": "X-frame banner stands use a lightweight X-shaped frame that holds a printed fabric or vinyl graphic taut without creasing. Available in sizes from 24×63″ to 32×71″. The graphic attaches with bungee loops, making it easy to swap artwork for different promotions. Excellent for retail floors, showrooms, and indoor events.",
     "opts": [
       {
         "key": "size",
@@ -1931,7 +1931,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Sizes", "v": "24×63\", 28×71\", 32×71\""},
+      {"k": "Standard Sizes", "v": "24×63″, 28×71″, 32×71″"},
       {"k": "Material", "v": "Lightweight vinyl graphic with bungee attachment"},
       {"k": "Print", "v": "Full colour CMYK"},
       {"k": "Hardware", "v": "X-frame stand + carrying bag included"},
@@ -2241,7 +2241,7 @@ export const DEFAULT_PRODS = [
     "name": "Lawn Signs (Coroplast)",
     "badge": "25% OFF",
     "imgs": [],
-    "desc": "Corrugated plastic lawn signs (coroplast) for real estate, elections, events, and outdoor advertising — lightweight and weather-resistant.", "long_desc": "Lawn signs (coroplast signs) are printed on 4mm corrugated plastic, making them lightweight, waterproof, and durable for outdoor use. They're the go-to choice for real estate listings, political campaigns, construction sites, yard sales, and event directional signage. Standard 18×24" fits universal H-stakes (sold separately).",
+    "desc": "Corrugated plastic lawn signs (coroplast) for real estate, elections, events, and outdoor advertising — lightweight and weather-resistant.", "long_desc": "Lawn signs (coroplast signs) are printed on 4mm corrugated plastic, making them lightweight, waterproof, and durable for outdoor use. They're the go-to choice for real estate listings, political campaigns, construction sites, yard sales, and event directional signage. Standard 18×24″ fits universal H-stakes (sold separately).",
     "opts": [
       {
         "key": "size",
@@ -2315,7 +2315,7 @@ export const DEFAULT_PRODS = [
   ,
     "specs": [
       {"k": "Material", "v": "4mm Corrugated Plastic (Coroplast)"},
-      {"k": "Standard Size", "v": "18\" × 24\""},
+      {"k": "Standard Size", "v": "18″ × 24″"},
       {"k": "Print", "v": "Full colour CMYK, single or double sided"},
       {"k": "Weatherproof", "v": "Yes — UV-resistant, waterproof"},
       {"k": "Stakes", "v": "H-wire stakes available (ask us)"},
@@ -3009,7 +3009,7 @@ export const DEFAULT_PRODS = [
   ,
     "specs": [
       {"k": "Material", "v": "Printed insert in weatherproof polybag sleeve"},
-      {"k": "Standard Size", "v": "18\" × 24\" (fits standard H-stakes)"},
+      {"k": "Standard Size", "v": "18″ × 24″ (fits standard H-stakes)"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Weather Resistance", "v": "Polybag sleeve protects from rain"},
       {"k": "Stakes", "v": "H-wire stakes sold separately"},
@@ -3515,7 +3515,7 @@ export const DEFAULT_PRODS = [
       {"k": "Material", "v": "Heavy-duty magnetic sheet, 30mil"},
       {"k": "Print", "v": "Full colour CMYK, UV-resistant"},
       {"k": "Laminate", "v": "Gloss UV laminate"},
-      {"k": "Standard Size", "v": "12×18\", 12×24\" or custom"},
+      {"k": "Standard Size", "v": "12×18″, 12×24″ or custom"},
       {"k": "Attaches to", "v": "Any ferrous metal vehicle surface"},
       {"k": "Removal", "v": "Instant — no adhesive, no residue"},
       {"k": "Turnaround", "v": "3–5 business days standard"}
@@ -3676,7 +3676,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Sizes", "v": "5.5×8.5\", 8.5×11\" (standard)"},
+      {"k": "Sizes", "v": "5.5×8.5″, 8.5×11″ (standard)"},
       {"k": "Binding", "v": "Saddle-stitch (8–48pp) or Perfect bind (48pp+)"},
       {"k": "Cover Stock", "v": "80–100lb gloss or matte cover"},
       {"k": "Interior Stock", "v": "60–80lb gloss or matte text"},
@@ -3691,7 +3691,7 @@ export const DEFAULT_PRODS = [
     "name": "Presentation Folders",
     "badge": null,
     "imgs": [],
-    "desc": "Custom presentation folders for proposals, information packages, and sales materials — makes a strong first impression.", "long_desc": "Presentation folders (also called pocket folders) hold your documents, brochures, and business card in an organized, professional package. The standard 9×12" format holds letter-size documents and features one or two interior pockets with a business card slit. Printed on 14pt coated stock with your full brand design."×12\" folders with pockets and business card slots.",
+    "desc": "Custom presentation folders for proposals, information packages, and sales materials — makes a strong first impression.", "long_desc": "Presentation folders (also called pocket folders) hold your documents, brochures, and business card in an organized, professional package. The standard 9×12″ format holds letter-size documents and features one or two interior pockets with a business card slit. Printed on 14pt coated stock with your full brand design."×12\" folders with pockets and business card slots.",
     "opts": [
       {
         "key": "coat",
@@ -3757,7 +3757,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "9\" × 12\" (holds letter-size documents)"},
+      {"k": "Size", "v": "9″ × 12″ (holds letter-size documents)"},
       {"k": "Stock", "v": "14pt C2S Coated"},
       {"k": "Finish", "v": "Gloss UV, Matte, or Soft-Touch Laminate"},
       {"k": "Pockets", "v": "Single or dual interior pockets"},
@@ -3772,7 +3772,7 @@ export const DEFAULT_PRODS = [
     "name": "Event Posters",
     "badge": null,
     "imgs": [],
-    "desc": "Large-format event posters on gloss or matte stock — bold, vibrant printing that commands attention.", "long_desc": "Event posters are printed on premium paper stock for maximum visual impact at concerts, community events, promotions, and retail displays. Available in standard poster sizes from 11×17" up to 24×36". Gloss paper stock delivers vivid colour reproduction ideal for photography and graphic-heavy designs.",
+    "desc": "Large-format event posters on gloss or matte stock — bold, vibrant printing that commands attention.", "long_desc": "Event posters are printed on premium paper stock for maximum visual impact at concerts, community events, promotions, and retail displays. Available in standard poster sizes from 11×17″ up to 24×36″. Gloss paper stock delivers vivid colour reproduction ideal for photography and graphic-heavy designs.",
     "opts": [
       {
         "key": "size",
@@ -3850,11 +3850,11 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Sizes", "v": "11×17\", 18×24\", 24×36\""},
+      {"k": "Sizes", "v": "11×17″, 18×24″, 24×36″"},
       {"k": "Stock", "v": "100lb Gloss Text or Matte"},
       {"k": "Print", "v": "Full colour CMYK, single sided"},
       {"k": "Finish", "v": "Aqueous coating"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "File Format", "v": "PDF or AI, 300dpi at full size"},
       {"k": "Turnaround", "v": "3–5 business days standard"}
     ]
@@ -3865,7 +3865,7 @@ export const DEFAULT_PRODS = [
     "name": "Bookmarks",
     "badge": null,
     "imgs": [],
-    "desc": "Custom printed bookmarks — cost-effective promotional giveaways for bookstores, libraries, schools, and literacy campaigns.", "long_desc": "Bookmarks are an affordable, practical promotional item that gets used and kept. Standard bookmark size is 2×7", printed on 14pt coated stock. Popular with bookstores, libraries, schools, publishers, churches, and any organization wanting an inexpensive branded takeaway.",
+    "desc": "Custom printed bookmarks — cost-effective promotional giveaways for bookstores, libraries, schools, and literacy campaigns.", "long_desc": "Bookmarks are an affordable, practical promotional item that gets used and kept. Standard bookmark size is 2×7″, printed on 14pt coated stock. Popular with bookstores, libraries, schools, publishers, churches, and any organization wanting an inexpensive branded takeaway.",
     "opts": [
       {
         "key": "sides",
@@ -3947,12 +3947,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Size", "v": "2\" × 7\""},
+      {"k": "Standard Size", "v": "2″ × 7″"},
       {"k": "Stock", "v": "14pt C2S Coated"},
       {"k": "Finish", "v": "Gloss UV or Matte"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Options", "v": "Corner rounding, punch hole available"},
-      {"k": "Bleed", "v": "0.0625\" all sides"},
+      {"k": "Bleed", "v": "0.0625″ all sides"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -4030,12 +4030,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Sizes", "v": "4×6\", 5×7\", A2 (4.25×5.5\")"},
+      {"k": "Standard Sizes", "v": "4×6″, 5×7″, A2 (4.25×5.5″)"},
       {"k": "Stock", "v": "14pt C2S Coated"},
       {"k": "Finish", "v": "Gloss UV or Matte"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Envelopes", "v": "Available — ask us"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -4123,7 +4123,7 @@ export const DEFAULT_PRODS = [
   ,
     "specs": [
       {"k": "Material", "v": "30mil PVC Plastic (credit card thickness)"},
-      {"k": "Size", "v": "3.375\" × 2.125\" (CR80 standard credit card size)"},
+      {"k": "Size", "v": "3.375″ × 2.125″ (CR80 standard credit card size)"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Options", "v": "Magnetic strip, barcode, QR code, scratch panel, sequential numbering"},
       {"k": "Finish", "v": "Gloss standard"},
@@ -4201,7 +4201,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Sizes", "v": "Up to 13\" × 19\""},
+      {"k": "Sizes", "v": "Up to 13″ × 19″"},
       {"k": "Stock", "v": "24lb bond, 60lb text, or 80lb text/cover (specify)"},
       {"k": "Print", "v": "Full colour CMYK or black & white"},
       {"k": "Finish", "v": "Uncoated standard; coated stock available"},
@@ -4288,12 +4288,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "8.5\" × 11\" (letter) or custom"},
+      {"k": "Size", "v": "8.5″ × 11″ (letter) or custom"},
       {"k": "Stock", "v": "24lb Premium Bond or 60lb Text"},
       {"k": "Print", "v": "Full colour CMYK header, single sided"},
       {"k": "Compatible With", "v": "Laser printers and inkjet printers"},
       {"k": "Finish", "v": "Uncoated (writeable, printable)"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -4385,7 +4385,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Sizes", "v": "#10 (4.125×9.5\"), A2, A6, A7"},
+      {"k": "Sizes", "v": "#10 (4.125×9.5″), A2, A6, A7"},
       {"k": "Stock", "v": "24lb White Wove"},
       {"k": "Print", "v": "Full colour CMYK, exterior front"},
       {"k": "Seal", "v": "Gummed flap or peel-and-seal"},
@@ -4473,7 +4473,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Sizes", "v": "4×5\", 5.5×8.5\", 8.5×11\""},
+      {"k": "Standard Sizes", "v": "4×5″, 5.5×8.5″, 8.5×11″"},
       {"k": "Stock", "v": "60lb uncoated bond"},
       {"k": "Sheet Count", "v": "25, 50, or 100 sheets per pad"},
       {"k": "Backing", "v": "Chipboard backing included"},
@@ -4550,7 +4550,7 @@ export const DEFAULT_PRODS = [
     "specs": [
       {"k": "Sets", "v": "2-part (duplicate) or 3-part (triplicate)"},
       {"k": "Parts", "v": "White original + Yellow + Pink (3-part)"},
-      {"k": "Standard Sizes", "v": "5.5×8.5\", 8.5×11\""},
+      {"k": "Standard Sizes", "v": "5.5×8.5″, 8.5×11″"},
       {"k": "Print", "v": "Full colour CMYK or black & white on top sheet"},
       {"k": "Binding", "v": "Glue-padded (books of 25 or 50 sets)"},
       {"k": "Sequentially Numbered", "v": "Available — ask us"},
@@ -4662,8 +4662,8 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Flat Size", "v": "4×6\", 5×7\", or 4×10\" (folded in half)"},
-      {"k": "Folded Size", "v": "4×3\", 5×3.5\", or 4×5\""},
+      {"k": "Flat Size", "v": "4×6″, 5×7″, or 4×10″ (folded in half)"},
+      {"k": "Folded Size", "v": "4×3″, 5×3.5″, or 4×5″"},
       {"k": "Stock", "v": "14pt C2S Coated"},
       {"k": "Finish", "v": "Gloss UV or Matte"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
@@ -4754,7 +4754,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Sizes", "v": "8.5×11\", 8.5×14\", 11×17\""},
+      {"k": "Standard Sizes", "v": "8.5×11″, 8.5×14″, 11×17″"},
       {"k": "Stock", "v": "14pt or 16pt C2S Coated"},
       {"k": "Laminate", "v": "Gloss or matte laminate, both sides"},
       {"k": "Waterproof", "v": "Yes — wipe-clean surface"},
@@ -4828,7 +4828,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Flat Size", "v": "8.5×11\" or 8.5×14\" (folds to A-frame)"},
+      {"k": "Flat Size", "v": "8.5×11″ or 8.5×14″ (folds to A-frame)"},
       {"k": "Stock", "v": "14pt C2S Coated"},
       {"k": "Finish", "v": "Gloss UV or Matte laminate"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
@@ -4888,7 +4888,7 @@ export const DEFAULT_PRODS = [
   ,
     "specs": [
       {"k": "Cover Material", "v": "Faux leather or genuine leather"},
-      {"k": "Standard Size", "v": "5×9\", 8×11\" (page size)"},
+      {"k": "Standard Size", "v": "5×9″, 8×11″ (page size)"},
       {"k": "Interior Pages", "v": "Printed on 80–100lb text stock"},
       {"k": "Interior Print", "v": "Full colour CMYK"},
       {"k": "Cover Colours", "v": "Black, brown, burgundy, navy (ask for options)"},
@@ -4925,7 +4925,7 @@ export const DEFAULT_PRODS = [
   ,
     "specs": [
       {"k": "Material", "v": "Leatherette or PU vinyl"},
-      {"k": "Standard Size", "v": "5×9\" (holds standard receipts)"},
+      {"k": "Standard Size", "v": "5×9″ (holds standard receipts)"},
       {"k": "Branding", "v": "Logo printed or debossed on cover"},
       {"k": "Interior", "v": "Card slot for payment or receipt"},
       {"k": "Colour Options", "v": "Black, brown, navy, burgundy"},
@@ -4985,9 +4985,9 @@ export const DEFAULT_PRODS = [
   ,
     "specs": [
       {"k": "Materials", "v": "Foam board, Acrylic, or Coroplast"},
-      {"k": "Popular Sizes", "v": "18×24\", 24×36\", 36×48\""},
+      {"k": "Popular Sizes", "v": "18×24″, 24×36″, 36×48″"},
       {"k": "Print", "v": "Full colour CMYK"},
-      {"k": "Foam Board Thickness", "v": "3/16\" or 1/2\""},
+      {"k": "Foam Board Thickness", "v": "3/16″ or 1/2″"},
       {"k": "Finish", "v": "Gloss or matte"},
       {"k": "Common Types", "v": "Welcome signs, seating charts, bar menus, directional"},
       {"k": "Turnaround", "v": "3–5 business days standard"}
@@ -5045,7 +5045,7 @@ export const DEFAULT_PRODS = [
   ,
     "specs": [
       {"k": "Materials", "v": "Foam board, Coroplast, or Printed Board"},
-      {"k": "Popular Sizes", "v": "18×24\", 24×36\""},
+      {"k": "Popular Sizes", "v": "18×24″, 24×36″"},
       {"k": "Print", "v": "Full colour CMYK"},
       {"k": "Finish", "v": "Gloss or matte"},
       {"k": "Common Types", "v": "Welcome signs, diaper raffle boards, advice cards"},
@@ -5058,7 +5058,7 @@ export const DEFAULT_PRODS = [
     "name": "Seating Chart Signs",
     "badge": null,
     "imgs": [],
-    "desc": "Large-format seating chart signs for weddings, galas, and events — clearly displays guest table assignments in an elegant format.", "long_desc": "Seating chart signs let guests quickly find their table at weddings, galas, and corporate events. Available in large poster sizes (24×36" up to 36×48") mounted on foam board or printed on a freestanding display. Can be organized alphabetically, by table, or in a custom format matching your event theme.",
+    "desc": "Large-format seating chart signs for weddings, galas, and events — clearly displays guest table assignments in an elegant format.", "long_desc": "Seating chart signs let guests quickly find their table at weddings, galas, and corporate events. Available in large poster sizes (24×36″ up to 36×48″) mounted on foam board or printed on a freestanding display. Can be organized alphabetically, by table, or in a custom format matching your event theme.",
     "opts": [
       {
         "key": "size",
@@ -5103,8 +5103,8 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Popular Sizes", "v": "24×36\", 30×40\", 36×48\""},
-      {"k": "Material", "v": "Foam board (3/16\" or 1/2\") or mounted print"},
+      {"k": "Popular Sizes", "v": "24×36″, 30×40″, 36×48″"},
+      {"k": "Material", "v": "Foam board (3/16″ or 1/2″) or mounted print"},
       {"k": "Print", "v": "Full colour CMYK"},
       {"k": "Format", "v": "Alphabetical, by table, or custom layout"},
       {"k": "Stand Options", "v": "Easel back, freestanding frame"},
@@ -5188,7 +5188,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Popular Sizes", "v": "8.5×11\", 11×17\", 18×24\""},
+      {"k": "Popular Sizes", "v": "8.5×11″, 11×17″, 18×24″"},
       {"k": "Material", "v": "Foam board, Coroplast, or Foam-mounted print"},
       {"k": "Print", "v": "Full colour CMYK"},
       {"k": "Mounting", "v": "Easel back, stake, hanging, or table stand"},
@@ -5263,9 +5263,9 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Material", "v": "3/16\" or 1/2\" White Foam Board"},
+      {"k": "Material", "v": "3/16″ or 1/2″ White Foam Board"},
       {"k": "Print", "v": "Full colour CMYK, direct print or mounted"},
-      {"k": "Sizes", "v": "Custom — any size up to 48×96\""},
+      {"k": "Sizes", "v": "Custom — any size up to 48×96″"},
       {"k": "Finish", "v": "Gloss or matte"},
       {"k": "Mounting", "v": "Easel back available"},
       {"k": "Use", "v": "Indoor only"},
@@ -5278,7 +5278,7 @@ export const DEFAULT_PRODS = [
     "name": "Giant Cheques",
     "badge": null,
     "imgs": [],
-    "desc": "Oversized ceremonial giant cheques for charity events, prize presentations, and media moments — printed professionally for maximum impact.", "long_desc": "Giant ceremonial cheques are a staple of charity fundraisers, contest prize presentations, grand openings, and media events. Our giant cheques are printed on rigid foam board or coroplast in your bank's design, a custom branded design, or a generic cheque template. The standard size is 24×48" or 30×60" for maximum photo and media visibility.",
+    "desc": "Oversized ceremonial giant cheques for charity events, prize presentations, and media moments — printed professionally for maximum impact.", "long_desc": "Giant ceremonial cheques are a staple of charity fundraisers, contest prize presentations, grand openings, and media events. Our giant cheques are printed on rigid foam board or coroplast in your bank's design, a custom branded design, or a generic cheque template. The standard size is 24×48″ or 30×60″ for maximum photo and media visibility.",
     "opts": [
       {
         "key": "size",
@@ -5326,8 +5326,8 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Sizes", "v": "24×48\", 30×60\" or custom"},
-      {"k": "Material", "v": "Foam board (1/2\") or Coroplast"},
+      {"k": "Standard Sizes", "v": "24×48″, 30×60″ or custom"},
+      {"k": "Material", "v": "Foam board (1/2″) or Coroplast"},
       {"k": "Print", "v": "Full colour CMYK"},
       {"k": "Design", "v": "Custom branded or generic template — your choice"},
       {"k": "Finish", "v": "Gloss or matte"},
@@ -5386,7 +5386,7 @@ export const DEFAULT_PRODS = [
   ,
     "specs": [
       {"k": "Material", "v": "Durable vinyl with permanent adhesive"},
-      {"k": "Standard Size", "v": "4\" round or 3×4\" rectangle"},
+      {"k": "Standard Size", "v": "4″ round or 3×4″ rectangle"},
       {"k": "Print", "v": "Full colour CMYK"},
       {"k": "QR Code", "v": "Your unique Google Review URL encoded — provide your Google Place URL"},
       {"k": "Finish", "v": "Gloss laminate"},
@@ -5482,7 +5482,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Sheet Sizes", "v": "4×6\", 5×7\", 8.5×11\""},
+      {"k": "Sheet Sizes", "v": "4×6″, 5×7″, 8.5×11″"},
       {"k": "Material", "v": "White gloss or matte vinyl"},
       {"k": "Print", "v": "Full colour CMYK"},
       {"k": "Cut", "v": "Die-cut to your shapes on the sheet"},
@@ -5586,9 +5586,9 @@ export const DEFAULT_PRODS = [
       {"k": "Material", "v": "White Semi-Gloss Paper"},
       {"k": "Adhesive", "v": "Permanent"},
       {"k": "Print", "v": "Full colour CMYK"},
-      {"k": "Core Size", "v": "3\" core (standard label applicator)"},
+      {"k": "Core Size", "v": "3″ core (standard label applicator)"},
       {"k": "Shapes", "v": "Circle, oval, rectangle, or custom die-cut"},
-      {"k": "Min. Size", "v": "1\" × 1\""},
+      {"k": "Min. Size", "v": "1″ × 1″"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
   },
@@ -5839,12 +5839,12 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Size", "v": "8.5×11\" (standard) or 11×17\" folded"},
+      {"k": "Size", "v": "8.5×11″ (standard) or 11×17″ folded"},
       {"k": "Stock", "v": "100lb Gloss Text or Matte"},
       {"k": "Print", "v": "Full colour CMYK, both sides"},
       {"k": "Finish", "v": "Aqueous gloss or matte coating"},
       {"k": "Common Content", "v": "Property photos, specs, agent info, price"},
-      {"k": "Bleed", "v": "0.125\" all sides"},
+      {"k": "Bleed", "v": "0.125″ all sides"},
       {"k": "Turnaround", "v": "2–3 business days (rush available)"}
     ]
   },
@@ -5914,7 +5914,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Size", "v": "18×24\", 24×32\", or custom"},
+      {"k": "Standard Size", "v": "18×24″, 24×32″, or custom"},
       {"k": "Material", "v": "4mm Coroplast or 3mm Aluminium Composite"},
       {"k": "Print", "v": "Full colour CMYK, double sided"},
       {"k": "Weatherproof", "v": "Yes — UV-resistant, waterproof"},
@@ -5967,7 +5967,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Size", "v": "6×24\" or 6×18\""},
+      {"k": "Standard Size", "v": "6×24″ or 6×18″"},
       {"k": "Material", "v": "4mm Coroplast"},
       {"k": "Print", "v": "Full colour CMYK, double sided"},
       {"k": "Attachment", "v": "Grommets for zip-tie attachment to sign frame"},
@@ -6021,7 +6021,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Insert Size", "v": "18×24\" (fits standard A-frame stands)"},
+      {"k": "Insert Size", "v": "18×24″ (fits standard A-frame stands)"},
       {"k": "Material", "v": "Coroplast insert or foam board (indoor)"},
       {"k": "Print", "v": "Full colour CMYK, double sided"},
       {"k": "Frame", "v": "A-frame stand sold separately or as a package"},
@@ -6091,7 +6091,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Size", "v": "11×17\" or 13×19\""},
+      {"k": "Standard Size", "v": "11×17″ or 13×19″"},
       {"k": "Stock", "v": "100lb Gloss Text"},
       {"k": "Print", "v": "Full colour CMYK"},
       {"k": "Format", "v": "Single-page annual or monthly tear-off"},
@@ -6157,7 +6157,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Size", "v": "4×6\" folded (3×4\" standing footprint)"},
+      {"k": "Standard Size", "v": "4×6″ folded (3×4″ standing footprint)"},
       {"k": "Stock", "v": "14pt C2S Coated"},
       {"k": "Finish", "v": "Gloss UV"},
       {"k": "Pages", "v": "12 monthly panels + cover"},
@@ -6228,7 +6228,7 @@ export const DEFAULT_PRODS = [
     ]
   ,
     "specs": [
-      {"k": "Standard Size", "v": "3.5×7\", 4×7\", or 4×8.5\""},
+      {"k": "Standard Size", "v": "3.5×7″, 4×7″, or 4×8.5″"},
       {"k": "Material", "v": "14pt card stock with flexible magnetic backing"},
       {"k": "Print", "v": "Full colour CMYK, front only"},
       {"k": "Back", "v": "Magnetic"},
@@ -6243,7 +6243,7 @@ export const DEFAULT_PRODS = [
     "name": "Paper Posters (Wide Format)",
     "badge": "Custom Sizes",
     "imgs": [],
-    "desc": "Wide-format paper posters up to 60" wide — vivid colour reproduction for art prints, advertising, and large-format displays.", "long_desc": "Wide-format paper posters use high-resolution inkjet printing on premium satin or gloss photo paper, delivering exceptional colour accuracy and detail. Available in any size up to 60" wide and any length. Suitable for gallery art prints, retail displays, trade show graphics, and large advertising posters.",
+    "desc": "Wide-format paper posters up to 60″ wide — vivid colour reproduction for art prints, advertising, and large-format displays.", "long_desc": "Wide-format paper posters use high-resolution inkjet printing on premium satin or gloss photo paper, delivering exceptional colour accuracy and detail. Available in any size up to 60″ wide and any length. Suitable for gallery art prints, retail displays, trade show graphics, and large advertising posters.",
     "opts": [
       {
         "key": "size",
@@ -6332,7 +6332,7 @@ export const DEFAULT_PRODS = [
   ,
     "specs": [
       {"k": "Material", "v": "Premium satin or gloss photo paper"},
-      {"k": "Max Width", "v": "60\" wide — any length"},
+      {"k": "Max Width", "v": "60″ wide — any length"},
       {"k": "Print", "v": "Full colour, high-resolution inkjet"},
       {"k": "Resolution", "v": "Submit files at 150dpi at final size (minimum)"},
       {"k": "Finish", "v": "Satin (standard) or gloss"},
@@ -6499,7 +6499,7 @@ export const DEFAULT_PRODS = [
     "specs": [
       {"k": "Material", "v": "Archival poly-cotton canvas"},
       {"k": "Print", "v": "High-resolution pigment inkjet, full colour"},
-      {"k": "Sizes", "v": "Custom — any size up to 60\" wide"},
+      {"k": "Sizes", "v": "Custom — any size up to 60″ wide"},
       {"k": "Format", "v": "Rolled (unframed) or stretched gallery wrap"},
       {"k": "Finish", "v": "Satin coating standard"},
       {"k": "Archival Life", "v": "100+ years under standard conditions"},
