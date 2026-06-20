@@ -29,7 +29,7 @@ export const DEFAULT_PRODS = [
     "name": "Best Value Business Cards",
     "badge": "Most Popular",
     "imgs": [],
-    "desc": "Professional full-colour business cards on 14pt C2S gloss stock — sharp, vibrant, and budget-friendly for any business.", "long_desc": "Our best-value business cards deliver professional results without the premium price tag. Printed in full-colour CMYK on 14pt coated two-sides (C2S) gloss card stock, these cards are ideal for networking events, trade shows, and everyday use. Standard 3.5″ × 2″ size fits every cardholder and wallet perfectly."×2\" cards at an unbeatable price. Choose paper, coating, and finish.",
+    "desc": "Professional full-colour business cards on 14pt C2S gloss stock — sharp, vibrant, and budget-friendly for any business.", "long_desc": "Our best-value business cards deliver professional results without the premium price tag. Printed in full-colour CMYK on 14pt coated two-sides (C2S) gloss card stock, these cards are ideal for networking events, trade shows, and everyday use. Standard 3.5″ × 2″ size fits every cardholder and wallet perfectly.",
     "opts": [
       {
         "key": "paper",
@@ -440,7 +440,7 @@ export const DEFAULT_PRODS = [
     "name": "Uncoated Business Cards",
     "badge": null,
     "imgs": [],
-    "desc": "Classic uncoated business cards with a natural paper feel — writable, eco-friendly aesthetic, great for handwritten notes and stamps.", "long_desc": "Uncoated cards have a natural, tactile paper feel that many professionals prefer. Without a surface coating, they're fully writable with pen, pencil, or stamp — ideal for appointment cards, referral cards, and brands with a natural or artisan aesthetic. Printed on 14pt uncoated stock.",
+    "desc": "Classic uncoated business cards with a natural paper feel — writable, eco-friendly aesthetic, great for handwritten notes and stamps.", "long_desc": "Uncoated cards have a natural, tactile paper feel that many professionals prefer. Without a surface coating, they’re fully writable with pen, pencil, or stamp — ideal for appointment cards, referral cards, and brands with a natural or artisan aesthetic. Printed on 14pt uncoated stock.",
     "opts": [
       {
         "key": "sides",
@@ -635,7 +635,7 @@ export const DEFAULT_PRODS = [
     "name": "Folded Business Cards",
     "badge": null,
     "imgs": [],
-    "desc": "Folded business cards that open to reveal more content — double the space for menus, portfolios, appointment details, or service lists.", "long_desc": "Folded business cards are standard business card size when closed (3.5″ × 2″) but open to 3.5″ × 4″ — giving you double the content area. Perfect for hair stylists listing services, photographers showing portfolio samples, restaurants printing a mini-menu, or anyone who needs more information than a standard card allows."×4\" — show pricing, services, or a bold design inside.",
+    "desc": "Folded business cards that open to reveal more content — double the space for menus, portfolios, appointment details, or service lists.", "long_desc": "Folded business cards are standard business card size when closed (3.5″ × 2″) but open to 3.5″ × 4″ — giving you double the content area. Perfect for hair stylists listing services, photographers showing portfolio samples, restaurants printing a mini-menu, or anyone who needs more information than a standard card allows.",
     "opts": [
       {
         "key": "coat",
@@ -1718,7 +1718,7 @@ export const DEFAULT_PRODS = [
     "name": "Door Hangers",
     "badge": "30% OFF",
     "imgs": [],
-    "desc": "Door hanger cards for targeted neighbourhood marketing — no mailbox, no envelope, delivers directly to the door.", "long_desc": "Door hangers are a highly targeted local marketing tool. Delivered directly to residential and commercial doors without a mailbox, they have extremely high visibility — everyone who enters or exits sees your message. Popular with pizza shops, landscapers, cleaners, realtors, and contractors targeting specific neighbourhoods."×11\" die-cut door hangers — the most effective local marketing tool.",
+    "desc": "Door hanger cards for targeted neighbourhood marketing — no mailbox, no envelope, delivers directly to the door.", "long_desc": "Door hangers are a highly targeted local marketing tool. Delivered directly to residential and commercial doors without a mailbox, they have extremely high visibility — everyone who enters or exits sees your message. Popular with pizza shops, landscapers, cleaners, realtors, and contractors targeting specific neighbourhoods.",
     "opts": [
       {
         "key": "sides",
@@ -2089,7 +2089,7 @@ export const DEFAULT_PRODS = [
     "name": "Vinyl Banners",
     "badge": "Most Popular",
     "imgs": [],
-    "desc": "Custom vinyl banners for indoor and outdoor use — durable, weatherproof, and available in any size for maximum visibility.", "long_desc": "Vinyl banners are the most versatile large-format display option. Printed on 13oz scrim vinyl with UV-resistant inks, they're suitable for indoor and outdoor use in all weather conditions. Available in any custom size. Hemming and grommets every 2 feet are standard, making them easy to hang anywhere.",
+    "desc": "Custom vinyl banners for indoor and outdoor use — durable, weatherproof, and available in any size for maximum visibility.", "long_desc": "Vinyl banners are the most versatile large-format display option. Printed on 13oz scrim vinyl with UV-resistant inks, they’re suitable for indoor and outdoor use in all weather conditions. Available in any custom size. Hemming and grommets every 2 feet are standard, making them easy to hang anywhere.",
     "opts": [
       {
         "key": "size",
@@ -2241,7 +2241,7 @@ export const DEFAULT_PRODS = [
     "name": "Lawn Signs (Coroplast)",
     "badge": "25% OFF",
     "imgs": [],
-    "desc": "Corrugated plastic lawn signs (coroplast) for real estate, elections, events, and outdoor advertising — lightweight and weather-resistant.", "long_desc": "Lawn signs (coroplast signs) are printed on 4mm corrugated plastic, making them lightweight, waterproof, and durable for outdoor use. They're the go-to choice for real estate listings, political campaigns, construction sites, yard sales, and event directional signage. Standard 18×24″ fits universal H-stakes (sold separately).",
+    "desc": "Corrugated plastic lawn signs (coroplast) for real estate, elections, events, and outdoor advertising — lightweight and weather-resistant.", "long_desc": "Lawn signs (coroplast signs) are printed on 4mm corrugated plastic, making them lightweight, waterproof, and durable for outdoor use. They’re the go-to choice for real estate listings, political campaigns, construction sites, yard sales, and event directional signage. Standard 18×24″ fits universal H-stakes (sold separately).",
     "opts": [
       {
         "key": "size",
@@ -2329,7 +2329,7 @@ export const DEFAULT_PRODS = [
     "name": "Custom Coroplast Signs",
     "badge": null,
     "imgs": [],
-    "desc": "Custom coroplast signs in any size — lightweight, waterproof corrugated plastic for outdoor and indoor use.", "long_desc": "Coroplast (corrugated plastic) signs are the industry standard for cost-effective outdoor signage. Lightweight, waterproof, and UV-resistant, they're used for construction site signage, directional signs, temporary outdoor displays, and election signage. Available in 4mm and 6mm thickness, single or double sided.",
+    "desc": "Custom coroplast signs in any size — lightweight, waterproof corrugated plastic for outdoor and indoor use.", "long_desc": "Coroplast (corrugated plastic) signs are the industry standard for cost-effective outdoor signage. Lightweight, waterproof, and UV-resistant, they’re used for construction site signage, directional signs, temporary outdoor displays, and election signage. Available in 4mm and 6mm thickness, single or double sided.",
     "opts": [
       {
         "key": "size",
@@ -2973,7 +2973,7 @@ export const DEFAULT_PRODS = [
     "name": "Polybag Signs",
     "badge": null,
     "imgs": [],
-    "desc": "Polybag signs that slip over standard wire stakes — weatherproof plastic sleeve signs for real estate, construction, and events.", "long_desc": "Polybag signs are printed sheets inserted into a clear weatherproof plastic polybag that slips over a wire H-stake. They're a cost-effective alternative to rigid coroplast signs, easy to insert and remove for seasonal campaigns. Popular with real estate agents, contractors, and event organizers.",
+    "desc": "Polybag signs that slip over standard wire stakes — weatherproof plastic sleeve signs for real estate, construction, and events.", "long_desc": "Polybag signs are printed sheets inserted into a clear weatherproof plastic polybag that slips over a wire H-stake. They’re a cost-effective alternative to rigid coroplast signs, easy to insert and remove for seasonal campaigns. Popular with real estate agents, contractors, and event organizers.",
     "opts": [
       {
         "key": "sides",
@@ -3136,7 +3136,7 @@ export const DEFAULT_PRODS = [
     "name": "20pt Styrene Signs",
     "badge": null,
     "imgs": [],
-    "desc": "Lightweight 20pt styrene plastic signs — ideal for indoor POP displays, retail shelf signs, and event signage.", "long_desc": "Styrene (polystyrene) signs are lightweight rigid plastic panels used for indoor point-of-purchase displays, retail price signs, event signage, and window displays. At 20pt thickness, they're stiff enough to stand alone in a frame or be hung, yet light enough to handle easily. Not for outdoor use.",
+    "desc": "Lightweight 20pt styrene plastic signs — ideal for indoor POP displays, retail shelf signs, and event signage.", "long_desc": "Styrene (polystyrene) signs are lightweight rigid plastic panels used for indoor point-of-purchase displays, retail price signs, event signage, and window displays. At 20pt thickness, they’re stiff enough to stand alone in a frame or be hung, yet light enough to handle easily. Not for outdoor use.",
     "opts": [
       {
         "key": "size",
@@ -3336,7 +3336,7 @@ export const DEFAULT_PRODS = [
     "name": "Vehicle Lettering & Decals",
     "badge": null,
     "imgs": [],
-    "desc": "Cut vinyl vehicle lettering and decals for business name, phone number, and logo — clean, professional, and cost-effective.", "long_desc": "Vehicle lettering uses precision cut vinyl applied directly to the vehicle surface. It's the most affordable vehicle branding option — perfect for tradespeople, delivery vehicles, and any business that wants a professional look without a full wrap. Available in any colour from a standard vinyl colour chart, or digitally printed for full-colour logos.",
+    "desc": "Cut vinyl vehicle lettering and decals for business name, phone number, and logo — clean, professional, and cost-effective.", "long_desc": "Vehicle lettering uses precision cut vinyl applied directly to the vehicle surface. It’s the most affordable vehicle branding option — perfect for tradespeople, delivery vehicles, and any business that wants a professional look without a full wrap. Available in any colour from a standard vinyl colour chart, or digitally printed for full-colour logos.",
     "opts": [
       {
         "key": "colour",
@@ -3691,7 +3691,7 @@ export const DEFAULT_PRODS = [
     "name": "Presentation Folders",
     "badge": null,
     "imgs": [],
-    "desc": "Custom presentation folders for proposals, information packages, and sales materials — makes a strong first impression.", "long_desc": "Presentation folders (also called pocket folders) hold your documents, brochures, and business card in an organized, professional package. The standard 9×12″ format holds letter-size documents and features one or two interior pockets with a business card slit. Printed on 14pt coated stock with your full brand design."×12\" folders with pockets and business card slots.",
+    "desc": "Custom presentation folders for proposals, information packages, and sales materials — makes a strong first impression.", "long_desc": "Presentation folders (also called pocket folders) hold your documents, brochures, and business card in an organized, professional package. The standard 9×12″ format holds letter-size documents and features one or two interior pockets with a business card slit. Printed on 14pt coated stock with your full brand design.",
     "opts": [
       {
         "key": "coat",
@@ -4303,7 +4303,7 @@ export const DEFAULT_PRODS = [
     "name": "Envelopes",
     "badge": null,
     "imgs": [],
-    "desc": "Custom printed envelopes with your logo and return address — professional branded correspondence from the first touch.", "long_desc": "Printed envelopes carry your brand identity from the moment they're received. Available in #10 (standard business), A2, A6, and A7 sizes. Full-colour printing on the front face with your logo, return address, and brand colours. Optional interior tint for privacy. Compatible with standard postage.",
+    "desc": "Custom printed envelopes with your logo and return address — professional branded correspondence from the first touch.", "long_desc": "Printed envelopes carry your brand identity from the moment they’re received. Available in #10 (standard business), A2, A6, and A7 sizes. Full-colour printing on the front face with your logo, return address, and brand colours. Optional interior tint for privacy. Compatible with standard postage.",
     "opts": [
       {
         "key": "size",
@@ -4400,7 +4400,7 @@ export const DEFAULT_PRODS = [
     "name": "Notepads",
     "badge": "20% OFF",
     "imgs": [],
-    "desc": "Custom branded notepads for offices, events, and client gifts — functional promotional items that stay on desks for months.", "long_desc": "Custom notepads are practical promotional items that keep your brand visible every day. A notepad on someone's desk means your logo is seen every time they write a note. Available in 25, 50, or 100-sheet options, padded with chipboard backing for stability. Popular as client gifts, trade show giveaways, and office stationery.",
+    "desc": "Custom branded notepads for offices, events, and client gifts — functional promotional items that stay on desks for months.", "long_desc": "Custom notepads are practical promotional items that keep your brand visible every day. A notepad on someone’s desk means your logo is seen every time they write a note. Available in 25, 50, or 100-sheet options, padded with chipboard backing for stability. Popular as client gifts, trade show giveaways, and office stationery.",
     "opts": [
       {
         "key": "size",
@@ -4563,7 +4563,7 @@ export const DEFAULT_PRODS = [
     "name": "Tent Cards",
     "badge": null,
     "imgs": [],
-    "desc": "Table tent cards for restaurants, hotels, and events — displays promotions, daily specials, and QR codes right at the table.", "long_desc": "Tent cards are folded cards that stand on tables, counters, and reception desks. Used by restaurants for specials and promotions, hotels for amenity information, and events for wayfinding. Printed on heavy stock and folded to an A-frame shape so they're stable without a stand.",
+    "desc": "Table tent cards for restaurants, hotels, and events — displays promotions, daily specials, and QR codes right at the table.", "long_desc": "Tent cards are folded cards that stand on tables, counters, and reception desks. Used by restaurants for specials and promotions, hotels for amenity information, and events for wayfinding. Printed on heavy stock and folded to an A-frame shape so they’re stable without a stand.",
     "opts": [
       {
         "key": "size",
@@ -4677,7 +4677,7 @@ export const DEFAULT_PRODS = [
     "name": "Laminated Menus",
     "badge": null,
     "imgs": [],
-    "desc": "Laminated restaurant menus on heavy card stock — waterproof, wipe-clean, and durable for daily table use.", "long_desc": "Laminated menus are the standard for casual dining, cafes, and fast-casual restaurants. Printed on heavy card stock and laminated front and back with a gloss or matte film, they're waterproof and wipe-clean — surviving daily use in a busy restaurant environment. Available as single-sheet or folded formats.",
+    "desc": "Laminated restaurant menus on heavy card stock — waterproof, wipe-clean, and durable for daily table use.", "long_desc": "Laminated menus are the standard for casual dining, cafes, and fast-casual restaurants. Printed on heavy card stock and laminated front and back with a gloss or matte film, they’re waterproof and wipe-clean — surviving daily use in a busy restaurant environment. Available as single-sheet or folded formats.",
     "opts": [
       {
         "key": "size",
@@ -4902,7 +4902,7 @@ export const DEFAULT_PRODS = [
     "name": "Restaurant Check Holders",
     "badge": null,
     "imgs": [],
-    "desc": "Custom branded check holders and bill presenters for restaurants — branded to match your establishment's look.", "long_desc": "Branded check presenters turn the bill delivery moment into a brand touchpoint. Available in leatherette or vinyl with your logo printed or embossed on the cover. The interior holds a standard bill, receipt, or payment card sleeve. A subtle but professional finishing touch for any dining establishment.",
+    "desc": "Custom branded check holders and bill presenters for restaurants — branded to match your establishment’s look.", "long_desc": "Branded check presenters turn the bill delivery moment into a brand touchpoint. Available in leatherette or vinyl with your logo printed or embossed on the cover. The interior holds a standard bill, receipt, or payment card sleeve. A subtle but professional finishing touch for any dining establishment.",
     "opts": [],
     "pricing": [
       {
@@ -5202,7 +5202,7 @@ export const DEFAULT_PRODS = [
     "name": "Custom Foam Board",
     "badge": null,
     "imgs": [],
-    "desc": "Custom foam board signs and displays — lightweight, rigid, and ideal for indoor presentations, events, and retail displays.", "long_desc": "Foam board (foamcore) is a lightweight rigid panel consisting of a foam core between two paper faces. Printed graphics are mounted or directly printed on the surface. It's the go-to material for presentations, trade show displays, real estate open houses, school projects, and retail displays. Not suitable for outdoor use.",
+    "desc": "Custom foam board signs and displays — lightweight, rigid, and ideal for indoor presentations, events, and retail displays.", "long_desc": "Foam board (foamcore) is a lightweight rigid panel consisting of a foam core between two paper faces. Printed graphics are mounted or directly printed on the surface. It’s the go-to material for presentations, trade show displays, real estate open houses, school projects, and retail displays. Not suitable for outdoor use.",
     "opts": [
       {
         "key": "size",
@@ -5278,7 +5278,7 @@ export const DEFAULT_PRODS = [
     "name": "Giant Cheques",
     "badge": null,
     "imgs": [],
-    "desc": "Oversized ceremonial giant cheques for charity events, prize presentations, and media moments — printed professionally for maximum impact.", "long_desc": "Giant ceremonial cheques are a staple of charity fundraisers, contest prize presentations, grand openings, and media events. Our giant cheques are printed on rigid foam board or coroplast in your bank's design, a custom branded design, or a generic cheque template. The standard size is 24×48″ or 30×60″ for maximum photo and media visibility.",
+    "desc": "Oversized ceremonial giant cheques for charity events, prize presentations, and media moments — printed professionally for maximum impact.", "long_desc": "Giant ceremonial cheques are a staple of charity fundraisers, contest prize presentations, grand openings, and media events. Our giant cheques are printed on rigid foam board or coroplast in your bank’s design, a custom branded design, or a generic cheque template. The standard size is 24×48″ or 30×60″ for maximum photo and media visibility.",
     "opts": [
       {
         "key": "size",
@@ -5710,7 +5710,7 @@ export const DEFAULT_PRODS = [
     "name": "Clear / Transparent Labels",
     "badge": null,
     "imgs": [],
-    "desc": "Clear transparent labels that appear to be printed directly on the product surface — the no-label look for premium products.", "long_desc": "Clear labels use a transparent BOPP film that becomes almost invisible when applied to a smooth surface like glass or plastic. The result is the appearance of print directly on the container — the 'no-label look' that premium brands use. Available with white ink underprint for opacity where needed.",
+    "desc": "Clear transparent labels that appear to be printed directly on the product surface — the no-label look for premium products.", "long_desc": "Clear labels use a transparent BOPP film that becomes almost invisible when applied to a smooth surface like glass or plastic. The result is the appearance of print directly on the container — the ’no-label look’ that premium brands use. Available with white ink underprint for opacity where needed.",
     "opts": [
       {
         "key": "size",
@@ -5854,7 +5854,7 @@ export const DEFAULT_PRODS = [
     "name": "For Sale / Sold Signs",
     "badge": null,
     "imgs": [],
-    "desc": "Real estate for sale and sold signs on coroplast or aluminium — weatherproof outdoor signs for yard, post, or stake mounting.", "long_desc": "For sale and sold signs are the most visible marketing tool in real estate. Our signs are printed on 4mm coroplast for lightweight yard stakes, or on aluminium composite for post-mounted permanent installations. Double-sided printing ensures visibility from both directions on the street." coroplast signs for real estate — single or double sided, full colour.",
+    "desc": "Real estate for sale and sold signs on coroplast or aluminium — weatherproof outdoor signs for yard, post, or stake mounting.", "long_desc": "For sale and sold signs are the most visible marketing tool in real estate. Our signs are printed on 4mm coroplast for lightweight yard stakes, or on aluminium composite for post-mounted permanent installations. Double-sided printing ensures visibility from both directions on the street.",
     "opts": [
       {
         "key": "sides",
@@ -5928,7 +5928,7 @@ export const DEFAULT_PRODS = [
     "name": "Realtor Riders",
     "badge": null,
     "imgs": [],
-    "desc": "Realtor rider signs for listing additions — Open House, Sold, Price Reduced, Virtual Tour — attaches above or below main sign.", "long_desc": "Rider signs are narrow supplementary panels that attach above or below the main for-sale sign. Common riders include Open House, Sold, New Price, Virtual Tour, Conditional, and agent team names. Printed on coroplast with grommets for easy attachment to existing sign frames." rider signs for posts — Open House, Price Reduced, Sold, custom text.",
+    "desc": "Realtor rider signs for listing additions — Open House, Sold, Price Reduced, Virtual Tour — attaches above or below main sign.", "long_desc": "Rider signs are narrow supplementary panels that attach above or below the main for-sale sign. Common riders include Open House, Sold, New Price, Virtual Tour, Conditional, and agent team names. Printed on coroplast with grommets for easy attachment to existing sign frames.",
     "opts": [
       {
         "key": "sides",
@@ -6172,7 +6172,7 @@ export const DEFAULT_PRODS = [
     "name": "Magnetic Calendars",
     "badge": null,
     "imgs": [],
-    "desc": "Magnetic calendar cards that stick to fridges and filing cabinets — a year-round reminder of your business on every fridge in town.", "long_desc": "Magnetic calendars combine the branding power of a calendar with the staying power of a fridge magnet. Stuck to a customer's refrigerator, your brand is seen every single day by the whole household. A staple promotional item for realtors, insurance agents, mechanics, dentists, and any business wanting maximum residential visibility.",
+    "desc": "Magnetic calendar cards that stick to fridges and filing cabinets — a year-round reminder of your business on every fridge in town.", "long_desc": "Magnetic calendars combine the branding power of a calendar with the staying power of a fridge magnet. Stuck to a customer’s refrigerator, your brand is seen every single day by the whole household. A staple promotional item for realtors, insurance agents, mechanics, dentists, and any business wanting maximum residential visibility.",
     "opts": [
       {
         "key": "size",
