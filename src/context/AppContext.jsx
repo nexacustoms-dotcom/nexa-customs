@@ -106,6 +106,9 @@ function mergeOverrides(prods, overrides) {
       lbl_stocks:     o.lbl_stocks      !== undefined ? o.lbl_stocks      : p.lbl_stocks,
       lbl_ink:        o.lbl_ink         !== undefined ? o.lbl_ink         : p.lbl_ink,
       lbl_finishing:  o.lbl_finishing   !== undefined ? o.lbl_finishing   : p.lbl_finishing,
+      // Specs & extended description
+      specs:          o.specs           !== undefined ? o.specs           : p.specs,
+      long_desc:      o.long_desc       !== undefined ? o.long_desc       : p.long_desc,
     };
   });
 }

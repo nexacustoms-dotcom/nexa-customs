@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp, sendEmailJS } from '../context/AppContext';
+import { useApp, sendEmailJS, imgUrl } from '../context/AppContext';
 
 // ── CART ──────────────────────────────────────────────────────────────────────
 export function CartPage() {

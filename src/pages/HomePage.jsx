@@ -43,7 +43,7 @@ export default function HomePage() {
         <div className="W">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 410px', gap: 60, alignItems: 'center', position: 'relative', zIndex: 1 }} className="hero-grid">
             <div>
-              <div className="badge-orange" style={{ marginBottom: 18 }}>Mississauga's Print Experts Since 2010</div>
+              <div className="badge-orange" style={{ marginBottom: 18 }}>{store.hero_badge || "Mississauga's Print Experts Since 2010"}</div>
               <h1 className="D" style={{ fontSize: 'clamp(52px,6vw,84px)', marginBottom: 22 }}>
                 {store.hero1}<br />
                 <span style={{ color: 'var(--o)' }}>{store.hero_accent}</span><br />

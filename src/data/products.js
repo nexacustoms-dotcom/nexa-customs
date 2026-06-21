@@ -6516,6 +6516,7 @@ export const DEFAULT_STORE = {
   hero1: 'Print That Makes',
   hero_accent: 'Your Brand',
   hero2: 'Impossible To Ignore',
+  hero_badge: "Mississauga's Print Experts Since 2010",
   hero_sub: 'From business cards to vehicle wraps — full-colour print, signs, and graphics for businesses across Ontario.',
   phone: '(437) 997-9921',
   phone_raw: '14379979921',

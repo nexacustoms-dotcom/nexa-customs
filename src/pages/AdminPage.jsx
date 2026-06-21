@@ -556,6 +556,7 @@ function AppearanceTab() {
           <div className="afg"><label className="aflbl">Accent Line (orange colour)</label><input className="ainp" value={s.hero_accent} onChange={updE('hero_accent')} /></div>
           <div className="afg"><label className="aflbl">Line 2</label><input className="ainp" value={s.hero2} onChange={updE('hero2')} /></div>
           <div className="afg"><label className="aflbl">Sub-headline</label><textarea className="ainp" rows="2" style={{ resize: 'vertical' }} value={s.hero_sub} onChange={updE('hero_sub')} /></div>
+          <div className="afg"><label className="aflbl">Badge Text <span style={{fontWeight:400,color:'var(--mu)',textTransform:'none'}}>(orange pill above headline)</span></label><input className="ainp" placeholder="Mississauga's Print Experts Since 2010" value={s.hero_badge||''} onChange={updE('hero_badge')} /></div>
           <ImageUpload label="Hero Background Image (optional)" value={s.hero_bg || ''} onChange={v => upd('hero_bg')(v)} folder="branding" note="Wide banner, min 1400px wide. Used as a subtle background behind the hero text." />
 
           {/* Hero Slideshow Manager */}
