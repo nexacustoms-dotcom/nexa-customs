@@ -76,6 +76,11 @@ export default function LabelConfigurator({ prod }) {
   const [finishing,    setFinishing]    = useState(finishes[0]);
   const [qty,          setQty]          = useState(quantities[0] ?? 100);
   const [turnaround,   setTurnaround]   = useState('standard');
+  const [imgIdx,       setImgIdx]       = useState(0);
+
+  // Safe image helpers — prevents crash when imgs array changes
+  const validImgs  = (prod?.imgs || []).filter(x => x?.length);
+  const safeImgIdx = validImgs.length > 0 ? Math.min(imgIdx, validImgs.length - 1) : 0;
 
   // Reset when product changes
   useEffect(() => {
