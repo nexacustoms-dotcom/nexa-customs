@@ -192,20 +192,20 @@ export default function LabelConfigurator({ prod }) {
         <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'flex-start' }}>
 
           {/* Image gallery */}
-          {prod.imgs?.filter(x => x?.length).length > 0 && (
+          {validImgs.length > 0 && (
             <div style={{ flexShrink: 0 }}>
               {/* Main image */}
               <div style={{ width: 200, height: 200, borderRadius: 12, overflow: 'hidden', background: 'var(--s2)', border: '1px solid var(--bd)', marginBottom: 8 }}>
                 <img
-                  src={imgUrl(prod.imgs.filter(x=>x?.length)[imgIdx] || prod.imgs[0], 400)}
+                  src={imgUrl(validImgs[safeImgIdx] || validImgs[0], 400)}
                   alt={prod.name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
               </div>
               {/* Thumbnails */}
-              {prod.imgs.filter(x=>x?.length).length > 1 && (
+              {validImgs.length > 1 && (
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', maxWidth: 200 }}>
-                  {prod.imgs.filter(x=>x?.length).map((img, i) => (
+                  {validImgs.map((img, i) => (
                     <button key={i} onClick={() => setImgIdx(i)}
                       style={{ width: 44, height: 44, borderRadius: 7, overflow: 'hidden', padding: 0, border: '2px solid ' + (i === imgIdx ? 'var(--o)' : 'var(--bd)'), cursor: 'pointer', background: 'var(--s2)', flexShrink: 0 }}>
                       <img src={imgUrl(img, 80)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -222,20 +222,7 @@ export default function LabelConfigurator({ prod }) {
               <h1 className="D" style={{ fontSize: 'clamp(20px,4vw,32px)', margin: 0 }}>{prod.name}</h1>
               {prod.badge && <span className="badge-orange">{prod.badge}</span>}
             </div>
-            <p style={{ fontSize: 13, color: 'var(--mu)', marginBottom: prod.long_desc ? 10 : 0, lineHeight: 1.7 }}>{prod.desc}</p>
-            {prod.long_desc && (
-              <p style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.8, padding: '8px 12px', background: 'var(--s2)', borderRadius: 7, borderLeft: '3px solid var(--o)', marginBottom: 10 }}>{prod.long_desc}</p>
-            )}
-            {prod.specs && prod.specs.length > 0 && (
-              <div style={{ background: 'var(--s2)', borderRadius: 8, border: '1px solid var(--bd)', overflow: 'hidden', marginBottom: 10 }}>
-                {prod.specs.filter(s=>s.k&&s.v).map((s, i, arr) => (
-                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '38% 1fr', borderBottom: i < arr.length-1 ? '1px solid var(--bd)' : 'none' }}>
-                    <div style={{ padding: '7px 11px', fontSize: 11, fontWeight: 700, color: 'var(--mu)', borderRight: '1px solid var(--bd)', background: 'rgba(0,0,0,.15)' }}>{s.k}</div>
-                    <div style={{ padding: '7px 11px', fontSize: 11, color: 'var(--tx)' }}>{s.v}</div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <p style={{ fontSize: 13, color: 'var(--mu)', marginBottom: 10, lineHeight: 1.7 }}>{prod.desc}</p>
             <div style={{ fontSize: 11, color: 'var(--mu)', display: 'flex', gap: 14 }}>
               <span>🇨🇦 Ships Canada-wide</span>
               <span>✅ Free digital proof</span>
@@ -531,6 +518,24 @@ export default function LabelConfigurator({ prod }) {
           </div>
         </div>
       </div>
+
+      {/* Extended description + Specs — below configurator */}
+      {prod.long_desc && (
+        <p style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.8, marginTop: 20, padding:'10px 14px', background:'var(--s2)', borderRadius:8, borderLeft:'3px solid var(--o)' }}>{prod.long_desc}</p>
+      )}
+      {prod.specs && prod.specs.length > 0 && (
+        <div style={{ marginTop: 18, marginBottom: 8 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--mu)', marginBottom: 8 }}>Specifications</div>
+          <div style={{ background: 'var(--s2)', borderRadius: 8, border: '1px solid var(--bd)', overflow: 'hidden' }}>
+            {prod.specs.filter(s=>s.k&&s.v).map((s, i, arr) => (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '38% 1fr', borderBottom: i < arr.length-1 ? '1px solid var(--bd)' : 'none' }}>
+                <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 700, color: 'var(--mu)', borderRight: '1px solid var(--bd)', background: 'rgba(0,0,0,.15)' }}>{s.k}</div>
+                <div style={{ padding: '8px 12px', fontSize: 11, color: 'var(--tx)' }}>{s.v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <style>{`
         @media(max-width:700px){.lbl-layout{grid-template-columns:1fr!important}}
