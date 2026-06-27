@@ -1,4 +1,176 @@
 {
+  "redirects": [
+    {
+      "source": "/product-category/signs",
+      "destination": "/products/signs-banners",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/banners",
+      "destination": "/products/signs-banners",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/stickers",
+      "destination": "/products/labels-stickers",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/labels",
+      "destination": "/products/labels-stickers",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/vehicles",
+      "destination": "/products/vehicle-graphics",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/wraps",
+      "destination": "/products/vehicle-graphics",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/flyers",
+      "destination": "/products/flyers-postcards",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/business-card",
+      "destination": "/products/business-cards",
+      "permanent": true
+    },
+    {
+      "source": "/product/:slug",
+      "destination": "/products",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/business-cards",
+      "destination": "/products/business-cards",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/signs-banners",
+      "destination": "/products/signs-banners",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/vehicle-graphics",
+      "destination": "/products/vehicle-graphics",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/labels-stickers",
+      "destination": "/products/labels-stickers",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/flyers-postcards",
+      "destination": "/products/flyers-postcards",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/marketing",
+      "destination": "/products/marketing",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/stationery",
+      "destination": "/products/stationery",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/restaurant",
+      "destination": "/products/restaurant",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/foam-boards",
+      "destination": "/products/foam-boards",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/real-estate",
+      "destination": "/products/real-estate",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/calendars",
+      "destination": "/products/calendars",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/posters-canvas",
+      "destination": "/products/posters-canvas",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/:slug",
+      "destination": "/products",
+      "permanent": true
+    },
+    {
+      "source": "/shop",
+      "destination": "/products",
+      "permanent": true
+    },
+    {
+      "source": "/shop/:path*",
+      "destination": "/products",
+      "permanent": true
+    },
+    {
+      "source": "/my-account",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/my-account/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wp-admin",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wp-admin/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wp-login.php",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wp-content/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wp-includes/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/feed",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/feed/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sitemap_index.xml",
+      "destination": "/sitemap.xml",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
