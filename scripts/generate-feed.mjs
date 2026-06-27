@@ -1,27 +1,16 @@
 #!/usr/bin/env node
-// Regenerate Google Merchant feed after price changes or hiding products:
+// Regenerate Google Merchant feed with LIVE images from Supabase:
 //   node scripts/generate-feed.mjs
 
 import { readFileSync, writeFileSync } from "fs";
 
-const DOMAIN = "https://nexacustoms.ca";
+const DOMAIN   = "https://nexacustoms.ca";
+const SUPA_URL = "https://eogypbrsjfgurrobjomn.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvZ3lwYnJzamZndXJyb2Jqb21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4NTMzMDgsImV4cCI6MjA2MDQyOTMwOH0.oMuQF6oKKGhSNaKLD5nAoFR6BRnQv1vIFOTvZEuHfkc";
 
-// ── Products to EXCLUDE from feed (hidden/unavailable) ──────────────────────
-// Add product IDs here when you hide them in Admin → Products
-const EXCLUDED = new Set([
-  // example: "vehicle-wrap-suv",
-]);
+const GLOBAL_FALLBACK = `${DOMAIN}/og-image.jpg`;
 
-const src = readFileSync("src/data/products.js", "utf8");
-
-// Parse DEFAULT_PRODS
-const start = src.indexOf("export const DEFAULT_PRODS = [");
-let depth = 0, begin = src.indexOf("[", start), endIdx = begin;
-for (let j = begin; j < src.length; j++) {
-  if (src[j] === "[") depth++;
-  else if (src[j] === "]") { depth--; if (depth === 0) { endIdx = j + 1; break; } }
-}
-const prods = eval(src.slice(begin, endIdx));
+const EXCLUDED = new Set([]);
 
 const CAT_MAP = {
   "business-cards":   "Business Supplies > Office Stationery",
@@ -55,21 +44,67 @@ const CAT_NAMES = {
 
 const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\\/g,"");
 
+function cleanImgUrl(url) {
+  if (!url) return null;
+  // Strip Supabase transform params — use raw file for Google (better compatibility)
+  return url.split("?")[0];
+}
+
+// Read local products
+const src = readFileSync("src/data/products.js", "utf8");
+const start = src.indexOf("export const DEFAULT_PRODS = [");
+let depth = 0, begin = src.indexOf("[", start), endIdx = begin;
+for (let j = begin; j < src.length; j++) {
+  if (src[j] === "[") depth++;
+  else if (src[j] === "]") { depth--; if (depth === 0) { endIdx = j + 1; break; } }
+}
+const prods = eval(src.slice(begin, endIdx));
+
+// Fetch live overrides from Supabase (has real images uploaded via Admin)
+console.log("📡 Fetching product images from Supabase...");
+let overrides = {};
+try {
+  const res = await fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.products&select=value`, {
+    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
+  });
+  const data = await res.json();
+  overrides = data[0]?.value?.overrides || {};
+  const withImgs = Object.values(overrides).filter(p => (p.imgs||[]).filter(x=>x?.length).length > 0).length;
+  console.log(`✅ Loaded ${Object.keys(overrides).length} overrides, ${withImgs} with real images`);
+} catch (e) {
+  console.warn("⚠️  Could not fetch Supabase overrides — using local data only");
+}
+
 const items = [];
+let withImg = 0, withFallback = 0;
 
 for (const prod of prods) {
   if (prod.disabled || EXCLUDED.has(prod.id)) continue;
   if (!prod.pricing?.length) continue;
 
-  const lowestPrice = Math.min(...prod.pricing.map(t => t.p));
-  const lowestQty   = prod.pricing.find(t => t.p === lowestPrice)?.q || prod.pricing[0].q;
-  const descClean   = (prod.desc || "").replace(/\\"/g, '"').replace(/\\/g, "");
+  // Merge Supabase override
+  const override = overrides[prod.id] || {};
+  const merged = { ...prod, ...override };
+
+  const lowestPrice = Math.min(...merged.pricing.map(t => t.p));
+  const lowestQty   = merged.pricing.find(t => t.p === lowestPrice)?.q || merged.pricing[0].q;
+  const descClean   = (merged.desc || "").replace(/\\"/g, '"').replace(/\\/g, "");
   const gcat        = CAT_MAP[prod.cat] || "Business Supplies > Office Stationery";
   const catName     = CAT_NAMES[prod.cat] || prod.cat.replace(/-/g," ");
   const link        = `${DOMAIN}/products/${prod.cat}/${prod.id}`;
-  const title       = `${prod.name} — Custom Printing GTA | Nexa Customs Mississauga`.slice(0, 150);
+  const title       = `${merged.name} — Custom Printing GTA | Nexa Customs`.slice(0, 150);
 
-  const desc = prod.sqft?.enabled
+  // Pick best image: product image → fallback
+  const imgs = (merged.imgs || []).filter(x => x?.length);
+  let imageUrl = GLOBAL_FALLBACK;
+  if (imgs.length > 0) {
+    imageUrl = cleanImgUrl(imgs[0]);
+    withImg++;
+  } else {
+    withFallback++;
+  }
+
+  const desc = merged.sqft?.enabled
     ? `${descClean} Starting at $${lowestPrice.toFixed(2)}. Custom sizes available. Full colour CMYK. Free digital proof. Serving Toronto, Mississauga, Brampton, Oakville, Burlington, GTA. Ships Canada-wide. Call (437) 997-9921.`
     : `${descClean} Starting at $${lowestPrice.toFixed(2)} for ${lowestQty.toLocaleString()} pieces. More qty options on our website. Full colour CMYK. Free digital proof. Serving Toronto, Mississauga, Brampton, Oakville, Burlington, GTA. Ships Canada-wide. Call (437) 997-9921.`;
 
@@ -78,7 +113,7 @@ for (const prod of prods) {
       <g:title>${esc(title)}</g:title>
       <g:description>${esc(desc.slice(0,5000))}</g:description>
       <g:link>${esc(link)}</g:link>
-      <g:image_link>${DOMAIN}/og-image.svg</g:image_link>
+      <g:image_link>${esc(imageUrl)}</g:image_link>
       <g:price>${lowestPrice.toFixed(2)} CAD</g:price>
       <g:brand>Nexa Customs</g:brand>
       <g:condition>new</g:condition>
@@ -103,6 +138,8 @@ ${items.join("\n")}
 </rss>`;
 
 writeFileSync("Public/product-feed.xml", xml, "utf8");
-console.log(`✅ Generated ${items.length} products → Public/product-feed.xml`);
+console.log(`\n✅ Generated ${items.length} products → Public/product-feed.xml`);
+console.log(`   📸 ${withImg} products with real Supabase images`);
+console.log(`   🔄 ${withFallback} products using fallback image`);
 console.log(`   Feed size: ${(xml.length/1024).toFixed(1)}KB`);
-console.log(`\nTo hide a product from feed: add its ID to EXCLUDED set in this script`);
+console.log(`\nNext: git add Public/product-feed.xml && git commit -m "update: merchant feed with real images" && git push`);
