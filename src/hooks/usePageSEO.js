@@ -21,44 +21,53 @@ const TITLES = {
   '/order-confirmed':'Order Confirmed! — Nexa Customs',
   '/order-status':   'Track Your Order — Nexa Customs',
   '/privacy':        'Privacy Policy — Nexa Customs',
-  '/terms':          'Terms & Conditions — Nexa Customs',
 };
 
+// All descriptions trimmed to 120–158 chars (sweet spot for Google & Bing)
 const DESCRIPTIONS = {
-  '/':           "Nexa Customs — GTA's trusted print shop in Mississauga. Business cards, vinyl banners, vehicle wraps, stickers & more. Free proof, same-day pickup, ships Canada-wide. (437) 997-9921.",
-  '/products':   'Browse 80+ print products at Nexa Customs. Business cards, banners, vehicle wraps, stickers, signs & more. Serving Toronto, Mississauga, Brampton, Oakville and all of Canada.',
-  '/quote':      'Get a free custom print quote from Nexa Customs. Serving GTA — Toronto, Mississauga, Brampton, Oakville. Ships Canada-wide. Response within 1 business day.',
-  '/contact':    'Contact Nexa Customs at (437) 997-9921. Located in Mississauga, serving all of GTA. Free pickup or Canada-wide shipping available.',
-  '/about':      "Nexa Customs Inc. — GTA's trusted print shop since 2010. Serving Toronto, Mississauga, Brampton, Oakville, Burlington and shipping Canada-wide. Quality guaranteed.",
-  '/faq':        'Frequently asked questions about Nexa Customs print services. File formats, turnaround times, GTA pickup, Canada shipping, proofs and more.',
-  '/shipping':   'Nexa Customs offers free pickup in Mississauga (GTA) and ships Canada-wide via Canada Post and FedEx. Fast, reliable delivery to all provinces.',
-  '/order-status': 'Track your Nexa Customs print order in real time. Enter your order number to see production status — received, printing, ready, or shipped.',
-  '/privacy':    'Privacy Policy for Nexa Customs Inc. Learn how we collect, use, and protect your personal information. PIPEDA compliant.',
-  '/terms':      'Terms and Conditions for Nexa Customs Inc. Custom print orders, artwork rights, payment, turnaround, and liability.',
+  '/':          "GTA's trusted print shop in Mississauga. Business cards, banners, vehicle wraps & stickers. Free proof, same-day pickup, ships Canada-wide. Call (437) 997-9921.",
+  '/products':  'Browse 80+ print products at Nexa Customs. Business cards, banners, vehicle wraps, stickers & signs. Serving GTA — Toronto, Mississauga, Brampton, Oakville.',
+  '/quote':     'Get a free custom print quote from Nexa Customs. Serving Toronto, Mississauga, Brampton, Oakville GTA. Ships Canada-wide. Reply within 1 business day.',
+  '/contact':   'Contact Nexa Customs at (437) 997-9921. Located in Mississauga, GTA. Free pickup or Canada-wide shipping. Mon–Fri 9AM–6PM, Sat by appointment.',
+  '/about':     "Nexa Customs Inc. — GTA print shop serving Toronto, Mississauga, Brampton & Oakville. Business cards, signs, vehicle wraps & more. Quality guaranteed.",
+  '/faq':       'FAQ for Nexa Customs print shop. File formats, turnaround times, GTA pickup, Canada shipping, free proofs and order tracking explained.',
+  '/shipping':  'Free pickup in Mississauga. Canada-wide shipping via Canada Post & FedEx. Flat-rate delivery to all provinces. Fast, reliable, trackable.',
+  '/returns':   'Nexa Customs quality guarantee — not satisfied, we reprint at no charge. Learn about our return and reprint policy for custom print orders.',
+  '/terms':     'Terms & Conditions for Nexa Customs Inc. Custom print orders, artwork, payment terms, turnaround times, liability and cancellation policy.',
+  '/privacy':   'Privacy Policy for Nexa Customs Inc. How we collect, use and protect your personal information. PIPEDA compliant. Contact info@nexacustoms.ca.',
+  '/turnaround':'Nexa Customs turnaround times: standard 5–7 days, rush 2–3 days, express same/next day. Pickup in Mississauga or ships Canada-wide.',
+  '/order-status':'Track your Nexa Customs print order. Enter your order number to see live status — received, in production, ready for pickup or shipped.',
 };
 
 const CAT_TITLES = {
   'business-cards':   'Business Cards Printing GTA — Mississauga, Toronto, Brampton — Nexa Customs',
   'signs-banners':    'Vinyl Banners & Signs GTA — Mississauga, Toronto, Brampton — Nexa Customs',
-  'vehicle-graphics': 'Vehicle Wraps GTA — Toronto, Mississauga, Brampton — Nexa Customs',
-  'labels-stickers':  'Custom Labels & Stickers GTA — Nexa Customs',
+  'vehicle-graphics': 'Vehicle Wraps & Fleet Graphics GTA — Toronto, Mississauga — Nexa Customs',
+  'labels-stickers':  'Custom Labels & Stickers GTA — Die-Cut, Roll Labels — Nexa Customs',
   'flyers-postcards': 'Flyers & Postcards Printing GTA — Nexa Customs',
-  'marketing':        'Marketing Materials Printing GTA — Nexa Customs',
-  'stationery':       'Business Stationery GTA — Nexa Customs',
-  'restaurant':       'Restaurant Printing GTA — Menus, Table Tents — Nexa Customs',
-  'foam-boards':      'Foam Boards & Display Signs GTA — Nexa Customs',
+  'marketing':        'Marketing Materials Printing GTA — Brochures, Posters — Nexa Customs',
+  'stationery':       'Business Stationery Printing GTA — Letterhead, Envelopes — Nexa Customs',
+  'restaurant':       'Restaurant Printing GTA — Menus, Table Tents, Placemats — Nexa Customs',
+  'foam-boards':      'Foam Board Signs & Displays GTA — Mississauga, Toronto — Nexa Customs',
   'real-estate':      'Real Estate Signs GTA — Mississauga, Toronto, Brampton — Nexa Customs',
-  'calendars':        'Custom Calendars Printing GTA — Nexa Customs',
-  'posters-canvas':   'Posters & Canvas Prints GTA — Nexa Customs',
+  'calendars':        'Custom Calendar Printing GTA — Wall & Desk Calendars — Nexa Customs',
+  'posters-canvas':   'Poster & Canvas Printing GTA — Large Format — Nexa Customs',
 };
 
+// All 12 categories — all within 120–158 chars
 const CAT_DESCS = {
-  'business-cards':   'Professional business cards printing in Mississauga, Toronto, Brampton & GTA. Starting $24.32 for 250 cards. Free proof, same-day pickup, ships Canada-wide.',
-  'signs-banners':    'Custom vinyl banners and signs in GTA. Serving Toronto, Mississauga, Brampton, Oakville. Indoor/outdoor, custom sizes, rush available.',
-  'vehicle-graphics': 'Professional vehicle wraps and fleet graphics in Toronto, Mississauga, Brampton GTA. Full wraps, partial wraps, truck lettering. Free consultation.',
-  'labels-stickers':  'Custom labels and stickers in GTA. Die-cut, roll labels, BOPP waterproof, clear labels. Serving Toronto, Mississauga, Brampton. Ships Canada-wide.',
-  'flyers-postcards': 'Flyers and postcards printing in GTA. Starting 1,000 flyers from $99. Serving Toronto, Mississauga, Brampton. Ships Canada-wide.',
-  'real-estate':      'Real estate signs and printing in GTA. Yard signs, riders, feature sheets. Serving Toronto, Mississauga, Brampton, Oakville realtors.',
+  'business-cards':   'Professional business cards in Mississauga & GTA. 14pt, 16pt, soft-touch, spot UV & more. Free proof, same-day pickup, ships Canada-wide.',
+  'signs-banners':    'Custom vinyl banners & signs in GTA. Indoor/outdoor, custom sizes, grommets, retractable stands. Rush available. Ships Canada-wide.',
+  'vehicle-graphics': 'Vehicle wraps & fleet graphics in Toronto, Mississauga & Brampton. Full wraps, partial wraps, decals, truck lettering. Free quote.',
+  'labels-stickers':  'Custom labels & stickers in GTA. Die-cut, roll labels, BOPP waterproof, clear & holographic. Serving Toronto, Mississauga, Brampton.',
+  'flyers-postcards': 'Flyer & postcard printing in GTA. 1,000 flyers from $99. Single & double-sided, gloss or matte. Ships Canada-wide. Rush available.',
+  'marketing':        'Marketing materials printing in GTA. Brochures, door hangers, rack cards, table tents. Serving Toronto, Mississauga, Brampton.',
+  'stationery':       'Business stationery printing in GTA. Letterhead, envelopes, notepads & NCR forms. Professional quality, fast turnaround, ships Canada-wide.',
+  'restaurant':       'Restaurant printing in GTA. Menus, table tents, placemats, coasters & more. Waterproof options available. Rush printing available.',
+  'foam-boards':      'Foam board signs & display printing in GTA. Lightweight, rigid, full colour. Indoor signage, trade shows, events. Mississauga pickup.',
+  'real-estate':      'Real estate signs & printing in GTA. Yard signs, riders, feature sheets, open house signs. Serving Toronto & GTA realtors.',
+  'calendars':        'Custom calendar printing in GTA. Wall calendars, desk calendars, magnetic & pocket calendars. Branded with your logo & photos.',
+  'posters-canvas':   'Poster & canvas printing in GTA. Large format, photo prints, art reproductions, canvas wraps. Ships Canada-wide. Rush available.',
 };
 
 // Ensures a <meta> or <link> tag exists, creates it if missing
@@ -87,9 +96,11 @@ export function usePageSEO() {
       desc  = DESCRIPTIONS[path] || desc;
     } else if (path.startsWith('/products/') && curProd) {
       title = `${curProd.name} — Nexa Customs · GTA Print Shop`;
-      desc  = curProd.desc
-        ? `${curProd.desc} Order online. Free proof. Same-day pickup in Mississauga GTA or ships Canada-wide. Call (437) 997-9921.`
+      // Product desc: keep under 158 chars
+      const rawDesc = curProd.desc
+        ? `${curProd.desc} Free proof, same-day pickup in Mississauga GTA or ships Canada-wide.`
         : DESCRIPTIONS['/'];
+      desc = rawDesc.length > 158 ? rawDesc.slice(0, 155) + '...' : rawDesc;
     } else if (path.startsWith('/products/')) {
       const catSlug = path.split('/')[2];
       title = CAT_TITLES[catSlug] || `${catSlug.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase())} — Nexa Customs GTA`;
@@ -110,16 +121,16 @@ export function usePageSEO() {
     const robotsEl = ensureTag('meta[name="robots"]', 'meta', { name: 'robots' });
     robotsEl.setAttribute('content', shouldIndex ? 'index, follow' : 'noindex, nofollow');
 
-    // OG / Twitter
+    // Meta + OG + Twitter
     const set = (sel, tag, initAttrs, attr, val) => {
       ensureTag(sel, tag, initAttrs).setAttribute(attr, val);
     };
-    set('meta[name="description"]',       'meta', { name:'description' },              'content', desc);
-    set('meta[property="og:title"]',      'meta', { property:'og:title' },             'content', title);
-    set('meta[property="og:description"]','meta', { property:'og:description' },       'content', desc);
-    set('meta[property="og:url"]',        'meta', { property:'og:url' },               'content', canonical);
-    set('meta[name="twitter:title"]',     'meta', { name:'twitter:title' },            'content', title);
-    set('meta[name="twitter:description"]','meta',{ name:'twitter:description' },      'content', desc);
+    set('meta[name="description"]',        'meta', { name:'description' },         'content', desc);
+    set('meta[property="og:title"]',       'meta', { property:'og:title' },        'content', title);
+    set('meta[property="og:description"]', 'meta', { property:'og:description' },  'content', desc);
+    set('meta[property="og:url"]',         'meta', { property:'og:url' },          'content', canonical);
+    set('meta[name="twitter:title"]',      'meta', { name:'twitter:title' },       'content', title);
+    set('meta[name="twitter:description"]','meta', { name:'twitter:description' }, 'content', desc);
 
   }, [location.pathname, curProd?.id]);
 }
