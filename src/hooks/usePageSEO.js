@@ -40,17 +40,17 @@ const DESCRIPTIONS = {
 };
 
 const CAT_TITLES = {
-  'business-cards':   'Business Cards Printing GTA — Mississauga, Toronto, Brampton — Nexa Customs',
-  'signs-banners':    'Vinyl Banners & Signs GTA — Mississauga, Toronto, Brampton — Nexa Customs',
-  'vehicle-graphics': 'Vehicle Wraps & Fleet Graphics GTA — Toronto, Mississauga — Nexa Customs',
-  'labels-stickers':  'Custom Labels & Stickers GTA — Die-Cut, Roll Labels — Nexa Customs',
+  'business-cards':   'Business Cards Printing GTA — Nexa Customs',
+  'signs-banners':    'Vinyl Banners & Signs GTA — Nexa Customs',
+  'vehicle-graphics': 'Vehicle Wraps GTA — Toronto & Mississauga — Nexa Customs',
+  'labels-stickers':  'Custom Labels & Stickers GTA — Nexa Customs',
   'flyers-postcards': 'Flyers & Postcards Printing GTA — Nexa Customs',
-  'marketing':        'Marketing Materials Printing GTA — Brochures, Posters — Nexa Customs',
-  'stationery':       'Business Stationery Printing GTA — Letterhead, Envelopes — Nexa Customs',
-  'restaurant':       'Restaurant Printing GTA — Menus, Table Tents, Placemats — Nexa Customs',
-  'foam-boards':      'Foam Board Signs & Displays GTA — Mississauga, Toronto — Nexa Customs',
-  'real-estate':      'Real Estate Signs GTA — Mississauga, Toronto, Brampton — Nexa Customs',
-  'calendars':        'Custom Calendar Printing GTA — Wall & Desk Calendars — Nexa Customs',
+  'marketing':        'Marketing Print Materials GTA — Nexa Customs',
+  'stationery':       'Business Stationery Printing GTA — Nexa Customs',
+  'restaurant':       'Restaurant Printing GTA — Menus & Table Tents',
+  'foam-boards':      'Foam Board Signs & Displays GTA — Nexa Customs',
+  'real-estate':      'Real Estate Signs GTA — Nexa Customs',
+  'calendars':        'Custom Calendar Printing GTA — Nexa Customs',
   'posters-canvas':   'Poster & Canvas Printing GTA — Large Format — Nexa Customs',
 };
 
