@@ -1,4 +1,17 @@
 {
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.nexacustoms.ca"
+        }
+      ],
+      "destination": "https://nexacustoms.ca/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
@@ -18,18 +31,7 @@
         {
           "key": "X-Robots-Tag",
           "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "nexa-customs.vercel.app"
-        }
-      ],
-      "headers": [
+        },
         {
           "key": "X-Frame-Options",
           "value": "DENY"

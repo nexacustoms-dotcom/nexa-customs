@@ -71,4 +71,3 @@ Disallow: /
 
 # ─── Sitemap locations ───────────────────────────────────────────────────────
 Sitemap: https://nexacustoms.ca/sitemap.xml
-Sitemap: https://nexacustoms.ca/sitemap_index.xml
