@@ -48,7 +48,7 @@ export function Navbar() {
         fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 16, color: '#000',
         flexShrink: 0, borderRadius: store.logo_img ? 8 : 0, overflow: 'hidden',
       }}>
-        {store.logo_img ? <img src={imgUrl(store.logo_img, 80)} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : (store.logo_text || 'N')}
+        {store.logo_img ? <img src={imgUrl(store.logo_img, 80)} alt={store.name || 'Nexa Customs'} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : (store.logo_text || 'N')}
       </div>
       <div>
         <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 17, letterSpacing: '.05em' }}>{store.name}</div>
@@ -143,7 +143,7 @@ export function Footer() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 13 }}>
               <div style={{ width: 36, height: 36, background: store.logo_img ? 'transparent' : 'var(--o)', clipPath: store.logo_img ? 'none' : 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 14, color: '#000', flexShrink: 0, borderRadius: store.logo_img ? 8 : 0, overflow: 'hidden' }}>
-                {store.logo_img ? <img src={imgUrl(store.logo_img, 80)} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : (store.logo_text || 'N')}
+                {store.logo_img ? <img src={imgUrl(store.logo_img, 80)} alt={store.name || 'Nexa Customs'} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : (store.logo_text || 'N')}
               </div>
               <div>
                 <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 17, letterSpacing: '.05em' }}>{store.name}</div>

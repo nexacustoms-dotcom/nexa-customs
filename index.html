@@ -178,7 +178,10 @@
     <!-- Stripe.js loaded dynamically at checkout only (see TransactionalPages.jsx) -->
 
     <!-- Static H1 for crawlers — React replaces visible content on load -->
-    <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">Nexa Customs — Print Shop in Mississauga, GTA</h1>
+    <!-- Pre-render content for crawlers that skip JS -->
+    <div role="main" aria-label="Nexa Customs — Print Shop in Mississauga, GTA" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap">
+      <span>Nexa Customs — Print Shop Mississauga GTA. Business cards, banners, vehicle wraps, stickers, signs. Free proof. Same-day pickup. Ships Canada-wide. (437) 997-9921.</span>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
