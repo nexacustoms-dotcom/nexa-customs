@@ -6,9 +6,9 @@ import { readFileSync, writeFileSync } from "fs";
 
 const DOMAIN   = "https://nexacustoms.ca";
 const SUPA_URL = "https://eogypbrsjfgurrobjomn.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvZ3lwYnJzamZndXJyb2Jqb21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4NTMzMDgsImV4cCI6MjA2MDQyOTMwOH0.oMuQF6oKKGhSNaKLD5nAoFR6BRnQv1vIFOTvZEuHfkc";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvZ3lwYnJzamZndXJyb2Jqb21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjYyODMsImV4cCI6MjA5MjgwMjI4M30.ajlCEo-TKn6qyi4GCfYNOeEpLpp5-MoJoFCKkGuRAzg";
 
-const GLOBAL_FALLBACK = `${DOMAIN}/og-image.jpg`;
+const GLOBAL_FALLBACK = 'https://eogypbrsjfgurrobjomn.supabase.co/storage/v1/object/public/nexa-media/branding/1781759339502-jf75i43zsws.png';
 
 const EXCLUDED = new Set([]);
 
@@ -64,11 +64,14 @@ const prods = eval(src.slice(begin, endIdx));
 console.log("📡 Fetching product images from Supabase...");
 let overrides = {};
 try {
-  const res = await fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.products&select=value`, {
+  const res = await fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.products&select=data`, {
     headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
   });
   const data = await res.json();
-  overrides = data[0]?.value?.overrides || {};
+  const arr = data[0]?.data || [];
+  // data is stored as array (indexed 0,1,2...) or plain array
+  const overrideArr = Array.isArray(arr) ? arr : Object.values(arr);
+  overrideArr.forEach(p => { if (p?.id) overrides[p.id] = p; });
   const withImgs = Object.values(overrides).filter(p => (p.imgs||[]).filter(x=>x?.length).length > 0).length;
   console.log(`✅ Loaded ${Object.keys(overrides).length} overrides, ${withImgs} with real images`);
 } catch (e) {
