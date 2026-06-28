@@ -89,8 +89,11 @@ for (const prod of prods) {
   const override = overrides[prod.id] || {};
   const merged = { ...prod, ...override };
 
-  const lowestPrice = Math.min(...merged.pricing.map(t => t.p));
-  const lowestQty   = merged.pricing.find(t => t.p === lowestPrice)?.q || merged.pricing[0].q;
+  // Use Supabase pricing if valid, otherwise fall back to local products.js pricing
+  const pricingSource = (merged.pricing?.length && Math.min(...merged.pricing.map(t => t.p)) > 0)
+    ? merged.pricing : prod.pricing;
+  const lowestPrice = Math.min(...pricingSource.map(t => t.p));
+  const lowestQty   = pricingSource.find(t => t.p === lowestPrice)?.q || pricingSource[0].q;
   const descClean   = (merged.desc || "").replace(/\\"/g, '"').replace(/\\/g, "");
   const gcat        = CAT_MAP[prod.cat] || "Business Supplies > Office Stationery";
   const catName     = CAT_NAMES[prod.cat] || prod.cat.replace(/-/g," ");
