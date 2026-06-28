@@ -13,18 +13,19 @@ const GLOBAL_FALLBACK = 'https://eogypbrsjfgurrobjomn.supabase.co/storage/v1/obj
 const EXCLUDED = new Set([]);
 
 const CAT_MAP = {
-  "business-cards":   "Business Supplies > Office Stationery",
-  "flyers-postcards": "Business Supplies > Office Stationery",
-  "signs-banners":    "Business Supplies > Banners & Pennants",
-  "vehicle-graphics": "Arts & Entertainment > Hobbies & Creative Arts",
-  "marketing":        "Business Supplies > Office Stationery",
-  "stationery":       "Business Supplies > Office Stationery",
-  "restaurant":       "Business Supplies > Office Stationery",
-  "foam-boards":      "Arts & Entertainment > Party & Celebration",
-  "labels-stickers":  "Office Supplies > Labels > Stickers",
-  "real-estate":      "Business Supplies > Office Stationery",
-  "calendars":        "Media > Books > Calendars",
-  "posters-canvas":   "Arts & Entertainment > Artwork > Posters",
+  // Numeric IDs from Google Product Taxonomy (more stable than text paths)
+  "business-cards":   "5587",   // Office Supplies > Business Cards
+  "flyers-postcards": "5587",   // Office Supplies > Business Cards (closest)
+  "signs-banners":    "3559",   // Business & Industrial > Retail > Signage
+  "vehicle-graphics": "3559",   // Business & Industrial > Retail > Signage
+  "marketing":        "5587",   // Office Supplies > Business Cards (closest)
+  "stationery":       "923",    // Office Supplies
+  "restaurant":       "5587",   // Office Supplies
+  "foam-boards":      "3559",   // Business & Industrial > Retail > Signage
+  "labels-stickers":  "5876",   // Office Supplies > Labels & Tags > Stickers & Decals
+  "real-estate":      "3559",   // Business & Industrial > Retail > Signage
+  "calendars":        "612",    // Media > Calendars
+  "posters-canvas":   "500044", // Arts & Entertainment > Artwork > Posters
 };
 
 const CAT_NAMES = {
