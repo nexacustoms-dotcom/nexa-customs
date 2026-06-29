@@ -392,7 +392,12 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <div className="afg"><label className="aflbl">Rate ($/sq ft)</label><input type="number" step="0.25" className="ainp" value={p.sqft.rate} onChange={e => upd('sqft')({ ...p.sqft, rate: parseFloat(e.target.value) || p.sqft.rate })} /></div>
                 <div className="afg"><label className="aflbl">Min Sq Ft</label><input type="number" step="0.5" className="ainp" value={p.sqft.min} onChange={e => upd('sqft')({ ...p.sqft, min: parseFloat(e.target.value) || p.sqft.min })} /></div>
+                <div className="afg"><label className="aflbl">Min Width (ft)</label><input type="number" step="0.5" min="0" className="ainp" value={p.sqft.minW || ''} placeholder="e.g. 1" onChange={e => upd('sqft')({ ...p.sqft, minW: parseFloat(e.target.value) || 0 })} /></div>
+                <div className="afg"><label className="aflbl">Min Height (ft)</label><input type="number" step="0.5" min="0" className="ainp" value={p.sqft.minH || ''} placeholder="e.g. 1" onChange={e => upd('sqft')({ ...p.sqft, minH: parseFloat(e.target.value) || 0 })} /></div>
+                <div className="afg"><label className="aflbl">Max Width (ft) — 0 = no limit</label><input type="number" step="0.5" min="0" className="ainp" value={p.sqft.maxW || ''} placeholder="e.g. 10" onChange={e => upd('sqft')({ ...p.sqft, maxW: parseFloat(e.target.value) || 0 })} /></div>
+                <div className="afg"><label className="aflbl">Max Height (ft) — 0 = no limit</label><input type="number" step="0.5" min="0" className="ainp" value={p.sqft.maxH || ''} placeholder="e.g. 50" onChange={e => upd('sqft')({ ...p.sqft, maxH: parseFloat(e.target.value) || 0 })} /></div>
               </div>
+              <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4 }}>Min/Max Width & Height shows warnings to customers if they enter sizes outside your limits. Set 0 to ignore.</div>
             </>
           )}
         </div>
@@ -1247,6 +1252,20 @@ function FullProductEditor({ prod, onSave, onCancel }) {
                   onChange={e => upd(key)(e.target.value.split(',').map(x=>x.trim()).filter(Boolean))} />
               </div>
             ))}
+            <div className="aform-grp">
+              <label className="aform-lbl">Min Size (inches) — 0 = no limit</label>
+              <input type="number" className="ainp" min="0" step="0.25" placeholder="e.g. 0.5"
+                value={p.lbl_minInch || ''}
+                onChange={e => upd('lbl_minInch')(parseFloat(e.target.value) || 0)} />
+              <div style={{ fontSize: 10, color: 'var(--mu)', marginTop: 3 }}>Warning if customer enters a size below this</div>
+            </div>
+            <div className="aform-grp">
+              <label className="aform-lbl">Max Size (inches) — 0 = no limit</label>
+              <input type="number" className="ainp" min="0" step="0.25" placeholder="e.g. 24"
+                value={p.lbl_maxInch || ''}
+                onChange={e => upd('lbl_maxInch')(parseFloat(e.target.value) || 0)} />
+              <div style={{ fontSize: 10, color: 'var(--mu)', marginTop: 3 }}>Warning if customer enters a size above this</div>
+            </div>
           </div>
         </div>
       )}

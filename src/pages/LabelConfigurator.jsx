@@ -301,22 +301,28 @@ export default function LabelConfigurator({ prod }) {
                   {shape === 'Oval'   && ' For an oval, Length is the long side, Breadth is the short side.'}
                 </p>
                 {(() => {
-                  const maxIn = prod.lbl_maxInch || 24; // default max 24 inches per side
+                  const maxIn = prod.lbl_maxInch > 0 ? prod.lbl_maxInch : null;
+                  const minIn = prod.lbl_minInch > 0 ? prod.lbl_minInch : null;
+                  const wOver  = maxIn && customW && parseFloat(customW) > maxIn;
+                  const hOver  = maxIn && customH && parseFloat(customH) > maxIn;
+                  const wUnder = minIn && customW && parseFloat(customW) < minIn;
+                  const hUnder = minIn && customH && parseFloat(customH) < minIn;
                   const wOver = customW && parseFloat(customW) > maxIn;
                   const hOver = customH && parseFloat(customH) > maxIn;
                   return (<>
-                    <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 10 }}>
-                      Max size: <strong style={{ color: 'var(--tx)' }}>{maxIn}" per side</strong>
-                    </div>
+                    {(minIn || maxIn) && <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 10, display: 'flex', gap: 14 }}>
+                      {minIn && <span>Min: <strong style={{ color: 'var(--tx)' }}>{minIn}" per side</strong></span>}
+                      {maxIn && <span>Max: <strong style={{ color: 'var(--tx)' }}>{maxIn}" per side</strong></span>}
+                    </div>}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 10, alignItems: 'end', maxWidth: 300 }}>
                       <div>
                         <div className="flbl" style={{ marginBottom: 6 }}>Length (in)</div>
-                        <input type="number" min="0.25" max={maxIn} step="0.25" placeholder="e.g. 3" value={customW} onChange={e => setCustomW(e.target.value)} style={{ ...si, borderColor: wOver ? '#e55' : undefined }} />
+                        <input type="number" min="0.25" max={maxIn || undefined} step="0.25" placeholder="e.g. 3" value={customW} onChange={e => setCustomW(e.target.value)} style={{ ...si, borderColor: (wOver || wUnder) ? '#e55' : undefined }} />
                       </div>
                       <div style={{ paddingBottom: 10, color: 'var(--mu)', fontSize: 18, fontWeight: 700 }}>×</div>
                       <div>
                         <div className="flbl" style={{ marginBottom: 6 }}>Breadth (in)</div>
-                        <input type="number" min="0.25" max={maxIn} step="0.25" placeholder="e.g. 2" value={customH} onChange={e => setCustomH(e.target.value)} style={{ ...si, borderColor: hOver ? '#e55' : undefined }} />
+                        <input type="number" min="0.25" max={maxIn || undefined} step="0.25" placeholder="e.g. 2" value={customH} onChange={e => setCustomH(e.target.value)} style={{ ...si, borderColor: (hOver || hUnder) ? '#e55' : undefined }} />
                       </div>
                     </div>
                     {customW && customH && parseFloat(customW) > 0 && parseFloat(customH) > 0 && !wOver && !hOver && (
@@ -324,9 +330,12 @@ export default function LabelConfigurator({ prod }) {
                         Size: {customW}" × {customH}"
                       </div>
                     )}
-                    {(wOver || hOver) && (
+                    {(wOver || hOver || wUnder || hUnder) && (
                       <div style={{ fontSize: 11, color: '#e55', background: 'rgba(238,85,85,0.08)', border: '1px solid rgba(238,85,85,0.25)', borderRadius: 6, padding: '7px 10px', marginTop: 8 }}>
-                        ⚠️ Maximum label size is {maxIn}" per side. Please <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a> for larger labels.
+                        {(wOver || hOver)
+                          ? <span>⚠️ Maximum label size is {maxIn}" per side. Please <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a> for larger sizes.</span>
+                          : <span>⚠️ Minimum label size is {minIn}" per side. Please <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a> for smaller sizes.</span>
+                        }
                       </div>
                     )}
                   </>);

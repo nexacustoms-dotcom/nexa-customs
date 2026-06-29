@@ -137,32 +137,42 @@ export default function ProductDetailPage() {
                   ))}
                 </div>
                 {g.key === 'size' && isCustomSize && (() => {
-                  const maxW = prod.sqft?.maxW || 50;
-                  const maxH = prod.sqft?.maxH || 50;
-                  const wOver = custW && parseFloat(custW) > maxW;
-                  const hOver = custH && parseFloat(custH) > maxH;
-                  const hasLimit = prod.sqft?.maxW || prod.sqft?.maxH;
+                  const maxW = prod.sqft?.maxW > 0 ? prod.sqft.maxW : null;
+                  const maxH = prod.sqft?.maxH > 0 ? prod.sqft.maxH : null;
+                  const minW = prod.sqft?.minW > 0 ? prod.sqft.minW : null;
+                  const minH = prod.sqft?.minH > 0 ? prod.sqft.minH : null;
+                  const wOver  = maxW && custW && parseFloat(custW) > maxW;
+                  const hOver  = maxH && custH && parseFloat(custH) > maxH;
+                  const wUnder = minW && custW && parseFloat(custW) < minW;
+                  const hUnder = minH && custH && parseFloat(custH) < minH;
+                  const wErr = wOver || wUnder;
+                  const hErr = hOver || hUnder;
+                  const hasLimit = maxW || maxH || minW || minH;
                   return (
                     <div style={{ marginTop: 10, background: 'var(--sf)', border: '1px solid var(--o)', borderRadius: 9, padding: 13 }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--o)', marginBottom: 10 }}>Custom Dimensions</div>
                       {hasLimit && (
-                        <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 8 }}>
-                          Max size: <strong style={{ color: 'var(--tx)' }}>{maxW}ft wide × {maxH}ft tall</strong>
+                        <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 8, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                          {(minW || minH) && <span>Min: <strong style={{ color: 'var(--tx)' }}>{minW || '—'}ft × {minH || '—'}ft</strong></span>}
+                          {(maxW || maxH) && <span>Max: <strong style={{ color: 'var(--tx)' }}>{maxW || '—'}ft × {maxH || '—'}ft</strong></span>}
                         </div>
                       )}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 8 }}>
                         {[['Width (ft)', custW, setCustW, maxW], ['Height (ft)', custH, setCustH, maxH]].map(([lbl, val, setter, max]) => (
                           <div key={lbl}>
                             <div style={{ fontSize: 10, color: 'var(--mu)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.05em' }}>{lbl}</div>
-                            <input type="number" min="0.5" max={max} step="0.5" placeholder="e.g. 3" value={val}
+                            <input type="number" step="0.5" placeholder="e.g. 3" value={val}
                               onChange={e => setter(e.target.value)}
-                              style={{ width: '100%', background: 'var(--s2)', border: '1px solid ' + ((lbl.includes('Width') ? wOver : hOver) ? '#e55' : 'var(--bd)'), color: 'var(--tx)', padding: '8px 10px', borderRadius: 6, fontSize: 14, fontFamily: 'inherit', outline: 'none' }} />
+                              style={{ width: '100%', background: 'var(--s2)', border: '1px solid ' + ((lbl.includes('Width') ? wErr : hErr) ? '#e55' : 'var(--bd)'), color: 'var(--tx)', padding: '8px 10px', borderRadius: 6, fontSize: 14, fontFamily: 'inherit', outline: 'none' }} />
                           </div>
                         ))}
                       </div>
-                      {(wOver || hOver) && (
+                      {(wErr || hErr) && (
                         <div style={{ fontSize: 11, color: '#e55', background: 'rgba(238,85,85,0.08)', border: '1px solid rgba(238,85,85,0.25)', borderRadius: 6, padding: '7px 10px', marginTop: 4 }}>
-                          ⚠️ {wOver && hOver ? 'Width and height exceed' : wOver ? 'Width exceeds' : 'Height exceeds'} our maximum print size. Please <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a> for oversized orders.
+                          ⚠️ {wOver || hOver
+                            ? (wOver && hOver ? 'Width and height exceed' : wOver ? 'Width exceeds' : 'Height exceeds') + ' our maximum print size. Please '
+                            : (wUnder && hUnder ? 'Width and height are below' : wUnder ? 'Width is below' : 'Height is below') + ' our minimum print size. Please '}
+                          <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a>.
                         </div>
                       )}
                     </div>
