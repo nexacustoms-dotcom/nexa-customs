@@ -307,8 +307,6 @@ export default function LabelConfigurator({ prod }) {
                   const hOver  = maxIn && customH && parseFloat(customH) > maxIn;
                   const wUnder = minIn && customW && parseFloat(customW) < minIn;
                   const hUnder = minIn && customH && parseFloat(customH) < minIn;
-                  const wOver = customW && parseFloat(customW) > maxIn;
-                  const hOver = customH && parseFloat(customH) > maxIn;
                   return (<>
                     {(minIn || maxIn) && <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 10, display: 'flex', gap: 14 }}>
                       {minIn && <span>Min: <strong style={{ color: 'var(--tx)' }}>{minIn}" per side</strong></span>}
