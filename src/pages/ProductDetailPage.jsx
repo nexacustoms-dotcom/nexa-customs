@@ -132,26 +132,42 @@ export default function ProductDetailPage() {
                     <button key={o.id} className={`ob${selOpts[g.key] === o.id ? ' sel' : ''}`}
                       onClick={() => setSelOpts(prev => ({ ...prev, [g.key]: o.id }))}>
                       {o.l}
-                      {isSqft && g.key === 'size' && o.sqft > 0 && <span style={{ display: 'block', fontSize: 9, opacity: .65, marginTop: 1 }}>{o.sqft} sq ft</span>}
+                      {/* sq ft hidden from size chips */}
                     </button>
                   ))}
                 </div>
-                {g.key === 'size' && isCustomSize && (
-                  <div style={{ marginTop: 10, background: 'var(--sf)', border: '1px solid var(--o)', borderRadius: 9, padding: 13 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--o)', marginBottom: 10 }}>Custom Dimensions</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 8 }}>
-                      {[['Width (ft)', custW, setCustW], ['Height (ft)', custH, setCustH]].map(([lbl, val, setter]) => (
-                        <div key={lbl}>
-                          <div style={{ fontSize: 10, color: 'var(--mu)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.05em' }}>{lbl}</div>
-                          <input type="number" min="0.5" max="50" step="0.5" placeholder="e.g. 3" value={val}
-                            onChange={e => setter(e.target.value)}
-                            style={{ width: '100%', background: 'var(--s2)', border: '1px solid var(--bd)', color: 'var(--tx)', padding: '8px 10px', borderRadius: 6, fontSize: 14, fontFamily: 'inherit', outline: 'none' }} />
+                {g.key === 'size' && isCustomSize && (() => {
+                  const maxW = prod.sqft?.maxW || 50;
+                  const maxH = prod.sqft?.maxH || 50;
+                  const wOver = custW && parseFloat(custW) > maxW;
+                  const hOver = custH && parseFloat(custH) > maxH;
+                  const hasLimit = prod.sqft?.maxW || prod.sqft?.maxH;
+                  return (
+                    <div style={{ marginTop: 10, background: 'var(--sf)', border: '1px solid var(--o)', borderRadius: 9, padding: 13 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--o)', marginBottom: 10 }}>Custom Dimensions</div>
+                      {hasLimit && (
+                        <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 8 }}>
+                          Max size: <strong style={{ color: 'var(--tx)' }}>{maxW}ft wide × {maxH}ft tall</strong>
                         </div>
-                      ))}
+                      )}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 8 }}>
+                        {[['Width (ft)', custW, setCustW, maxW], ['Height (ft)', custH, setCustH, maxH]].map(([lbl, val, setter, max]) => (
+                          <div key={lbl}>
+                            <div style={{ fontSize: 10, color: 'var(--mu)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.05em' }}>{lbl}</div>
+                            <input type="number" min="0.5" max={max} step="0.5" placeholder="e.g. 3" value={val}
+                              onChange={e => setter(e.target.value)}
+                              style={{ width: '100%', background: 'var(--s2)', border: \`1px solid \${(lbl.includes('Width') ? wOver : hOver) ? '#e55' : 'var(--bd)'}\`, color: 'var(--tx)', padding: '8px 10px', borderRadius: 6, fontSize: 14, fontFamily: 'inherit', outline: 'none' }} />
+                          </div>
+                        ))}
+                      </div>
+                      {(wOver || hOver) && (
+                        <div style={{ fontSize: 11, color: '#e55', background: 'rgba(238,85,85,0.08)', border: '1px solid rgba(238,85,85,0.25)', borderRadius: 6, padding: '7px 10px', marginTop: 4 }}>
+                          ⚠️ {wOver && hOver ? 'Width and height exceed' : wOver ? 'Width exceeds' : 'Height exceeds'} our maximum print size. Please <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a> for oversized orders.
+                        </div>
+                      )}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--mu)' }}>Rate: <strong style={{ color: 'var(--o)' }}>${prod.sqft?.rate?.toFixed(2)}/sq ft</strong> · Min {prod.sqft?.min} sq ft</div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             ))}
 
@@ -251,7 +267,7 @@ export default function ProductDetailPage() {
               )}
               {isSqft && custW && custH && (
                 <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4 }}>
-                  {custW}ft × {custH}ft = {(parseFloat(custW) * parseFloat(custH)).toFixed(1)} sq ft
+                  {custW}ft × {custH}ft
                 </div>
               )}
               {taFee > 0 && (

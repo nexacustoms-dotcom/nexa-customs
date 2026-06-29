@@ -300,26 +300,37 @@ export default function LabelConfigurator({ prod }) {
                   {shape === 'Circle' && ' For a perfect circle, set Length = Breadth.'}
                   {shape === 'Oval'   && ' For an oval, Length is the long side, Breadth is the short side.'}
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 10, alignItems: 'end', maxWidth: 300 }}>
-                  <div>
-                    <div className="flbl" style={{ marginBottom: 6 }}>Length (in)</div>
-                    <input type="number" min="0.25" step="0.25" placeholder="e.g. 3" value={customW} onChange={e => setCustomW(e.target.value)} style={si} />
-                  </div>
-                  <div style={{ paddingBottom: 10, color: 'var(--mu)', fontSize: 18, fontWeight: 700 }}>×</div>
-                  <div>
-                    <div className="flbl" style={{ marginBottom: 6 }}>Breadth (in)</div>
-                    <input type="number" min="0.25" step="0.25" placeholder="e.g. 2" value={customH} onChange={e => setCustomH(e.target.value)} style={si} />
-                  </div>
-                </div>
-                {customW && customH && parseFloat(customW) > 0 && parseFloat(customH) > 0 && (
-                  <div style={{ marginTop: 10, fontSize: 11, color: 'var(--mu)', background: 'var(--s2)', borderRadius: 'var(--r)', padding: '8px 12px', display: 'inline-flex', gap: 12, flexWrap: 'wrap' }}>
-                    <span>Area = {(parseFloat(customW) * parseFloat(customH)).toFixed(2)} in²</span>
-                    <span>·</span>
-                    <span>Factor: ×{areaFactor(customW, customH).toFixed(2)}</span>
-                    <span>·</span>
-                    <span style={{ color: 'var(--o)' }}>Price scales with √(L×B)</span>
-                  </div>
-                )}
+                {(() => {
+                  const maxIn = prod.lbl_maxInch || 24; // default max 24 inches per side
+                  const wOver = customW && parseFloat(customW) > maxIn;
+                  const hOver = customH && parseFloat(customH) > maxIn;
+                  return (<>
+                    <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 10 }}>
+                      Max size: <strong style={{ color: 'var(--tx)' }}>{maxIn}" per side</strong>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 10, alignItems: 'end', maxWidth: 300 }}>
+                      <div>
+                        <div className="flbl" style={{ marginBottom: 6 }}>Length (in)</div>
+                        <input type="number" min="0.25" max={maxIn} step="0.25" placeholder="e.g. 3" value={customW} onChange={e => setCustomW(e.target.value)} style={{ ...si, borderColor: wOver ? '#e55' : undefined }} />
+                      </div>
+                      <div style={{ paddingBottom: 10, color: 'var(--mu)', fontSize: 18, fontWeight: 700 }}>×</div>
+                      <div>
+                        <div className="flbl" style={{ marginBottom: 6 }}>Breadth (in)</div>
+                        <input type="number" min="0.25" max={maxIn} step="0.25" placeholder="e.g. 2" value={customH} onChange={e => setCustomH(e.target.value)} style={{ ...si, borderColor: hOver ? '#e55' : undefined }} />
+                      </div>
+                    </div>
+                    {customW && customH && parseFloat(customW) > 0 && parseFloat(customH) > 0 && !wOver && !hOver && (
+                      <div style={{ marginTop: 8, fontSize: 11, color: 'var(--mu)' }}>
+                        Size: {customW}" × {customH}"
+                      </div>
+                    )}
+                    {(wOver || hOver) && (
+                      <div style={{ fontSize: 11, color: '#e55', background: 'rgba(238,85,85,0.08)', border: '1px solid rgba(238,85,85,0.25)', borderRadius: 6, padding: '7px 10px', marginTop: 8 }}>
+                        ⚠️ Maximum label size is {maxIn}" per side. Please <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a> for larger labels.
+                      </div>
+                    )}
+                  </>);
+                })()}
               </div>
             )}
           </div>
