@@ -75,8 +75,17 @@ export default function HomePage() {
                   <div style={{ position: 'absolute', top: 10, right: 10, background: 'var(--o)', color: '#000', fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 20, zIndex: 2, letterSpacing: '.05em', textTransform: 'uppercase' }}>Shop Now →</div>
                 )}
                 {slides[slide]?.img
-                  ? <img src={imgUrl(slides[slide].img, 1200)} alt={slides[slide].title} style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
-                  : (
+                  ? (
+                    <div style={{ position: 'relative', width: '100%' }}>
+                      <img src={imgUrl(slides[slide].img, 1200)} alt={slides[slide].title} style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
+                      {(slides[slide]?.title || slides[slide]?.sub) && (
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.75))', padding: '28px 16px 14px' }}>
+                          {slides[slide]?.title && <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, textTransform: 'uppercase', color: '#fff', marginBottom: 3 }}>{slides[slide].title}</div>}
+                          {slides[slide]?.sub && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.82)', lineHeight: 1.5 }}>{slides[slide].sub}</div>}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
                     <div style={{ padding: 36, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                       <div style={{ fontSize: 64, marginBottom: 16 }}>{slides[slide]?.ico || '🖨️'}</div>
                       <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, textTransform: 'uppercase', marginBottom: 8 }}>{slides[slide]?.title}</div>
