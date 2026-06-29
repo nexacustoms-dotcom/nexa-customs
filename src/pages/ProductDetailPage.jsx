@@ -156,7 +156,7 @@ export default function ProductDetailPage() {
                             <div style={{ fontSize: 10, color: 'var(--mu)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.05em' }}>{lbl}</div>
                             <input type="number" min="0.5" max={max} step="0.5" placeholder="e.g. 3" value={val}
                               onChange={e => setter(e.target.value)}
-                              style={{ width: '100%', background: 'var(--s2)', border: \`1px solid \${(lbl.includes('Width') ? wOver : hOver) ? '#e55' : 'var(--bd)'}\`, color: 'var(--tx)', padding: '8px 10px', borderRadius: 6, fontSize: 14, fontFamily: 'inherit', outline: 'none' }} />
+                              style={{ width: '100%', background: 'var(--s2)', border: '1px solid ' + ((lbl.includes('Width') ? wOver : hOver) ? '#e55' : 'var(--bd)'), color: 'var(--tx)', padding: '8px 10px', borderRadius: 6, fontSize: 14, fontFamily: 'inherit', outline: 'none' }} />
                           </div>
                         ))}
                       </div>
