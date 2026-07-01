@@ -83,7 +83,7 @@ function applyFavicon(url) {
 
 function mergeOverrides(prods, overrides) {
   if (!overrides?.length) return prods;
-  return prods.map(p => {
+  const merged = prods.map(p => {
     const o = overrides.find(x => x.id === p.id);
     if (!o) return p;
     return {
@@ -94,6 +94,7 @@ function mergeOverrides(prods, overrides) {
       badge:          o.badge           !== undefined ? o.badge    : p.badge,
       name:           o.name            || p.name,
       desc:           o.desc            || p.desc,
+      cat:            o.cat             || p.cat,
       disabled:       o.disabled        || false,
       opts:           o.opts            !== undefined ? o.opts     : p.opts,
       // Turnaround availability
@@ -111,6 +112,11 @@ function mergeOverrides(prods, overrides) {
       long_desc:      o.long_desc       !== undefined ? o.long_desc       : p.long_desc,
     };
   });
+  // Brand-new products created in Admin won't exist in the base default list —
+  // append them as-is so they survive a page refresh instead of vanishing.
+  const knownIds = new Set(prods.map(p => p.id));
+  const newOnes = overrides.filter(o => !knownIds.has(o.id));
+  return newOnes.length ? [...merged, ...newOnes] : merged;
 }
 
 function mergeCatOverrides(cats, overrides) {
@@ -138,13 +144,14 @@ export function AppProvider({ children }) {
     async function syncAll() {
       if (!isSupaReady()) return;
       setSyncing(true);
-      // Fetch all 5 config rows in parallel — saves ~1s vs sequential awaits
-      const [cr, catr, pr, pager, pcr] = await Promise.all([
+      // Fetch all 6 config rows in parallel — saves ~1s vs sequential awaits
+      const [cr, catr, pr, pager, pcr, cpr] = await Promise.all([
         supaGet('site_config', 'id=eq.main&limit=1'),
         supaGet('site_config', 'id=eq.categories&limit=1'),
         supaGet('site_config', 'id=eq.products&limit=1'),
         supaGet('site_config', 'id=eq.builtin_pages&limit=1'),
         supaGet('site_config', 'id=eq.pricing_cfg&limit=1'),
+        supaGet('site_config', 'id=eq.custom_pages&limit=1'),
       ]);
       // store config
       if (cr?.length > 0 && cr[0].data) {
@@ -175,6 +182,11 @@ export function AppProvider({ children }) {
         const m = { ...DEFAULT_PRICING, ...d };
         setPricingState(m); ls.set('nxt_pricing_cfg', m);
       }
+      // custom pages (e.g. blog posts) — falls back to whatever is in localStorage if none saved yet
+      if (cpr?.length > 0 && cpr[0].data) {
+        const d = typeof cpr[0].data === 'string' ? JSON.parse(cpr[0].data) : cpr[0].data;
+        if (Array.isArray(d)) { ls.set('nxt_custom_pages', d); setPages(d); }
+      }
       setSyncing(false);
     }
     syncAll();
@@ -189,6 +201,15 @@ export function AppProvider({ children }) {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       ls.set('nxt_builtin_pages', next);
       supaUpsert('site_config', { id: 'builtin_pages', data: next, updated_at: new Date().toISOString() });
+      return next;
+    });
+  }, []);
+
+  const setPagesSynced = useCallback((updater) => {
+    setPages(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      ls.set('nxt_custom_pages', next);
+      supaUpsert('site_config', { id: 'custom_pages', data: next, updated_at: new Date().toISOString() });
       return next;
     });
   }, []);
@@ -216,6 +237,7 @@ export function AppProvider({ children }) {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       const overrides = next.map(p => ({
         id:                 p.id,
+        cat:                p.cat,
         name:               p.name,
         desc:               p.desc,
         badge:              p.badge,
@@ -351,7 +373,7 @@ export function AppProvider({ children }) {
   const cartSubtotal = cart.reduce((s, i) => s + (i.price || 0), 0);
 
   return (
-    <AppContext.Provider value={{ page, go, syncing, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages, builtinPages, setBuiltinPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
+    <AppContext.Provider value={{ page, go, syncing, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages: setPagesSynced, builtinPages, setBuiltinPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
       {children}
     </AppContext.Provider>
   );

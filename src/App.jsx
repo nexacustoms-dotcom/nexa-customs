@@ -11,6 +11,21 @@ import { CartPage, CheckoutPage, SuccessPage, QuotePage, ContactPage, OrderStatu
 import { usePageSEO } from './hooks/usePageSEO';
 
 // ── COMPONENTS ────────────────────────────────────────────────────────────────
+// Parses [text](url) into a real clickable link inside paragraph text.
+// Everything else in the paragraph is left as plain text.
+function renderInlineLinks(text) {
+  const re = /\[([^\]]+)\]\((\S+?)\)/g;
+  const parts = [];
+  let last = 0, m, i = 0;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    parts.push(<a key={i++} href={m[2]} target={m[2].startsWith('mailto:') || m[2].startsWith('tel:') ? undefined : '_blank'} rel="noopener noreferrer" style={{ color: 'var(--o)', textDecoration: 'underline' }}>{m[1]}</a>);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
+
 function FAQItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
@@ -39,10 +54,15 @@ function PolicyPage({ slug }) {
         <p style={{ fontSize: 13, color: 'var(--mu)' }}>Last updated: June 2026 · Nexa Customs Inc. · Mississauga, Ontario</p>
       </div>
       {/* Body */}
-      {p.body && p.body.split('\n\n').map((para, i) => {
+      {(p.body || p.content) && (p.body || p.content).split('\n\n').map((para, i) => {
         // Section header: lines starting with ##
         if (para.startsWith('## ')) {
           return <h2 key={i} style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 22, marginTop: 32, marginBottom: 12, color: 'var(--tx)', paddingBottom: 8, borderBottom: '1px solid var(--bd)' }}>{para.slice(3)}</h2>;
+        }
+        // Image: a paragraph that is just ![alt text](image url)
+        const imgMatch = para.trim().match(/^!\[([^\]]*)\]\((\S+)\)$/);
+        if (imgMatch) {
+          return <img key={i} src={imgMatch[2]} alt={imgMatch[1]} style={{ width: '100%', maxHeight: 480, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--bd)', marginBottom: 20 }} />;
         }
         // Info box: lines starting with >>>
         if (para.startsWith('>>> ')) {
@@ -70,7 +90,7 @@ function PolicyPage({ slug }) {
             </div>
           );
         }
-        return <p key={i} style={{ fontSize: 14, color: 'var(--mu)', lineHeight: 1.85, marginBottom: 16, whiteSpace: 'pre-line' }}>{para}</p>;
+        return <p key={i} style={{ fontSize: 14, color: 'var(--mu)', lineHeight: 1.85, marginBottom: 16, whiteSpace: 'pre-line' }}>{renderInlineLinks(para)}</p>;
       })}
       {p.faqs && p.faqs.map((item, i) => <FAQItem key={i} q={item.q} a={item.a} />)}
       {/* Footer CTA */}

@@ -108,6 +108,44 @@ function ImageUpload({ label, value, onChange, folder, note }) {
   );
 }
 
+// ── INSERT IMAGE INTO PAGE TEXT ───────────────────────────────────────────────
+function InsertImageButton({ onInsert }) {
+  const { ls, showToast } = useApp();
+  const [uploading, setUploading] = useState(false);
+  const ref = useRef();
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('Please select an image file'); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('Max file size is 5MB'); return; }
+    setUploading(true);
+    const result = await uploadToSupabase(file, 'pages', ls);
+    setUploading(false);
+    e.target.value = '';
+    if (result.error) { showToast('❌ Upload failed: ' + result.error); return; }
+    onInsert(`\n\n![Image](${result.url})\n\n`);
+    showToast('✅ Image uploaded and inserted!');
+  }
+
+  return (
+    <>
+      <button type="button" className="abtn" onClick={() => ref.current?.click()} disabled={uploading} style={{ fontSize: 11 }}>
+        {uploading ? '⏳ Uploading…' : '📁 Insert Image'}
+      </button>
+      <input ref={ref} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
+    </>
+  );
+}
+
+function MediaSyntaxHelp() {
+  return (
+    <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 6, lineHeight: 1.7 }}>
+      🔗 To add a working link, write: <code style={{ background: 'var(--s2)', padding: '1px 5px', borderRadius: 4 }}>[Click here](https://example.com)</code> or for email: <code style={{ background: 'var(--s2)', padding: '1px 5px', borderRadius: 4 }}>[Email us](mailto:info@nexacustoms.ca)</code>
+    </div>
+  );
+}
+
 // ── ADMIN ROOT ────────────────────────────────────────────────────────────────
 export default function AdminPage() {
   const { go, adminAuthed, setAdminAuthed, showToast, ls } = useApp();
@@ -385,6 +423,14 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
               </div>
             </div>
           ))}
+          <div style={{ height: 1, background: 'var(--bd)', margin: '14px 0' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <input type="checkbox" id="sqft-enabled" style={{ width: 16, height: 16 }} checked={!!p.sqft?.enabled}
+              onChange={e => upd('sqft')(e.target.checked
+                ? { enabled: true, rate: p.sqft?.rate || 5, min: p.sqft?.min || 1, minW: p.sqft?.minW || 0, minH: p.sqft?.minH || 0, maxW: p.sqft?.maxW || 0, maxH: p.sqft?.maxH || 0 }
+                : { ...p.sqft, enabled: false })} />
+            <label htmlFor="sqft-enabled" style={{ fontSize: 13 }}>Enable custom-size Sq Ft calculator for this product</label>
+          </div>
           {p.sqft?.enabled && (
             <>
               <div style={{ height: 1, background: 'var(--bd)', margin: '14px 0' }} />
@@ -820,7 +866,9 @@ function PagesTab() {
             <div className="afg">
               <label className="aflbl">Page Content</label>
               <p style={{ fontSize:11, color:'var(--mu)', marginBottom:8 }}>Use blank lines to separate paragraphs.</p>
+              <div style={{ marginBottom: 8 }}><InsertImageButton onInsert={snippet => setForm(f => ({ ...f, body: f.body + snippet }))} /></div>
               <textarea className="ainp" rows="14" style={{ resize:'vertical', lineHeight:1.6 }} value={form.body} onChange={upd('body')} />
+              <MediaSyntaxHelp />
             </div>
           )}
           <div style={{ display:'flex', gap:10, marginTop:14 }}>
@@ -849,7 +897,9 @@ function PagesTab() {
           <label htmlFor="pg-nav2" style={{ fontSize:13 }}>Show in footer navigation</label>
         </div>
         <div className="afg"><label className="aflbl">Content (plain text, blank lines = paragraphs)</label>
+          <div style={{ marginBottom: 8 }}><InsertImageButton onInsert={snippet => setForm(f => ({ ...f, content: f.content + snippet }))} /></div>
           <textarea className="ainp" rows="12" style={{ resize:'vertical', lineHeight:1.6 }} value={form.content} onChange={upd('content')} />
+          <MediaSyntaxHelp />
         </div>
         <div style={{ display:'flex', gap:10, marginTop:14 }}>
           <button className="abtn abtn-add" onClick={saveCustom}>💾 Save Page</button>
