@@ -96,10 +96,12 @@ export function usePageSEO() {
       desc  = DESCRIPTIONS[path] || desc;
     } else if (path.startsWith('/products/') && curProd) {
       title = `${curProd.name} — Nexa Customs · GTA Print Shop`;
-      // Product desc: keep under 158 chars
+      // Product desc: keep under 158 chars. Never fall back to the homepage
+      // description — that creates duplicate meta descriptions across every
+      // product missing its own text.
       const rawDesc = curProd.desc
         ? `${curProd.desc} Free proof, same-day pickup in Mississauga GTA or ships Canada-wide.`
-        : DESCRIPTIONS['/'];
+        : `${curProd.name} — custom printing in Mississauga & the GTA. Free proof, same-day pickup or ships Canada-wide. Call (437) 997-9921.`;
       desc = rawDesc.length > 158 ? rawDesc.slice(0, 155) + '...' : rawDesc;
     } else if (path.startsWith('/products/')) {
       const catSlug = path.split('/')[2];
@@ -107,9 +109,10 @@ export function usePageSEO() {
       desc  = CAT_DESCS[catSlug] || DESCRIPTIONS['/products'];
     }
 
-    // Never index transactional / private pages
+    // Never index transactional / private / disabled-product pages
     const noIndexPaths = ['/cart', '/checkout', '/order-confirmed', '/admin'];
-    const shouldIndex  = !noIndexPaths.some(p => path.startsWith(p));
+    const isDisabledProduct = path.startsWith('/products/') && curProd?.disabled;
+    const shouldIndex  = !noIndexPaths.some(p => path.startsWith(p)) && !isDisabledProduct;
 
     document.title = title;
 
