@@ -69,9 +69,9 @@ try {
     headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
   });
   const data = await res.json();
-  const arr = data[0]?.data || [];
-  // data is stored as array (indexed 0,1,2...) or plain array
-  const overrideArr = Array.isArray(arr) ? arr : Object.values(arr);
+  // data is stored as indexed object {0:{...}, 1:{...}} — always use Object.values
+  const rawData = data[0]?.data || {};
+  const overrideArr = Object.values(rawData);
   overrideArr.forEach(p => { if (p?.id) overrides[p.id] = p; });
   const withImgs = Object.values(overrides).filter(p => (p.imgs||[]).filter(x=>x?.length).length > 0).length;
   console.log(`✅ Loaded ${Object.keys(overrides).length} overrides, ${withImgs} with real images`);
@@ -89,6 +89,9 @@ for (const prod of prods) {
   // Merge Supabase override
   const override = overrides[prod.id] || {};
   const merged = { ...prod, ...override };
+
+  // Skip if hidden/disabled in Admin panel (Supabase override wins)
+  if (merged.disabled) continue;
 
   // Use Supabase pricing if valid, otherwise fall back to local products.js pricing
   const pricingSource = (merged.pricing?.length && Math.min(...merged.pricing.map(t => t.p)) > 0)
