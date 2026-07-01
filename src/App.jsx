@@ -39,7 +39,7 @@ function PolicyPage({ slug }) {
         <p style={{ fontSize: 13, color: 'var(--mu)' }}>Last updated: June 2026 · Nexa Customs Inc. · Mississauga, Ontario</p>
       </div>
       {/* Body */}
-      {p.body && p.body.split('\n\n').map((para, i) => {
+      {(p.body || p.content) && (p.body || p.content).split('\n\n').map((para, i) => {
         // Section header: lines starting with ##
         if (para.startsWith('## ')) {
           return <h2 key={i} style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 22, marginTop: 32, marginBottom: 12, color: 'var(--tx)', paddingBottom: 8, borderBottom: '1px solid var(--bd)' }}>{para.slice(3)}</h2>;

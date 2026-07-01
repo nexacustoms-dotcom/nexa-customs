@@ -385,6 +385,14 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
               </div>
             </div>
           ))}
+          <div style={{ height: 1, background: 'var(--bd)', margin: '14px 0' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <input type="checkbox" id="sqft-enabled" style={{ width: 16, height: 16 }} checked={!!p.sqft?.enabled}
+              onChange={e => upd('sqft')(e.target.checked
+                ? { enabled: true, rate: p.sqft?.rate || 5, min: p.sqft?.min || 1, minW: p.sqft?.minW || 0, minH: p.sqft?.minH || 0, maxW: p.sqft?.maxW || 0, maxH: p.sqft?.maxH || 0 }
+                : { ...p.sqft, enabled: false })} />
+            <label htmlFor="sqft-enabled" style={{ fontSize: 13 }}>Enable custom-size Sq Ft calculator for this product</label>
+          </div>
           {p.sqft?.enabled && (
             <>
               <div style={{ height: 1, background: 'var(--bd)', margin: '14px 0' }} />
