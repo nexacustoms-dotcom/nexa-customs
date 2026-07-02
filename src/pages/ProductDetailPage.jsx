@@ -95,14 +95,14 @@ export default function ProductDetailPage() {
         </div>
 
         {/* 3-column layout: image | configurator | sticky summary */}
-        <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr 280px', gap: 28, alignItems: 'start', paddingBottom: 60 }} className="det-layout">
+        <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr 280px', gap: 28, alignItems: 'start', paddingBottom: 60 }} className="det-layout">
 
           {/* ── COL 1: Image + badges ── */}
           <div style={{ position: 'sticky', top: 82 }} className="det-img">
             <div style={{ background: CAT_BG[prod.cat] || 'var(--s2)', borderRadius: 14, overflow: 'hidden', marginBottom: 8 }}>
               {imgs.length > 0
-                ? <img src={imgUrl(imgs[imgIdx], 800)} alt={prod.name} style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
-                : <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72 }}>{cat?.i || '🖨️'}</div>
+                ? <img src={imgUrl(imgs[imgIdx], 900)} alt={prod.name} width="900" height="360" style={{ width: '100%', height: 360, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
+                : <div style={{ height: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 90 }}>{cat?.i || '🖨️'}</div>
               }
             </div>
             {imgs.length > 1 && (
@@ -240,9 +240,23 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Extended description */}
+            {/* Extended description — supports paragraphs (blank line) and bullet points (- item) */}
             {prod.long_desc && (
-              <p style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.8, marginTop: 18, padding:'10px 14px', background:'var(--s2)', borderRadius:8, borderLeft:'3px solid var(--o)' }}>{prod.long_desc}</p>
+              <div style={{ marginTop: 22, paddingTop: 20, borderTop: '1px solid var(--bd)' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--mu)', marginBottom: 10 }}>About This Product</div>
+                {prod.long_desc.split('\n\n').map((block, bi) => {
+                  const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+                  const isBulletBlock = lines.length > 0 && lines.every(l => l.startsWith('- '));
+                  if (isBulletBlock) {
+                    return (
+                      <ul key={bi} style={{ margin: '0 0 14px', paddingLeft: 18, fontSize: 13, color: 'var(--mu)', lineHeight: 1.8 }}>
+                        {lines.map((l, li) => <li key={li}>{l.slice(2)}</li>)}
+                      </ul>
+                    );
+                  }
+                  return <p key={bi} style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.8, marginBottom: 14, whiteSpace: 'pre-line' }}>{block}</p>;
+                })}
+              </div>
             )}
 
             {/* Specifications */}

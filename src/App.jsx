@@ -40,29 +40,37 @@ function FAQItem({ q, a }) {
 }
 
 function PolicyPage({ slug }) {
-  const { builtinPages, pages } = useApp();
+  const { builtinPages, pages, cats } = useApp();
+  const navigate = useNavigate();
   const p = builtinPages?.[slug] || pages?.find(pg => pg.slug === slug);
   if (!p) return <NotFoundPage />;
+  const relatedCat = cats?.find(c => c.id === p.relatedCat);
   return (
     <div className="W" style={{ padding: '48px 28px 80px', maxWidth: 820 }}>
+      {/* Breadcrumb */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--mu)', marginBottom: 20 }}>
+        <span onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Home</span>
+        <span>/</span>
+        <span style={{ color: 'var(--tx)' }}>{p.title}</span>
+      </div>
       {/* Header */}
       <div style={{ marginBottom: 36, paddingBottom: 24, borderBottom: '1px solid var(--bd)' }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 10 }}>
           {slug === 'shipping' ? 'Shipping & Delivery' : slug === 'returns' ? 'Returns & Refunds' : slug === 'faq' ? 'Help Center' : slug === 'terms' ? 'Legal' : slug === 'turnaround' ? 'Production Times' : 'Nexa Customs'}
         </div>
-        <h1 className="D" style={{ fontSize: 'clamp(28px,4vw,48px)', marginBottom: 10 }}>{p.title}</h1>
+        <h1 className="D" style={{ fontSize: 'clamp(30px,4.4vw,52px)', marginBottom: 10, lineHeight: 1.1 }}>{p.title}</h1>
         <p style={{ fontSize: 13, color: 'var(--mu)' }}>Last updated: June 2026 · Nexa Customs Inc. · Mississauga, Ontario</p>
       </div>
       {/* Body */}
       {(p.body || p.content) && (p.body || p.content).split('\n\n').map((para, i) => {
         // Section header: lines starting with ##
         if (para.startsWith('## ')) {
-          return <h2 key={i} style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 22, marginTop: 32, marginBottom: 12, color: 'var(--tx)', paddingBottom: 8, borderBottom: '1px solid var(--bd)' }}>{para.slice(3)}</h2>;
+          return <h2 key={i} style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 24, marginTop: 36, marginBottom: 14, color: 'var(--tx)', paddingBottom: 8, borderBottom: '1px solid var(--bd)' }}>{para.slice(3)}</h2>;
         }
         // Image: a paragraph that is just ![alt text](image url)
         const imgMatch = para.trim().match(/^!\[([^\]]*)\]\((\S+)\)$/);
         if (imgMatch) {
-          return <img key={i} src={imgMatch[2]} alt={imgMatch[1]} style={{ width: '100%', maxHeight: 480, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--bd)', marginBottom: 20 }} />;
+          return <img key={i} src={imgMatch[2]} alt={imgMatch[1]} style={{ width: '100%', maxHeight: 480, objectFit: 'cover', borderRadius: 14, border: '1px solid var(--bd)', boxShadow: '0 8px 24px rgba(0,0,0,.18)', marginBottom: 24, marginTop: 4 }} />;
         }
         // Info box: lines starting with >>>
         if (para.startsWith('>>> ')) {
@@ -90,11 +98,23 @@ function PolicyPage({ slug }) {
             </div>
           );
         }
-        return <p key={i} style={{ fontSize: 14, color: 'var(--mu)', lineHeight: 1.85, marginBottom: 16, whiteSpace: 'pre-line' }}>{renderInlineLinks(para)}</p>;
+        // First real paragraph gets a slightly larger "lede" treatment, like a proper article intro
+        const isLede = i === 0;
+        return <p key={i} style={{ fontSize: isLede ? 16 : 14, color: isLede ? 'var(--tx)' : 'var(--mu)', lineHeight: 1.85, marginBottom: 16, whiteSpace: 'pre-line', fontWeight: isLede ? 500 : 400 }}>{renderInlineLinks(para)}</p>;
       })}
       {p.faqs && p.faqs.map((item, i) => <FAQItem key={i} q={item.q} a={item.a} />)}
+      {/* Related products CTA — turns a blog reader into a buyer */}
+      {relatedCat && (
+        <div style={{ marginTop: 40, padding: '22px 26px', background: 'linear-gradient(135deg, rgba(249,115,22,.1), rgba(249,115,22,.03))', border: '1px solid rgba(249,115,22,.25)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 6 }}>Ready to order?</div>
+            <div style={{ fontWeight: 700, fontSize: 17 }}>Shop {relatedCat.l} — free proof, fast turnaround</div>
+          </div>
+          <button className="btn btn-primary" onClick={() => navigate(`/products/${relatedCat.id}`)}>Browse {relatedCat.l} →</button>
+        </div>
+      )}
       {/* Footer CTA */}
-      <div style={{ marginTop: 48, padding: '20px 24px', background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
+      <div style={{ marginTop: 24, padding: '20px 24px', background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
         <div>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Have a question?</div>
           <div style={{ fontSize: 12, color: 'var(--mu)' }}>Our team is here to help Mon–Fri 9AM–6PM</div>

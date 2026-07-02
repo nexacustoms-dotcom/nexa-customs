@@ -6527,6 +6527,15 @@ export const DEFAULT_STORE = {
   social_ig: 'https://instagram.com/nexacustoms',
   social_fb: 'https://facebook.com/nexacustoms',
   social_wa: '14379979921',
+  google_review_url: '',
+  google_rating: '4.9',
+  google_review_count: '',
+  testimonials: [
+    { t: "Nexa Customs printed 500 business cards overnight. Quality was incredible — clients constantly compliment them.", a: "Sarah M.", co: "Bloom Real Estate", i: "S" },
+    { t: "Best banner printing in Mississauga. Fast, affordable, and the colours are spot-on every time.", a: "James K.", co: "JK Construction", i: "J" },
+    { t: "Our vehicle wrap turned so many heads. Professional from design to installation.", a: "Priya R.", co: "Priya's Catering", i: "P" },
+    { t: "Ordered 5,000 flyers for a campaign — on time, vibrant colours, unbeatable pricing.", a: "Lisa T.", co: "Marketing Director", i: "L" },
+  ],
   footer_copy: '© 2025 Nexa Customs Inc. All rights reserved.',
   favicon: '🖨',
 };

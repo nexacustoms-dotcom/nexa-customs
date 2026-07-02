@@ -4,16 +4,10 @@ import { useApp, imgUrl } from '../context/AppContext';
 import { DEFAULT_STORE } from '../data/products';
 import ProductCard from '../components/ProductCard';
 
-const TESTIMONIALS = [
-  { t: "Nexa Customs printed 500 business cards overnight. Quality was incredible — clients constantly compliment them.", a: "Sarah M.", co: "Bloom Real Estate", i: "S" },
-  { t: "Best banner printing in Mississauga. Fast, affordable, and the colours are spot-on every time.", a: "James K.", co: "JK Construction", i: "J" },
-  { t: "Our vehicle wrap turned so many heads. Professional from design to installation.", a: "Priya R.", co: "Priya's Catering", i: "P" },
-  { t: "Ordered 5,000 flyers for a campaign — on time, vibrant colours, unbeatable pricing.", a: "Lisa T.", co: "Marketing Director", i: "L" },
-];
-
 export default function HomePage() {
   const { cats, prods, store: _store, showProduct } = useApp();
   const store = { ...DEFAULT_STORE, ..._store };
+  const TESTIMONIALS = (store.testimonials && store.testimonials.length > 0) ? store.testimonials : DEFAULT_STORE.testimonials;
   const navigate = useNavigate();
   const [slide, setSlide] = useState(0);
   const [tIdx, setTIdx] = useState(0);
@@ -36,7 +30,7 @@ export default function HomePage() {
       {/* HERO */}
       <section style={{ position: 'relative', padding: '76px 0 100px' }}>
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-          {store.hero_bg && <img src={imgUrl(store.hero_bg, 1200)} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }} />}
+          {store.hero_bg && <img src={imgUrl(store.hero_bg, 500, 35)} alt="" width="500" height="500" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }} />}
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(249,115,22,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,.04) 1px,transparent 1px)', backgroundSize: '54px 54px' }} />
           <div style={{ position: 'absolute', top: -120, right: -60, width: 640, height: 640, borderRadius: '50%', background: 'radial-gradient(circle,rgba(249,115,22,.1) 0%,transparent 68%)' }} />
         </div>
@@ -77,7 +71,7 @@ export default function HomePage() {
                 {slides[slide]?.img
                   ? (
                     <div style={{ position: 'relative', width: '100%' }}>
-                      <img src={imgUrl(slides[slide].img, 1200)} alt={slides[slide].title} style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
+                      <img src={imgUrl(slides[slide].img, 1200)} alt={slides[slide].title} width="1200" height="260" style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
                       {(slides[slide]?.title || slides[slide]?.sub) && (
                         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.75))', padding: '28px 16px 14px' }}>
                           {slides[slide]?.title && <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, textTransform: 'uppercase', color: '#fff', marginBottom: 3 }}>{slides[slide].title}</div>}
@@ -120,7 +114,7 @@ export default function HomePage() {
             <h2 className="D" style={{ fontSize: 'clamp(26px,3.5vw,42px)' }}>Shop By Category</h2>
             <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => navigate('/products')}>View All →</button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10 }} className="cat-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }} className="cat-grid">
             {cats.slice(0, 12).map(c => (
               <div key={c.id} onClick={() => navigate(`/products/${c.id}`)}
                 style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 0, transition: 'all .2s', cursor: 'pointer' }}
@@ -128,9 +122,9 @@ export default function HomePage() {
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--bd)'; e.currentTarget.style.transform = ''; }}
               >
                 {c.img
-                  ? <img src={imgUrl(c.img, 400)} alt={c.l} style={{ width: '100%', height: 90, objectFit: 'cover', display: 'block' }} loading="lazy" />
-                  : <div style={{ width: '100%', height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, background: 'var(--s2)' }}>{c.i}</div>}
-                <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.3, padding: '10px 8px' }}>{c.l}</span>
+                  ? <img src={imgUrl(c.img, 500)} alt={c.l} width="500" height="180" decoding="async" style={{ width: '100%', height: 180, objectFit: 'cover', display: 'block' }} loading="lazy" />
+                  : <div style={{ width: '100%', height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 52, background: 'var(--s2)' }}>{c.i}</div>}
+                <span style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3, padding: '13px 10px' }}>{c.l}</span>
               </div>
             ))}
           </div>
@@ -176,6 +170,13 @@ export default function HomePage() {
       {/* TESTIMONIALS */}
       <section style={{ background: 'linear-gradient(135deg,rgba(249,115,22,.13),rgba(249,115,22,.04))', borderTop: '1px solid rgba(249,115,22,.16)', borderBottom: '1px solid rgba(249,115,22,.16)', padding: '58px 0' }}>
         <div className="W">
+          {store.google_review_url && (
+            <a href={store.google_review_url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 22, padding: '8px 14px', background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 30, textDecoration: 'none', color: 'var(--tx)', fontSize: 12 }}>
+              <span style={{ color: 'var(--o)' }}>★★★★★</span>
+              <strong>{store.google_rating || '4.9'}</strong>
+              <span style={{ color: 'var(--mu)' }}>{store.google_review_count ? `(${store.google_review_count} reviews)` : ''} on Google</span>
+            </a>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 32, justifyContent: 'space-between' }} className="testi-row">
             <div style={{ flex: 1 }}>
               <div style={{ color: 'var(--o)', fontSize: 14, marginBottom: 10 }}>★★★★★</div>

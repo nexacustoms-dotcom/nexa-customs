@@ -153,8 +153,16 @@ export function Footer() {
             <p style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.78, maxWidth: 265, marginBottom: 6 }}>GTA trusted print partner since 2010. Quality, fast turnaround, unbeatable prices.</p>
             <p style={{ fontSize: 11, color: 'var(--mu)', lineHeight: 1.7, maxWidth: 265, marginBottom: 16 }}>📍 Free pickup in Mississauga · 🇨🇦 Ships Canada-wide</p>
             <div style={{ display: 'flex', gap: 7 }}>
-              {[['IG', store.social_ig], ['fb', store.social_fb]].filter(([,h]) => h).map(([l, h]) => (
-                <a key={l} href={h} target="_blank" rel="noreferrer" style={{ width: 33, height: 33, background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mu)', fontSize: 11, fontWeight: 800 }}>{l}</a>
+              {[
+                ['ig', store.social_ig, <svg key="ig" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>],
+                ['fb', store.social_fb, <svg key="fb" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12"/></svg>],
+                ['wa', store.social_wa ? `https://wa.me/${store.social_wa}` : null, <svg key="wa" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2m5.8 14.2c-.2.7-1.4 1.3-2 1.4-.5.1-1.1.1-1.8-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 .9-2.3c.2-.2.5-.3.7-.3h.5c.2 0 .4 0 .6.4.2.5.7 1.8.8 1.9.1.2.1.3 0 .5-.1.2-.2.3-.3.5-.2.2-.3.3-.5.5-.2.2-.4.4-.2.7.2.4 1 1.5 2 2.5 1.4 1.2 2.5 1.6 2.9 1.8.3.1.5.1.7-.1.2-.2.8-1 1-1.3.2-.3.4-.3.7-.2.3.1 1.7.8 2 1 .3.1.5.2.6.3.1.2.1.7-.1 1.3"/></svg>],
+                ['gr', store.google_review_url, <svg key="gr" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.3l-6.2 3.8 1.6-7-5.4-4.7 7.2-.6L12 2l2.8 6.8 7.2.6-5.4 4.7 1.6 7z"/></svg>],
+              ].filter(([, h]) => h).map(([l, h, icon]) => (
+                <a key={l} href={h} target="_blank" rel="noreferrer" aria-label={l} style={{ width: 33, height: 33, background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mu)' }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--o)'; e.currentTarget.style.borderColor = 'var(--o)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--mu)'; e.currentTarget.style.borderColor = 'var(--bd)'; }}
+                >{icon}</a>
               ))}
             </div>
           </div>

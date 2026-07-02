@@ -351,7 +351,7 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
             <div className="afg"><label className="aflbl">Badge (optional)</label><input className="ainp" placeholder="Most Popular, Premium, 30% OFF…" value={p.badge || ''} onChange={e => upd('badge')(e.target.value)} /></div>
             <div className="afg">
               <label className="aflbl">Extended Description <span style={{fontWeight:400,color:'var(--mu)',textTransform:'none'}}>(shown under short desc on product page)</span></label>
-              <textarea className="ainp" rows="4" style={{resize:'vertical',minHeight:80}} value={p.long_desc||''} onChange={e => upd('long_desc')(e.target.value)} placeholder="Longer product description — materials, use cases, tips…" />
+              <textarea className="ainp" rows="6" style={{resize:'vertical',minHeight:120}} value={p.long_desc||''} onChange={e => upd('long_desc')(e.target.value)} placeholder="Write 2-3 short paragraphs (leave a blank line between them). For a bullet list, start each line with '- ', e.g.&#10;&#10;- Weatherproof Coroplast material&#10;- Double-sided full colour printing&#10;- Grommets available on request" />
             </div>
             <div className="afg"><label className="aflbl">Category</label>
               <select className="ainp" value={p.cat} onChange={e => upd('cat')(e.target.value)}>
@@ -668,6 +668,34 @@ function AppearanceTab() {
           </div>
         </div>
 
+        {/* Google Reviews */}
+        <div className="aform-section">
+          <div className="aform-title">⭐ Google Reviews</div>
+          <p style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 12, lineHeight: 1.6 }}>Add your Google Business Profile review link to show a "★ 4.9 on Google" badge above your testimonials. Leave blank to hide it.</p>
+          <div className="afg"><label className="aflbl">Google Review Link</label><input className="ainp" placeholder="https://g.page/r/.../review" value={s.google_review_url || ''} onChange={updE('google_review_url')} /></div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            <div className="afg"><label className="aflbl">Rating (e.g. 4.9)</label><input className="ainp" value={s.google_rating || ''} onChange={updE('google_rating')} /></div>
+            <div className="afg"><label className="aflbl">Review Count (optional)</label><input className="ainp" placeholder="e.g. 87" value={s.google_review_count || ''} onChange={updE('google_review_count')} /></div>
+          </div>
+        </div>
+
+        {/* Testimonials */}
+        <div className="aform-section">
+          <div className="aform-title">💬 Testimonials</div>
+          <p style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 12, lineHeight: 1.6 }}>Shown in the rotating quote section on your homepage.</p>
+          {(s.testimonials || []).map((t, ti) => (
+            <div key={ti} style={{ border: '1px solid var(--bd)', borderRadius: 10, padding: 12, marginBottom: 10, background: 'var(--s2)' }}>
+              <textarea className="ainp" rows="2" style={{ resize: 'vertical', marginBottom: 8 }} placeholder="Quote text" value={t.t} onChange={e => { const nx = [...s.testimonials]; nx[ti] = { ...nx[ti], t: e.target.value }; upd('testimonials')(nx); }} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8 }}>
+                <input className="ainp" placeholder="Customer name (e.g. Sarah M.)" value={t.a} onChange={e => { const nx = [...s.testimonials]; nx[ti] = { ...nx[ti], a: e.target.value, i: e.target.value.charAt(0).toUpperCase() }; upd('testimonials')(nx); }} />
+                <input className="ainp" placeholder="Business (e.g. Bloom Real Estate)" value={t.co} onChange={e => { const nx = [...s.testimonials]; nx[ti] = { ...nx[ti], co: e.target.value }; upd('testimonials')(nx); }} />
+                <button onClick={() => upd('testimonials')((s.testimonials || []).filter((_, i) => i !== ti))} style={{ padding: '7px 12px', borderRadius: 6, border: '1px solid rgba(239,68,68,.3)', background: 'rgba(239,68,68,.08)', color: '#f87171', cursor: 'pointer', fontSize: 12 }}>✕</button>
+              </div>
+            </div>
+          ))}
+          <button className="abtn abtn-add" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => upd('testimonials')([...(s.testimonials || []), { t: '', a: '', co: '', i: '?' }])}>+ Add Testimonial</button>
+        </div>
+
         {/* Social */}
         <div className="aform-section">
           <div className="aform-title">📱 Social & Footer</div>
@@ -790,10 +818,10 @@ function SettingsTab() {
 
 // ── PAGES TAB ─────────────────────────────────────────────────────────────────
 function PagesTab() {
-  const { pages, setPages, builtinPages, setBuiltinPages, showToast } = useApp();
+  const { pages, setPages, builtinPages, setBuiltinPages, cats, showToast } = useApp();
   const [editing, setEditing] = useState(null);
   const [editingBuiltin, setEditingBuiltin] = useState(null);
-  const [form, setForm] = useState({ title:'', slug:'', nav:false, content:'', body:'', faqs:[] });
+  const [form, setForm] = useState({ title:'', slug:'', nav:false, content:'', body:'', faqs:[], relatedCat:'' });
   const upd = k => e => setForm(f => ({ ...f, [k]: e.target.type==='checkbox' ? e.target.checked : e.target.value }));
 
   const SYSTEM = ['home','products','cart','checkout','success','quote','contact','admin'];
@@ -801,7 +829,7 @@ function PagesTab() {
 
   function startEditBuiltin(slug) {
     const p = builtinPages[slug];
-    setForm({ title: p.title, slug: p.slug, nav: p.nav ?? true, body: p.body || '', faqs: p.faqs || [], content: '' });
+    setForm({ title: p.title, slug: p.slug, nav: p.nav ?? true, body: p.body || '', faqs: p.faqs || [], content: '', relatedCat: '' });
     setEditingBuiltin(slug);
     setEditing(null);
   }
@@ -812,13 +840,13 @@ function PagesTab() {
     showToast('✅ Page saved!'); setEditingBuiltin(null);
   }
 
-  function startEditCustom(pg, idx) { setForm({ title:pg.title, slug:pg.slug, nav:pg.nav||false, content:pg.content||'', body:'', faqs:[] }); setEditing(idx); setEditingBuiltin(null); }
+  function startEditCustom(pg, idx) { setForm({ title:pg.title, slug:pg.slug, nav:pg.nav||false, content:pg.content||'', body:'', faqs:[], relatedCat: pg.relatedCat || '' }); setEditing(idx); setEditingBuiltin(null); }
 
   function saveCustom() {
     if (!form.title.trim() || !form.slug.trim()) { showToast('Title and slug required'); return; }
     const slug = form.slug.toLowerCase().replace(/[^a-z0-9-]/g,'-');
-    if (editing === 'new') setPages(prev => [...prev, { id:'cp-'+Date.now(), title:form.title, slug, nav:form.nav, content:form.content }]);
-    else setPages(prev => prev.map((p,i) => i===editing ? {...p, title:form.title, slug, nav:form.nav, content:form.content} : p));
+    if (editing === 'new') setPages(prev => [...prev, { id:'cp-'+Date.now(), title:form.title, slug, nav:form.nav, content:form.content, relatedCat:form.relatedCat || null }]);
+    else setPages(prev => prev.map((p,i) => i===editing ? {...p, title:form.title, slug, nav:form.nav, content:form.content, relatedCat:form.relatedCat || null} : p));
     showToast('✅ Page saved!'); setEditing(null);
   }
 
@@ -896,6 +924,13 @@ function PagesTab() {
           <input type="checkbox" id="pg-nav2" style={{ width:16,height:16 }} checked={form.nav} onChange={upd('nav')} />
           <label htmlFor="pg-nav2" style={{ fontSize:13 }}>Show in footer navigation</label>
         </div>
+        <div className="afg" style={{ marginBottom:12 }}>
+          <label className="aflbl">Related Product Category <span style={{color:'var(--mu)',fontSize:10}}>(shows a "Shop Now" box at the bottom of the post — optional)</span></label>
+          <select className="ainp" value={form.relatedCat} onChange={upd('relatedCat')}>
+            <option value="">None</option>
+            {(cats || []).map(c => <option key={c.id} value={c.id}>{c.l}</option>)}
+          </select>
+        </div>
         <div className="afg"><label className="aflbl">Content (plain text, blank lines = paragraphs)</label>
           <div style={{ marginBottom: 8 }}><InsertImageButton onInsert={snippet => setForm(f => ({ ...f, content: f.content + snippet }))} /></div>
           <textarea className="ainp" rows="12" style={{ resize:'vertical', lineHeight:1.6 }} value={form.content} onChange={upd('content')} />
@@ -913,7 +948,7 @@ function PagesTab() {
     <div>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
         <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:24 }}>Pages</h2>
-        <button className="abtn abtn-add" onClick={() => { setForm({title:'',slug:'',nav:false,content:'',body:'',faqs:[]}); setEditing('new'); }}>+ New Page</button>
+        <button className="abtn abtn-add" onClick={() => { setForm({title:'',slug:'',nav:false,content:'',body:'',faqs:[],relatedCat:''}); setEditing('new'); }}>+ New Page</button>
       </div>
 
       {/* Builtin pages — fully editable */}

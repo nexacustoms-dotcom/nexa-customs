@@ -9,12 +9,12 @@ export default function ProductCard({ prod, onOpen }) {
 
   return (
     <div className="card" onClick={onOpen} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ height: 118, background: CAT_BG[prod.cat] || 'var(--s2)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid var(--bd)', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
+      <div style={{ height: 170, background: CAT_BG[prod.cat] || 'var(--s2)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid var(--bd)', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
         {firstImg
-          ? <img src={imgUrl(firstImg, 400)} alt={prod.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+          ? <img src={imgUrl(firstImg, 500)} alt={prod.name} width="500" height="170" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
           : cat?.img
-            ? <img src={imgUrl(cat.img, 400)} alt={cat.l} style={{ width: '60%', height: '60%', objectFit: 'cover', borderRadius: 8, opacity: 0.6 }} loading="lazy" />
-            : <span style={{ fontSize: 42 }}>{cat?.i || '🖨️'}</span>
+            ? <img src={imgUrl(cat.img, 500)} alt={cat.l} width="500" height="170" decoding="async" style={{ width: '60%', height: '60%', objectFit: 'cover', borderRadius: 8, opacity: 0.6 }} loading="lazy" />
+            : <span style={{ fontSize: 48 }}>{cat?.i || '🖨️'}</span>
         }
         {prod.badge && (
           <div className="badge-orange" style={{ position: 'absolute', top: 8, left: 8 }}>{prod.badge}</div>
