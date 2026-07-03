@@ -246,6 +246,7 @@ function ProductsTab() {
       disabled: false,
       rush_ok:  true,
       express_ok: true,
+      sameday_max_qty: 0,
       label_configurator: false,
       pricing: [
         { q: 25,  p: 0 },
@@ -1315,6 +1316,10 @@ function FullProductEditor({ prod, onSave, onCancel }) {
               </div>
             );
           })}
+        </div>
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--bd)' }}>
+          <label className="aflbl">Max Quantity for Rush/Express <span style={{color:'var(--mu)',fontSize:10}}>(orders above this ship Standard 5–7 days only — leave blank for no limit)</span></label>
+          <input type="number" min="0" className="ainp" style={{ maxWidth: 200 }} placeholder="e.g. 2000" value={p.sameday_max_qty || ''} onChange={e => upd('sameday_max_qty')(parseInt(e.target.value) || 0)} />
         </div>
       </div>
 

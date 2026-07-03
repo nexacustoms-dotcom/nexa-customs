@@ -6,7 +6,7 @@ import { CAT_BG } from '../data/products';
 import LabelConfigurator from './LabelConfigurator';
 
 export default function ProductDetailPage() {
-  const { curProd, cats, prods, addToCart, calcPrice, showToast, store, pricing } = useApp();
+  const { curProd, cats, prods, pages, addToCart, calcPrice, showToast, store, pricing } = useApp();
   const navigate = useNavigate();
   const [selOpts, setSelOpts] = useState({});
   const [selQty, setSelQty] = useState(null);
@@ -14,6 +14,7 @@ export default function ProductDetailPage() {
   const [custW, setCustW] = useState('');
   const [custH, setCustH] = useState('');
   const [turnaround, setTurnaround] = useState('standard');
+  const [activeTab, setActiveTab] = useState('overview');
 
   const prod = curProd;
 
@@ -21,10 +22,23 @@ export default function ProductDetailPage() {
     if (!prod) return;
     const defaults = {};
     (prod.opts || []).forEach(g => { const f = g.opts?.find(o => !o.disabled); if (f) defaults[g.key] = f.id; });
-    setSelOpts(defaults);
-    setSelQty(prod.pricing?.[0]?.q ?? 1);
     setImgIdx(0); setCustW(''); setCustH('');
-    setTurnaround('standard');
+
+    // Restore a shared configuration from the URL if this link was shared (?qty=250&opt_paper=16pt&ta=rush)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('p') === prod.id) {
+      const restored = { ...defaults };
+      (prod.opts || []).forEach(g => { const v = params.get('opt_' + g.key); if (v) restored[g.key] = v; });
+      setSelOpts(restored);
+      setSelQty(parseInt(params.get('qty')) || prod.pricing?.[0]?.q || 1);
+      setTurnaround(params.get('ta') || 'standard');
+      if (params.get('w')) setCustW(params.get('w'));
+      if (params.get('h')) setCustH(params.get('h'));
+    } else {
+      setSelOpts(defaults);
+      setSelQty(prod.pricing?.[0]?.q ?? 1);
+      setTurnaround('standard');
+    }
   }, [prod?.id]);
 
   if (!prod) return (
@@ -46,11 +60,19 @@ export default function ProductDetailPage() {
 
   const rushOk    = prod.rush_ok    !== false;
   const expressOk = prod.express_ok !== false;
+  const overSamedayLimit = prod.sameday_max_qty > 0 && selQty > prod.sameday_max_qty;
+  const rushAvail    = rushOk    && !overSamedayLimit;
+  const expressAvail = expressOk && !overSamedayLimit;
   const rushMult    = pricing?.rush_pct    ?? 0.25;
   const expressMult = pricing?.express_pct ?? 0.50;
   const taMult = turnaround === 'rush' ? rushMult : turnaround === 'express' ? expressMult : 0;
   const taFee  = +(basePrice * taMult).toFixed(2);
   const price  = +(basePrice + taFee).toFixed(2);
+
+  // If quantity climbs above the same-day/rush ceiling while Rush/Express was selected, fall back to Standard
+  useEffect(() => {
+    if (overSamedayLimit && turnaround !== 'standard') setTurnaround('standard');
+  }, [overSamedayLimit]);
 
   function handleAdd() {
     if (price === 0) { showToast('Please configure your order'); return; }
@@ -63,7 +85,48 @@ export default function ProductDetailPage() {
     showToast(`✅ Added to cart!`);
   }
 
+  function buildShareUrl() {
+    const params = new URLSearchParams();
+    params.set('p', prod.id);
+    if (selQty) params.set('qty', selQty);
+    if (turnaround !== 'standard') params.set('ta', turnaround);
+    Object.entries(selOpts).forEach(([k, v]) => params.set('opt_' + k, v));
+    if (isCustomSize) { if (custW) params.set('w', custW); if (custH) params.set('h', custH); }
+    return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+  }
+
+  function handleShare() {
+    const url = buildShareUrl();
+    navigator.clipboard?.writeText(url).then(
+      () => showToast('🔗 Link copied — this exact configuration will load when opened'),
+      () => showToast(url)
+    );
+  }
+
+  function handleEmailQuote() {
+    const optLabels = Object.entries(selOpts).map(([key, val]) => {
+      const g = prod.opts?.find(x => x.key === key);
+      return g?.opts?.find(o => o.id === val)?.l || val;
+    }).filter(Boolean);
+    const lines = [
+      `${prod.name}`,
+      `Quantity: ${selQty?.toLocaleString()}${isSqft ? ' pcs' : ' units'}`,
+      isCustomSize && custW && custH ? `Size: ${custW}′ × ${custH}′` : null,
+      ...optLabels.map(l => `- ${l}`),
+      `Turnaround: ${turnaround === 'rush' ? 'Rush (2–3 days)' : turnaround === 'express' ? 'Express (same/next day)' : 'Standard (5–7 days)'}`,
+      `Price: $${price.toFixed(2)}`,
+      '',
+      `View & order: ${buildShareUrl()}`,
+    ].filter(Boolean);
+    const subject = encodeURIComponent(`Quote: ${prod.name} — Nexa Customs`);
+    const body = encodeURIComponent(lines.join('\n'));
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  }
+
+  function handlePrint() { window.print(); }
+
   const related = prods.filter(p => !p.disabled && p.cat === prod.cat && p.id !== prod.id).slice(0, 4);
+  const relatedPosts = (pages || []).filter(pg => pg.relatedCat === prod.cat).slice(0, 3);
 
   // Build config summary for right panel
   const configSummary = [
@@ -97,31 +160,76 @@ export default function ProductDetailPage() {
         {/* 3-column layout: image | configurator | sticky summary */}
         <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr 280px', gap: 28, alignItems: 'start', paddingBottom: 60 }} className="det-layout">
 
-          {/* ── COL 1: Image + badges ── */}
-          <div style={{ position: 'sticky', top: 82 }} className="det-img">
-            <div style={{ background: CAT_BG[prod.cat] || 'var(--s2)', borderRadius: 14, overflow: 'hidden', marginBottom: 8 }}>
-              {imgs.length > 0
-                ? <img src={imgUrl(imgs[imgIdx], 900)} alt={prod.name} width="900" height="360" style={{ width: '100%', height: 360, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
-                : <div style={{ height: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 90 }}>{cat?.i || '🖨️'}</div>
-              }
-            </div>
-            {imgs.length > 1 && (
-              <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 10 }}>
-                {imgs.map((_, i) => <div key={i} onClick={() => setImgIdx(i)} style={{ width: 7, height: 7, borderRadius: '50%', background: i === imgIdx ? 'var(--o)' : 'var(--bd)', cursor: 'pointer' }} />)}
+          {/* ── COL 1: Image (sticky) + Overview/Specs tabs (scrolls normally below) ── */}
+          <div className="det-img">
+            <div style={{ position: 'sticky', top: 82 }} className="det-img-sticky">
+              <div style={{ background: CAT_BG[prod.cat] || 'var(--s2)', borderRadius: 14, overflow: 'hidden', marginBottom: 8 }}>
+                {imgs.length > 0
+                  ? <img src={imgUrl(imgs[imgIdx], 900)} alt={prod.name} width="900" height="360" style={{ width: '100%', height: 360, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
+                  : <div style={{ height: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 90 }}>{cat?.i || '🖨️'}</div>
+                }
               </div>
-            )}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-              {[['✅','Free Proof'],['⚡','Rush Avail.'],['🛡️','Guaranteed'],['🚚','ON Shipping']].map(([ico, l]) => (
-                <div key={l} style={{ background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 7, padding: '7px 9px', fontSize: 10, color: 'var(--mu)', display: 'flex', alignItems: 'center', gap: 5 }}>{ico} {l}</div>
-              ))}
+              {imgs.length > 1 && (
+                <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 10 }}>
+                  {imgs.map((_, i) => <div key={i} onClick={() => setImgIdx(i)} style={{ width: 7, height: 7, borderRadius: '50%', background: i === imgIdx ? 'var(--o)' : 'var(--bd)', cursor: 'pointer' }} />)}
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                {[['✅','Free Proof'],['⚡','Rush Avail.'],['🛡️','Guaranteed'],['🚚','ON Shipping']].map(([ico, l]) => (
+                  <div key={l} style={{ background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 7, padding: '7px 9px', fontSize: 10, color: 'var(--mu)', display: 'flex', alignItems: 'center', gap: 5 }}>{ico} {l}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* Overview / Specs tabs — uses the space under the image, scrolls normally */}
+            <div style={{ marginTop: 20 }}>
+              <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--bd)', marginBottom: 16 }}>
+                {[
+                  ['overview', 'Overview'],
+                  ...(prod.specs?.filter(s=>s.k&&s.v).length > 0 ? [['specs', 'Specifications']] : []),
+                ].map(([id, label]) => (
+                  <button key={id} onClick={() => setActiveTab(id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '10px 4px', marginRight: 18, fontSize: 13, fontWeight: 700, color: activeTab === id ? 'var(--o)' : 'var(--mu)', borderBottom: `2px solid ${activeTab === id ? 'var(--o)' : 'transparent'}`, fontFamily: 'inherit' }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {activeTab === 'overview' && (
+                <div>
+                  <p style={{ fontSize: 13, color: 'var(--tx)', lineHeight: 1.85, marginBottom: prod.long_desc ? 14 : 0, fontWeight: 500 }}>{prod.desc}</p>
+                  {prod.long_desc && prod.long_desc.split('\n\n').map((block, bi) => {
+                    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+                    const isBulletBlock = lines.length > 0 && lines.every(l => l.startsWith('- '));
+                    if (isBulletBlock) {
+                      return (
+                        <ul key={bi} style={{ margin: '0 0 14px', paddingLeft: 18, fontSize: 13, color: 'var(--mu)', lineHeight: 1.8 }}>
+                          {lines.map((l, li) => <li key={li}>{l.slice(2)}</li>)}
+                        </ul>
+                      );
+                    }
+                    return <p key={bi} style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.8, marginBottom: 14, whiteSpace: 'pre-line' }}>{block}</p>;
+                  })}
+                </div>
+              )}
+
+              {activeTab === 'specs' && prod.specs && (
+                <div style={{ background: 'var(--s2)', borderRadius: 8, border: '1px solid var(--bd)', overflow: 'hidden' }}>
+                  {prod.specs.filter(s=>s.k&&s.v).map((s, i) => (
+                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '38% 1fr', borderBottom: i < prod.specs.filter(s=>s.k&&s.v).length - 1 ? '1px solid var(--bd)' : 'none' }}>
+                      <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 700, color: 'var(--mu)', borderRight: '1px solid var(--bd)', background: 'rgba(0,0,0,.15)' }}>{s.k}</div>
+                      <div style={{ padding: '8px 12px', fontSize: 11, color: 'var(--tx)' }}>{s.v}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
           {/* ── COL 2: Configurator ── */}
           <div>
             {prod.badge && <div className="badge-orange" style={{ marginBottom: 8 }}>{prod.badge}</div>}
-            <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 30, margin: '6px 0 8px' }}>{prod.name}</h1>
-            <p style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.72, marginBottom: 20 }}>{prod.desc}</p>
+            <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 30, margin: '6px 0 20px' }}>{prod.name}</h1>
 
             {/* Options */}
             {(prod.opts || []).map(g => (
@@ -216,8 +324,8 @@ export default function ProductDetailPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
                 {[
                   { id: 'standard', ico: '📦', label: 'Standard', sub: '5–7 business days', fee: 0, ok: true },
-                  { id: 'rush',     ico: '⚡', label: 'Rush',     sub: '2–3 business days', fee: rushMult, ok: rushOk },
-                  { id: 'express',  ico: '🚀', label: 'Express',  sub: 'Same / next day',   fee: expressMult, ok: expressOk },
+                  { id: 'rush',     ico: '⚡', label: 'Rush',     sub: '2–3 business days', fee: rushMult, ok: rushAvail },
+                  { id: 'express',  ico: '🚀', label: 'Express',  sub: 'Same / next day',   fee: expressMult, ok: expressAvail },
                 ].map(opt => {
                   const sel = turnaround === opt.id;
                   const feeAmt = +(basePrice * opt.fee).toFixed(2);
@@ -238,41 +346,12 @@ export default function ProductDetailPage() {
                   );
                 })}
               </div>
-            </div>
-
-            {/* Extended description — supports paragraphs (blank line) and bullet points (- item) */}
-            {prod.long_desc && (
-              <div style={{ marginTop: 22, paddingTop: 20, borderTop: '1px solid var(--bd)' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--mu)', marginBottom: 10 }}>About This Product</div>
-                {prod.long_desc.split('\n\n').map((block, bi) => {
-                  const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
-                  const isBulletBlock = lines.length > 0 && lines.every(l => l.startsWith('- '));
-                  if (isBulletBlock) {
-                    return (
-                      <ul key={bi} style={{ margin: '0 0 14px', paddingLeft: 18, fontSize: 13, color: 'var(--mu)', lineHeight: 1.8 }}>
-                        {lines.map((l, li) => <li key={li}>{l.slice(2)}</li>)}
-                      </ul>
-                    );
-                  }
-                  return <p key={bi} style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.8, marginBottom: 14, whiteSpace: 'pre-line' }}>{block}</p>;
-                })}
-              </div>
-            )}
-
-            {/* Specifications */}
-            {prod.specs && prod.specs.length > 0 && (
-              <div style={{ marginTop: 18 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--mu)', marginBottom: 8 }}>Specifications</div>
-                <div style={{ background: 'var(--s2)', borderRadius: 8, border: '1px solid var(--bd)', overflow: 'hidden' }}>
-                  {prod.specs.filter(s=>s.k&&s.v).map((s, i) => (
-                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '38% 1fr', borderBottom: i < prod.specs.filter(s=>s.k&&s.v).length - 1 ? '1px solid var(--bd)' : 'none' }}>
-                      <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 700, color: 'var(--mu)', borderRight: '1px solid var(--bd)', background: 'rgba(0,0,0,.15)' }}>{s.k}</div>
-                      <div style={{ padding: '8px 12px', fontSize: 11, color: 'var(--tx)' }}>{s.v}</div>
-                    </div>
-                  ))}
+              {overSamedayLimit && (
+                <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 8, lineHeight: 1.6 }}>
+                  Rush & Express aren't available above {prod.sameday_max_qty.toLocaleString()} units for this product — orders this size ship Standard (5–7 business days). We'll ship sooner if it's ready early.
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* ── COL 3: Sticky price summary ── */}
@@ -328,6 +407,13 @@ export default function ProductDetailPage() {
               Add to Cart — ${price.toFixed(2)}
             </button>
 
+            {/* Share / Email / Print actions */}
+            <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, marginTop: 8 }}>
+              <button onClick={handleShare} style={{ fontSize: 11, padding: '9px 4px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--mu)', cursor: 'pointer', fontWeight: 600 }}>🔗 Share</button>
+              <button onClick={handleEmailQuote} style={{ fontSize: 11, padding: '9px 4px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--mu)', cursor: 'pointer', fontWeight: 600 }}>✉️ Email Quote</button>
+              <button onClick={handlePrint} style={{ fontSize: 11, padding: '9px 4px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--mu)', cursor: 'pointer', fontWeight: 600 }}>🖨️ Print / PDF</button>
+            </div>
+
             {/* Trust */}
             <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 14 }}>
               {[['🔒','Secure checkout'],['✅','Free proof included'],['🛡️','Quality guaranteed'],['📞', store.phone || '(437) 997-9921']].map(([ico, l]) => (
@@ -339,10 +425,26 @@ export default function ProductDetailPage() {
 
         {/* Related */}
         {related.length > 0 && (
-          <div style={{ paddingBottom: 60 }}>
+          <div style={{ paddingBottom: relatedPosts.length > 0 ? 40 : 60 }}>
             <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, marginBottom: 18 }}>More in {cat?.l}</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }} className="related-grid">
               {related.map(r => <ProductCard key={r.id} prod={r} onOpen={() => navigate(`/products/${r.cat}/${r.id}`)} />)}
+            </div>
+          </div>
+        )}
+
+        {/* Related reading — links back to blog posts about this category */}
+        {relatedPosts.length > 0 && (
+          <div style={{ paddingBottom: 60 }}>
+            <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, marginBottom: 16 }}>Helpful Guides</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 12 }}>
+              {relatedPosts.map(post => (
+                <div key={post.id} onClick={() => navigate(`/p/${post.slug}`)} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, padding: '16px 18px', cursor: 'pointer', transition: 'border-color .15s' }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--o)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--bd)'}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 6 }}>Read More</div>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{post.title} →</div>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -350,11 +452,12 @@ export default function ProductDetailPage() {
       <style>{`
         @media(max-width:1100px){
           .det-layout{grid-template-columns:1fr 260px !important}
-          .det-img{position:static !important; grid-column:1/-1; display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:start}
+          .det-img{grid-column:1/-1}
+          .det-img-sticky{position:static !important; display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:start}
         }
         @media(max-width:700px){
           .det-layout{grid-template-columns:1fr !important}
-          .det-img{grid-template-columns:1fr !important; margin-bottom:8px}
+          .det-img-sticky{grid-template-columns:1fr !important; margin-bottom:8px}
           .det-sum{position:static !important}
         }
         @media(max-width:640px){.related-grid{grid-template-columns:repeat(2,1fr) !important}}

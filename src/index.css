@@ -80,7 +80,7 @@ img{max-width:100%}
   .pl-layout{grid-template-columns:1fr !important}
   .pl-sidebar{position:static !important}
   .det-layout{grid-template-columns:1fr !important}
-  .det-img{position:static !important}
+  .det-img-sticky{position:static !important}
   .cart-layout{grid-template-columns:1fr !important}
   .cart-sum{position:static !important}
   .ck-layout{grid-template-columns:1fr !important}
@@ -106,4 +106,12 @@ img{max-width:100%}
 @media(max-width:480px){
   .prod-grid-4,.feat-grid{grid-template-columns:1fr !important}
   .ord-stats{grid-template-columns:1fr 1fr !important}
+}
+@media print{
+  nav,footer,.no-print{display:none !important}
+  body,.det-layout{background:#fff !important;color:#000 !important}
+  .det-layout{display:block !important;padding:0 !important}
+  .det-img-sticky{position:static !important}
+  a{color:#000 !important;text-decoration:none !important}
+  * {box-shadow:none !important;}
 }

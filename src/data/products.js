@@ -6505,6 +6505,40 @@ export const DEFAULT_PRODS = [
       {"k": "Archival Life", "v": "100+ years under standard conditions"},
       {"k": "Turnaround", "v": "5–7 business days standard"}
     ]
+  },
+  {
+    "id": "nfc-smart-business-card",
+    "cat": "business-cards",
+    "name": "NFC Smart Business Card",
+    "badge": "New",
+    "imgs": [],
+    "desc": "Tap-to-share digital business card with an embedded NFC chip and QR code — no app needed for the person receiving it.",
+    "long_desc": "DRAFT PRODUCT — review pricing, supplier cost, and photos before enabling.\n\nA reusable PVC card with an embedded NFC chip and printed QR code. One tap on any NFC-enabled phone (or a QR scan as backup) instantly shares your contact info, website, or social links — no app required for the recipient. Update your linked profile anytime without reprinting the card.\n\n- Durable PVC construction, credit-card sized\n- NFC chip + QR code on one card (works even if the phone doesn't support NFC)\n- Recipient does not need to install anything\n- Update your digital profile anytime — the physical card never needs reprinting",
+    "opts": [
+      {
+        "key": "finish",
+        "label": "Finish",
+        "opts": [
+          { "id": "matte_black", "l": "Matte Black", "m": 1 },
+          { "id": "matte_white", "l": "Matte White", "m": 1 },
+          { "id": "gold_foil", "l": "Gold Foil Accent", "m": 1.25 },
+          { "id": "silver_foil", "l": "Silver Foil Accent", "m": 1.25 }
+        ]
+      }
+    ],
+    "pricing": [
+      { "q": 1, "p": 35 },
+      { "q": 5, "p": 150 },
+      { "q": 10, "p": 275 }
+    ],
+    "specs": [
+      { "k": "Material", "v": "PVC with embedded NFC chip" },
+      { "k": "Compatibility", "v": "Works with all NFC-enabled smartphones; QR fallback for others" },
+      { "k": "Profile Updates", "v": "Unlimited — update your linked info anytime" }
+    ],
+    "rush_ok": false,
+    "express_ok": false,
+    "disabled": true
   }
 ];
 
