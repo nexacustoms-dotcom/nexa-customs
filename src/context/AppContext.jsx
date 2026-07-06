@@ -285,7 +285,13 @@ export function AppProvider({ children }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
   const showToast = useCallback((msg) => { setToast(msg); setTimeout(() => setToast(null), 3200); }, []);
-  const addToCart = useCallback((item) => { setCart(prev => [...prev, { ...item, cartId: Date.now() + Math.random() }]); showToast('✓ ' + item.name + ' added to cart'); }, [showToast]);
+  const addToCart = useCallback((item) => {
+    setCart(prev => [...prev, { ...item, cartId: Date.now() + Math.random() }]);
+    showToast('✓ ' + item.name + ' added to cart');
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'add_to_cart', { currency: 'CAD', value: item.price || 0, items: [{ item_id: item.id, item_name: item.name, quantity: item.qty || 1, price: item.unitPrice || item.price || 0 }] });
+    }
+  }, [showToast]);
   const removeFromCart = useCallback((cartId) => setCart(prev => prev.filter(i => i.cartId !== cartId)), []);
   const clearCart = useCallback(() => setCart([]), []);
   const showProduct = useCallback((id) => {

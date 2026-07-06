@@ -76,6 +76,12 @@ export function CheckoutPage() {
 
   useEffect(() => { if (cart.length === 0) navigate('/products'); }, [cart.length]);
 
+  useEffect(() => {
+    if (cart.length > 0 && typeof window.gtag === 'function') {
+      window.gtag('event', 'begin_checkout', { currency: 'CAD', value: cartSubtotal, items: cart.map(i => ({ item_id: i.id, item_name: i.name, quantity: i.qty || 1, price: i.unitPrice || 0 })) });
+    }
+  }, []);
+
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ fn: '', ln: '', email: '', phone: '', company: '', notes: '' });
   const [errors, setErrors] = useState({});
@@ -181,6 +187,9 @@ export function CheckoutPage() {
   function goNext() {
     if (step === 1 && !validateStep1()) return;
     if (step === 2 && !validateStep2()) return;
+    if (step === 3 && typeof window.gtag === 'function') {
+      window.gtag('event', 'add_payment_info', { currency: 'CAD', value: cartSubtotal });
+    }
     setStep(s => Math.min(s + 1, 4));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -411,6 +420,14 @@ export function CheckoutPage() {
         }
       } else {
         await saveOrder(no);
+      }
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'purchase', {
+          transaction_id: no,
+          currency: 'CAD',
+          value: total,
+          items: cart.map(i => ({ item_id: i.id, item_name: i.name, quantity: i.qty || 1, price: i.unitPrice || 0 })),
+        });
       }
       sessionStorage.setItem('last_order_no', no);
       sessionStorage.setItem('last_delivery', delivery);

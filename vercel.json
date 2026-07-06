@@ -41,6 +41,31 @@
       "permanent": true
     },
     {
+      "source": "/product/business-cards-14pt",
+      "destination": "/products/business-cards",
+      "permanent": true
+    },
+    {
+      "source": "/product/business-card-16pt",
+      "destination": "/products/business-cards",
+      "permanent": true
+    },
+    {
+      "source": "/product/vinyl-labels",
+      "destination": "/products/labels-stickers/vinyl-roll-labels",
+      "permanent": true
+    },
+    {
+      "source": "/product/ncr-forms",
+      "destination": "/products/stationery/ncr-forms",
+      "permanent": true
+    },
+    {
+      "source": "/product/poly-bags",
+      "destination": "/products/signs-banners/polybag-signs",
+      "permanent": true
+    },
+    {
       "source": "/product/:slug",
       "destination": "/products",
       "permanent": true
