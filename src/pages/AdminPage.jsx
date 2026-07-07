@@ -247,6 +247,7 @@ function ProductsTab() {
       rush_ok:  true,
       express_ok: true,
       sameday_max_qty: 0,
+      allow_custom_qty: false,
       label_configurator: false,
       pricing: [
         { q: 25,  p: 0 },
@@ -414,16 +415,43 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
         <div className="aform-section">
           <div className="aform-title">Pricing Tiers</div>
           <p style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 12 }}>Base prices per quantity. Option multipliers apply on top at checkout.</p>
-          {p.pricing.map((tier, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span style={{ fontSize: 11, color: 'var(--mu)', width: 64, flexShrink: 0, fontFamily: "'DM Mono',monospace" }}>Qty {tier.q >= 1000 ? (tier.q / 1000) + 'K' : tier.q}</span>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--bd)', borderRadius: 7, overflow: 'hidden', background: 'var(--dk)', flex: 1 }}>
-                <span style={{ padding: '0 8px', color: 'var(--mu)', fontSize: 13 }}>$</span>
-                <input type="number" step="0.01" min="0" value={tier.p.toFixed(2)} className="ainp" style={{ border: 'none', background: 'transparent', borderRadius: 0 }}
-                  onChange={e => { const np = [...p.pricing]; np[i] = { ...tier, p: parseFloat(e.target.value) || 0 }; upd('pricing')(np); }} />
+          {p.pricing.map((tier, i) => {
+            const prevTier = i > 0 ? p.pricing[i - 1] : null;
+            const unitPrice = tier.q > 0 ? tier.p / tier.q : 0;
+            const prevUnitPrice = prevTier && prevTier.q > 0 ? prevTier.p / prevTier.q : null;
+            const costsMoreThanSmallerTier = prevUnitPrice !== null && unitPrice > prevUnitPrice;
+            const isDuplicateQty = p.pricing.filter(t => t.q === tier.q).length > 1;
+            const isZero = tier.p <= 0;
+            return (
+              <div key={i} style={{ marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 11, color: 'var(--mu)', width: 64, flexShrink: 0, fontFamily: "'DM Mono',monospace" }}>Qty {tier.q >= 1000 ? (tier.q / 1000) + 'K' : tier.q}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', border: `1px solid ${costsMoreThanSmallerTier || isDuplicateQty || isZero ? '#f87171' : 'var(--bd)'}`, borderRadius: 7, overflow: 'hidden', background: 'var(--dk)', flex: 1 }}>
+                    <span style={{ padding: '0 8px', color: 'var(--mu)', fontSize: 13 }}>$</span>
+                    <input type="number" step="0.01" min="0" value={tier.p.toFixed(2)} className="ainp" style={{ border: 'none', background: 'transparent', borderRadius: 0 }}
+                      onChange={e => { const np = [...p.pricing]; np[i] = { ...tier, p: parseFloat(e.target.value) || 0 }; upd('pricing')(np); }} />
+                  </div>
+                  <span style={{ fontSize: 10, color: 'var(--mu)', width: 70, flexShrink: 0, textAlign: 'right', fontFamily: "'DM Mono',monospace" }}>${unitPrice.toFixed(3)}/ea</span>
+                </div>
+                {costsMoreThanSmallerTier && (
+                  <div style={{ fontSize: 10, color: '#f87171', marginTop: 2, marginLeft: 72 }}>⚠️ Per-unit price (${unitPrice.toFixed(3)}) is higher than the smaller {prevTier.q} tier (${prevUnitPrice.toFixed(3)}) — bulk should usually cost less per unit, double-check this isn't a typo</div>
+                )}
+                {isDuplicateQty && (
+                  <div style={{ fontSize: 10, color: '#f87171', marginTop: 2, marginLeft: 72 }}>⚠️ Quantity {tier.q} is used more than once — only one will actually apply</div>
+                )}
+                {isZero && (
+                  <div style={{ fontSize: 10, color: '#f87171', marginTop: 2, marginLeft: 72 }}>⚠️ Price is $0 — this tier will be free for customers</div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
+          <div style={{ height: 1, background: 'var(--bd)', margin: '14px 0' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <input type="checkbox" id="custom-qty-enabled" style={{ width: 16, height: 16 }} checked={!!p.allow_custom_qty}
+              onChange={e => upd('allow_custom_qty')(e.target.checked)} />
+            <label htmlFor="custom-qty-enabled" style={{ fontSize: 13 }}>Allow customer to type any quantity (not just the tiers above)</label>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4, marginLeft: 26 }}>Price for in-between quantities is calculated by interpolating between your nearest two tiers above. Customers still can't go below your lowest tier or above your highest.</div>
           <div style={{ height: 1, background: 'var(--bd)', margin: '14px 0' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <input type="checkbox" id="sqft-enabled" style={{ width: 16, height: 16 }} checked={!!p.sqft?.enabled}
@@ -444,6 +472,9 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
                 <div className="afg"><label className="aflbl">Max Width (ft) — 0 = no limit</label><input type="number" step="0.5" min="0" className="ainp" value={p.sqft.maxW || ''} placeholder="e.g. 10" onChange={e => upd('sqft')({ ...p.sqft, maxW: parseFloat(e.target.value) || 0 })} /></div>
                 <div className="afg"><label className="aflbl">Max Height (ft) — 0 = no limit</label><input type="number" step="0.5" min="0" className="ainp" value={p.sqft.maxH || ''} placeholder="e.g. 50" onChange={e => upd('sqft')({ ...p.sqft, maxH: parseFloat(e.target.value) || 0 })} /></div>
               </div>
+              {(!p.sqft.rate || p.sqft.rate <= 0) && (
+                <div style={{ fontSize: 10, color: '#f87171', marginTop: 6 }}>⚠️ Rate is $0 — custom-size orders on this product will be free for customers</div>
+              )}
               <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4 }}>Min/Max Width & Height shows warnings to customers if they enter sizes outside your limits. Set 0 to ignore.</div>
             </>
           )}

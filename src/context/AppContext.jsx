@@ -101,6 +101,7 @@ function mergeOverrides(prods, overrides) {
       rush_ok:        o.rush_ok         !== undefined ? o.rush_ok         : p.rush_ok,
       express_ok:     o.express_ok      !== undefined ? o.express_ok      : p.express_ok,
       sameday_max_qty: o.sameday_max_qty !== undefined ? o.sameday_max_qty : p.sameday_max_qty,
+      allow_custom_qty: o.allow_custom_qty !== undefined ? o.allow_custom_qty : p.allow_custom_qty,
       // Label configurator fields
       label_configurator: o.label_configurator !== undefined ? o.label_configurator : p.label_configurator,
       lbl_shapes:     o.lbl_shapes      !== undefined ? o.lbl_shapes      : p.lbl_shapes,
@@ -254,6 +255,7 @@ export function AppProvider({ children }) {
         rush_ok:            p.rush_ok,
         express_ok:         p.express_ok,
         sameday_max_qty:    p.sameday_max_qty,
+        allow_custom_qty:   p.allow_custom_qty,
         // Specs & extended description
         specs:              p.specs || [],
         long_desc:          p.long_desc || '',
@@ -361,9 +363,23 @@ export function AppProvider({ children }) {
       const unitCost = applyOpts(baseUnit, prod.opts, selOpts, 'size', sqftW, sqftH, sqftW);
       return { total: +(unitCost * Math.max(qty||1,1)).toFixed(2), unit: +unitCost.toFixed(4), sqft: sqftVal };
     }
-    const tier = prod.pricing?.find(t => t.q===qty) || prod.pricing?.[0];
-    if (!tier) return { total: 0, unit: 0, sqft: 0 };
-    const ti = prod.pricing?.indexOf(tier) ?? 0;
+    const sortedTiers = [...(prod.pricing || [])].sort((a, b) => a.q - b.q);
+    if (!sortedTiers.length) return { total: 0, unit: 0, sqft: 0 };
+    let tier = sortedTiers.find(t => t.q === qty);
+    let interpolatedBase = null;
+    if (!tier) {
+      // Quantity doesn't match a tier exactly — interpolate between the two nearest tiers
+      // instead of silently defaulting to the first (cheapest) tier's price.
+      const q = Math.max(sortedTiers[0].q, Math.min(qty || sortedTiers[0].q, sortedTiers[sortedTiers.length - 1].q));
+      let lo = sortedTiers[0], hi = sortedTiers[sortedTiers.length - 1];
+      for (let i = 0; i < sortedTiers.length - 1; i++) {
+        if (q >= sortedTiers[i].q && q <= sortedTiers[i + 1].q) { lo = sortedTiers[i]; hi = sortedTiers[i + 1]; break; }
+      }
+      const frac = hi.q === lo.q ? 0 : (q - lo.q) / (hi.q - lo.q);
+      interpolatedBase = lo.p + (hi.p - lo.p) * frac;
+      tier = lo;
+    }
+    const ti = sortedTiers.indexOf(tier);
     // Check if selected size has its own direct prices
     const sizeGroup = prod.opts?.find(g => g.key === 'size');
     const sizeOpt = sizeGroup?.opts?.find(o => o.id === selOpts?.size);
@@ -374,7 +390,7 @@ export function AppProvider({ children }) {
       const total = +applyOpts(base, prod.opts, selOpts, 'size', 0, 0, qty).toFixed(2);
       return { total, unit: +(total/(qty||1)).toFixed(4), sqft: 0 };
     }
-    const total = +applyOpts(tier.p, prod.opts, selOpts, null, 0, 0, qty).toFixed(2);
+    const total = +applyOpts(interpolatedBase ?? tier.p, prod.opts, selOpts, null, 0, 0, qty).toFixed(2);
     return { total, unit: +(total/(qty||1)).toFixed(4), sqft: 0 };
   }, []);
 
