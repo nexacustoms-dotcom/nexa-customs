@@ -445,13 +445,17 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
               </div>
             );
           })}
-          <div style={{ height: 1, background: 'var(--bd)', margin: '14px 0' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <input type="checkbox" id="custom-qty-enabled" style={{ width: 16, height: 16 }} checked={!!p.allow_custom_qty}
-              onChange={e => upd('allow_custom_qty')(e.target.checked)} />
-            <label htmlFor="custom-qty-enabled" style={{ fontSize: 13 }}>Allow customer to type any quantity (not just the tiers above)</label>
+
+          <div className="aform-section" style={{ marginTop: 18, borderColor: p.allow_custom_qty ? 'rgba(249,115,22,.4)' : 'var(--bd)', background: p.allow_custom_qty ? 'rgba(249,115,22,.06)' : 'var(--s2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <input type="checkbox" id="custom-qty-enabled" style={{ width: 18, height: 18 }} checked={!!p.allow_custom_qty}
+                onChange={e => upd('allow_custom_qty')(e.target.checked)} />
+              <label htmlFor="custom-qty-enabled" style={{ fontSize: 14, fontWeight: 700 }}>🔢 Let customers type any quantity, not just the tiles above</label>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--mu)', marginTop: 6, marginLeft: 28, lineHeight: 1.6 }}>
+              When ON, a "Custom" tile appears next to your quantity tiles. Price for anything in-between is calculated automatically by interpolating between your two nearest tiers above — no extra pricing to set up. Customers still can't go below your lowest tier or above your highest.
+            </div>
           </div>
-          <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4, marginLeft: 26 }}>Price for in-between quantities is calculated by interpolating between your nearest two tiers above. Customers still can't go below your lowest tier or above your highest.</div>
           <div style={{ height: 1, background: 'var(--bd)', margin: '14px 0' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <input type="checkbox" id="sqft-enabled" style={{ width: 16, height: 16 }} checked={!!p.sqft?.enabled}
@@ -1134,6 +1138,73 @@ function EmailsTab() {
 }
 
 // ── PRICING TAB ───────────────────────────────────────────────────────────────
+function checkPricingIssues(prod) {
+  if (prod.sqft?.enabled || !prod.pricing || prod.pricing.length < 2) return [];
+  const sorted = [...prod.pricing].sort((a, b) => a.q - b.q);
+  const issues = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1], cur = sorted[i];
+    if (cur.p < prev.p) {
+      issues.push({ severity: 'severe', text: `Qty ${cur.q} ($${cur.p.toFixed(2)}) costs LESS in total than qty ${prev.q} ($${prev.p.toFixed(2)}) — a customer would just buy the bigger tier` });
+    } else {
+      const prevUnit = prev.p / prev.q, curUnit = cur.p / cur.q;
+      if (curUnit > prevUnit) {
+        issues.push({ severity: 'moderate', text: `Qty ${cur.q} costs more per-unit ($${curUnit.toFixed(3)}) than qty ${prev.q} ($${prevUnit.toFixed(3)})` });
+      }
+    }
+  }
+  return issues;
+}
+
+function PricingHealthCheck({ prods, onFix }) {
+  const [open, setOpen] = useState(false);
+  const results = prods.map(p => ({ prod: p, issues: checkPricingIssues(p) })).filter(r => r.issues.length > 0);
+  const severeCount = results.filter(r => r.issues.some(i => i.severity === 'severe')).length;
+  const moderateCount = results.length - severeCount;
+
+  if (results.length === 0) {
+    return (
+      <div className="aform-section" style={{ maxWidth: 560, marginBottom: 28, borderColor: 'rgba(34,197,94,.3)', background: 'rgba(34,197,94,.05)' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#4ade80' }}>✅ Pricing Health Check — no issues found</div>
+        <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4 }}>Every product's quantity tiers increase sensibly — no bigger tier costs less than a smaller one.</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="aform-section" style={{ maxWidth: 560, marginBottom: 28, borderColor: 'rgba(239,68,68,.35)', background: 'rgba(239,68,68,.05)' }}>
+      <div onClick={() => setOpen(o => !o)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#f87171' }}>⚠️ Pricing Health Check — {results.length} product{results.length !== 1 ? 's' : ''} need attention</div>
+          <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4 }}>
+            {severeCount > 0 && <span>{severeCount} severe (bigger quantity actually costs less overall)</span>}
+            {severeCount > 0 && moderateCount > 0 && <span> · </span>}
+            {moderateCount > 0 && <span>{moderateCount} moderate (bulk costs more per-unit than a smaller tier)</span>}
+          </div>
+        </div>
+        <span style={{ fontSize: 18, color: 'var(--mu)' }}>{open ? '▾' : '▸'}</span>
+      </div>
+      {open && (
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {results.map(({ prod, issues }) => (
+            <div key={prod.id} style={{ background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 8, padding: '10px 12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontWeight: 700, fontSize: 13 }}>{prod.name}</span>
+                <button className="abtn" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => onFix(prod.id)}>✏️ Fix Now</button>
+              </div>
+              {issues.map((issue, i) => (
+                <div key={i} style={{ fontSize: 11, color: issue.severity === 'severe' ? '#f87171' : '#fbbf24', marginBottom: 2 }}>
+                  {issue.severity === 'severe' ? '🔴' : '🟡'} {issue.text}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PricingTab() {
   const { prods, setProds, pricing, setPricing, showToast } = useApp();
   const [cfg, setCfg] = useState({ ...pricing });
@@ -1185,6 +1256,8 @@ function PricingTab() {
         </div>
         <button className="abtn abtn-add" style={{ marginTop:8 }} onClick={saveCfg}>💾 Save Global Config</button>
       </div>
+
+      <PricingHealthCheck prods={prods} onFix={id => setEditingId(id)} />
 
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, gap:12, flexWrap:'wrap' }}>
         <div>
