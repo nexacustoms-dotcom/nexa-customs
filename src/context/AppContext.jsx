@@ -363,7 +363,13 @@ export function AppProvider({ children }) {
       }
       const baseUnit = Math.max(sqftVal, prod.sqft.min||1) * (prod.sqft.rate||6.5);
       const unitCost = applyOpts(baseUnit, prod.opts, selOpts, 'size', sqftW, sqftH, sqftW);
-      return { total: +(unitCost * Math.max(qty||1,1)).toFixed(2), unit: +unitCost.toFixed(4), sqft: sqftVal };
+      const pieces = Math.max(qty||1, 1);
+      // Bulk discount: find the highest qty threshold this order qualifies for
+      const bulkTiers = [...(prod.sqft.bulk_discounts || [])].sort((a, b) => a.qty - b.qty);
+      let discountPct = 0;
+      for (const t of bulkTiers) { if (pieces >= t.qty) discountPct = t.pct; }
+      const discountedUnitCost = unitCost * (1 - discountPct / 100);
+      return { total: +(discountedUnitCost * pieces).toFixed(2), unit: +discountedUnitCost.toFixed(4), sqft: sqftVal, discountPct };
     }
     const sortedTiers = [...(prod.pricing || [])].sort((a, b) => a.q - b.q);
     if (!sortedTiers.length) return { total: 0, unit: 0, sqft: 0 };

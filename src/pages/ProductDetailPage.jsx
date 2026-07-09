@@ -296,10 +296,28 @@ export default function ProductDetailPage() {
                 {isSqft ? 'Quantity (Pieces)' : 'Select Quantity'}
               </div>
               {isSqft ? (
-                <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid var(--bd)', background: 'var(--s2)', borderRadius: 10, overflow: 'hidden', width: 'fit-content' }}>
-                  <button onClick={() => setSelQty(q => Math.max(1, (q || 1) - 1))} style={{ padding: '11px 18px', fontSize: 20, fontWeight: 800, background: 'none', border: 'none', color: 'var(--tx)', cursor: 'pointer', borderRight: '1.5px solid var(--bd)' }}>−</button>
-                  <span style={{ padding: '11px 24px', fontSize: 18, fontWeight: 800 }}>{selQty}</span>
-                  <button onClick={() => setSelQty(q => (q || 1) + 1)} style={{ padding: '11px 18px', fontSize: 20, fontWeight: 800, background: 'none', border: 'none', color: 'var(--tx)', cursor: 'pointer', borderLeft: '1.5px solid var(--bd)' }}>+</button>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid var(--bd)', background: 'var(--s2)', borderRadius: 10, overflow: 'hidden', width: 'fit-content' }}>
+                      <button onClick={() => setSelQty(q => Math.max(1, (q || 1) - 1))} style={{ padding: '11px 18px', fontSize: 20, fontWeight: 800, background: 'none', border: 'none', color: 'var(--tx)', cursor: 'pointer', borderRight: '1.5px solid var(--bd)' }}>−</button>
+                      <span style={{ padding: '11px 24px', fontSize: 18, fontWeight: 800 }}>{selQty}</span>
+                      <button onClick={() => setSelQty(q => (q || 1) + 1)} style={{ padding: '11px 18px', fontSize: 20, fontWeight: 800, background: 'none', border: 'none', color: 'var(--tx)', cursor: 'pointer', borderLeft: '1.5px solid var(--bd)' }}>+</button>
+                    </div>
+                    {(() => {
+                      const { discountPct } = calcPrice(prod, selQty, selOpts);
+                      return discountPct > 0 ? (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--o)', background: 'rgba(249,115,22,.12)', padding: '4px 10px', borderRadius: 20 }}>
+                          🎉 Save {discountPct}% per piece at this quantity
+                        </span>
+                      ) : null;
+                    })()}
+                  </div>
+                  {prod.sqft?.bulk_discounts?.length > 0 && (() => {
+                    const next = [...prod.sqft.bulk_discounts].sort((a,b)=>a.qty-b.qty).find(t => t.qty > (selQty || 1));
+                    return next ? (
+                      <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 6 }}>Order {next.qty}+ pieces to unlock {next.pct}% off per piece</div>
+                    ) : null;
+                  })()}
                 </div>
               ) : (() => {
                 const qtyMode = prod.qty_mode || (prod.allow_custom_qty ? 'both' : 'tiles');

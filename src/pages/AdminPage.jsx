@@ -490,6 +490,25 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
                 <div style={{ fontSize: 10, color: '#f87171', marginTop: 6 }}>⚠️ Rate is $0 — custom-size orders on this product will be free for customers</div>
               )}
               <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4 }}>Min/Max Width & Height shows warnings to customers if they enter sizes outside your limits. Set 0 to ignore.</div>
+
+              <div style={{ height: 1, background: 'var(--bd)', margin: '16px 0' }} />
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>📉 Bulk Discount for Multiple Pieces</div>
+              <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 10, lineHeight: 1.6 }}>
+                Right now, ordering 10 identical pieces costs exactly 10× one piece — no bulk discount. Add tiers below if you want to reward bigger piece counts. Leave empty for no discount (today's behavior).
+              </div>
+              {(p.sqft.bulk_discounts || []).map((bd, bi) => (
+                <div key={bi} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, color: 'var(--mu)' }}>At</span>
+                  <input type="number" min="2" className="ainp" style={{ width: 70 }} value={bd.qty}
+                    onChange={e => { const nx = [...p.sqft.bulk_discounts]; nx[bi] = { ...bd, qty: parseInt(e.target.value) || 2 }; upd('sqft')({ ...p.sqft, bulk_discounts: nx }); }} />
+                  <span style={{ fontSize: 11, color: 'var(--mu)' }}>+ pieces, take</span>
+                  <input type="number" min="0" max="90" className="ainp" style={{ width: 70 }} value={bd.pct}
+                    onChange={e => { const nx = [...p.sqft.bulk_discounts]; nx[bi] = { ...bd, pct: parseInt(e.target.value) || 0 }; upd('sqft')({ ...p.sqft, bulk_discounts: nx }); }} />
+                  <span style={{ fontSize: 11, color: 'var(--mu)' }}>% off per piece</span>
+                  <button onClick={() => upd('sqft')({ ...p.sqft, bulk_discounts: p.sqft.bulk_discounts.filter((_, i) => i !== bi) })} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid rgba(239,68,68,.3)', background: 'rgba(239,68,68,.08)', color: '#f87171', cursor: 'pointer', fontSize: 11 }}>✕</button>
+                </div>
+              ))}
+              <button className="abtn" style={{ fontSize: 11, padding: '6px 12px' }} onClick={() => upd('sqft')({ ...p.sqft, bulk_discounts: [...(p.sqft.bulk_discounts || []), { qty: 5, pct: 5 }] })}>+ Add Discount Tier</button>
             </>
           )}
         </div>
