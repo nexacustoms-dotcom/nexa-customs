@@ -102,6 +102,7 @@ function mergeOverrides(prods, overrides) {
       express_ok:     o.express_ok      !== undefined ? o.express_ok      : p.express_ok,
       sameday_max_qty: o.sameday_max_qty !== undefined ? o.sameday_max_qty : p.sameday_max_qty,
       allow_custom_qty: o.allow_custom_qty !== undefined ? o.allow_custom_qty : p.allow_custom_qty,
+      qty_mode:       o.qty_mode !== undefined ? o.qty_mode : (p.qty_mode || (p.allow_custom_qty ? 'both' : 'tiles')),
       // Label configurator fields
       label_configurator: o.label_configurator !== undefined ? o.label_configurator : p.label_configurator,
       lbl_shapes:     o.lbl_shapes      !== undefined ? o.lbl_shapes      : p.lbl_shapes,
@@ -256,6 +257,7 @@ export function AppProvider({ children }) {
         express_ok:         p.express_ok,
         sameday_max_qty:    p.sameday_max_qty,
         allow_custom_qty:   p.allow_custom_qty,
+        qty_mode:           p.qty_mode,
         // Specs & extended description
         specs:              p.specs || [],
         long_desc:          p.long_desc || '',

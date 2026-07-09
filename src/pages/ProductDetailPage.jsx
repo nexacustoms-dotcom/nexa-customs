@@ -301,57 +301,75 @@ export default function ProductDetailPage() {
                   <span style={{ padding: '11px 24px', fontSize: 18, fontWeight: 800 }}>{selQty}</span>
                   <button onClick={() => setSelQty(q => (q || 1) + 1)} style={{ padding: '11px 18px', fontSize: 20, fontWeight: 800, background: 'none', border: 'none', color: 'var(--tx)', cursor: 'pointer', borderLeft: '1.5px solid var(--bd)' }}>+</button>
                 </div>
-              ) : (
-                <div>
+              ) : (() => {
+                const qtyMode = prod.qty_mode || (prod.allow_custom_qty ? 'both' : 'tiles');
+                const minQ = prod.pricing[0].q, maxQ = prod.pricing[prod.pricing.length - 1].q;
+                const baseTier = prod.pricing[0];
+                const { total: baseTotal } = calcPrice(prod, baseTier.q, selOpts);
+                const baseUnit = baseTotal / baseTier.q;
+
+                const tileGrid = (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(100px,1fr))', gap: 7 }}>
-                    {(() => {
-                      const baseTier = prod.pricing[0];
-                      const { total: baseTotal } = calcPrice(prod, baseTier.q, selOpts);
-                      const baseUnit = baseTotal / baseTier.q;
-                      return prod.pricing.map(tier => {
-                        const { total: tp } = calcPrice(prod, tier.q, selOpts);
-                        const disp = tier.q >= 1000 ? (tier.q / 1000).toFixed(tier.q % 1000 ? 1 : 0) + 'K' : String(tier.q);
-                        const sel = !customQtyMode && selQty === tier.q;
-                        const unit = tp / tier.q;
-                        const savePct = baseUnit > 0 ? Math.round((1 - unit / baseUnit) * 100) : 0;
-                        return (
-                          <button key={tier.q} className={`qb${sel ? ' sel' : ''}`} onClick={() => { setCustomQtyMode(false); setSelQty(tier.q); }} style={{ position: 'relative' }}>
-                            {savePct >= 5 && (
-                              <span style={{ position: 'absolute', top: -8, right: -6, background: 'var(--o)', color: '#000', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 20, lineHeight: 1.4 }}>
-                                Save {savePct}%
-                              </span>
-                            )}
-                            <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 18, lineHeight: 1.2 }}>{disp}</span>
-                            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--o)' }}>${tp.toFixed(2)}</span>
-                            <span style={{ fontSize: 10, color: 'var(--mu)', fontFamily: "'DM Mono',monospace" }}>${unit.toFixed(3)}/ea</span>
-                          </button>
-                        );
-                      });
-                    })()}
-                    {prod.allow_custom_qty && (
+                    {prod.pricing.map(tier => {
+                      const { total: tp } = calcPrice(prod, tier.q, selOpts);
+                      const disp = tier.q >= 1000 ? (tier.q / 1000).toFixed(tier.q % 1000 ? 1 : 0) + 'K' : String(tier.q);
+                      const sel = !customQtyMode && selQty === tier.q;
+                      const unit = tp / tier.q;
+                      const savePct = baseUnit > 0 ? Math.round((1 - unit / baseUnit) * 100) : 0;
+                      return (
+                        <button key={tier.q} className={`qb${sel ? ' sel' : ''}`} onClick={() => { setCustomQtyMode(false); setSelQty(tier.q); }} style={{ position: 'relative' }}>
+                          {savePct >= 5 && (
+                            <span style={{ position: 'absolute', top: -8, right: -6, background: 'var(--o)', color: '#000', fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 20, lineHeight: 1.4 }}>
+                              Save {savePct}%
+                            </span>
+                          )}
+                          <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 18, lineHeight: 1.2 }}>{disp}</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--o)' }}>${tp.toFixed(2)}</span>
+                          <span style={{ fontSize: 10, color: 'var(--mu)', fontFamily: "'DM Mono',monospace" }}>${unit.toFixed(3)}/ea</span>
+                        </button>
+                      );
+                    })}
+                    {qtyMode === 'both' && (
                       <button className={`qb${customQtyMode ? ' sel' : ''}`} onClick={() => { setCustomQtyMode(true); if (!selQty || prod.pricing.some(t => t.q === selQty)) setSelQty(prod.pricing[0].q); }}>
                         <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 15, lineHeight: 1.2 }}>Custom</span>
                         <span style={{ fontSize: 10, color: 'var(--mu)' }}>Type any amount</span>
                       </button>
                     )}
                   </div>
-                  {prod.allow_custom_qty && customQtyMode && (() => {
-                    const minQ = prod.pricing[0].q, maxQ = prod.pricing[prod.pricing.length - 1].q;
-                    return (
-                      <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid var(--bd)', background: 'var(--s2)', borderRadius: 10, overflow: 'hidden' }}>
-                          <button onClick={() => setSelQty(q => Math.max(minQ, (q || minQ) - 1))} style={{ padding: '10px 16px', fontSize: 18, fontWeight: 800, background: 'none', border: 'none', color: 'var(--tx)', cursor: 'pointer', borderRight: '1.5px solid var(--bd)' }}>−</button>
-                          <input type="number" value={selQty || ''} min={minQ} max={maxQ}
-                            onChange={e => setSelQty(Math.max(minQ, Math.min(maxQ, parseInt(e.target.value) || minQ)))}
-                            style={{ width: 80, textAlign: 'center', padding: '10px 4px', fontSize: 16, fontWeight: 800, background: 'none', border: 'none', color: 'var(--tx)' }} />
-                          <button onClick={() => setSelQty(q => Math.min(maxQ, (q || minQ) + 1))} style={{ padding: '10px 16px', fontSize: 18, fontWeight: 800, background: 'none', border: 'none', color: 'var(--tx)', cursor: 'pointer', borderLeft: '1.5px solid var(--bd)' }}>+</button>
-                        </div>
-                        <span style={{ fontSize: 11, color: 'var(--mu)' }}>Between {minQ.toLocaleString()} and {maxQ.toLocaleString()}</span>
+                );
+
+                const counterInput = (() => {
+                  const q = selQty || minQ;
+                  const { total: curTotal } = calcPrice(prod, q, selOpts);
+                  const curUnit = curTotal / q;
+                  const savePct = baseUnit > 0 ? Math.round((1 - curUnit / baseUnit) * 100) : 0;
+                  return (
+                    <div style={{ marginTop: qtyMode === 'both' ? 10 : 0, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid var(--bd)', background: 'var(--s2)', borderRadius: 10, overflow: 'hidden' }}>
+                        <button onClick={() => setSelQty(qv => Math.max(minQ, (qv || minQ) - 1))} style={{ padding: '10px 16px', fontSize: 18, fontWeight: 800, background: 'none', border: 'none', color: 'var(--tx)', cursor: 'pointer', borderRight: '1.5px solid var(--bd)' }}>−</button>
+                        <input type="number" value={selQty || ''} min={minQ} max={maxQ}
+                          onChange={e => setSelQty(Math.max(minQ, Math.min(maxQ, parseInt(e.target.value) || minQ)))}
+                          style={{ width: 80, textAlign: 'center', padding: '10px 4px', fontSize: 16, fontWeight: 800, background: 'none', border: 'none', color: 'var(--tx)' }} />
+                        <button onClick={() => setSelQty(qv => Math.min(maxQ, (qv || minQ) + 1))} style={{ padding: '10px 16px', fontSize: 18, fontWeight: 800, background: 'none', border: 'none', color: 'var(--tx)', cursor: 'pointer', borderLeft: '1.5px solid var(--bd)' }}>+</button>
                       </div>
-                    );
-                  })()}
-                </div>
-              )}
+                      <span style={{ fontSize: 11, color: 'var(--mu)' }}>Between {minQ.toLocaleString()} and {maxQ.toLocaleString()}</span>
+                      {savePct >= 5 && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--o)', background: 'rgba(249,115,22,.12)', padding: '4px 10px', borderRadius: 20 }}>
+                          🎉 Save {savePct}% at this quantity
+                        </span>
+                      )}
+                    </div>
+                  );
+                })();
+
+                if (qtyMode === 'counter') return counterInput;
+                return (
+                  <div>
+                    {tileGrid}
+                    {qtyMode === 'both' && customQtyMode && counterInput}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Turnaround */}

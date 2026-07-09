@@ -248,6 +248,7 @@ function ProductsTab() {
       express_ok: true,
       sameday_max_qty: 0,
       allow_custom_qty: false,
+      qty_mode: 'tiles',
       label_configurator: false,
       pricing: [
         { q: 25,  p: 0 },
@@ -446,14 +447,23 @@ function ProductEditor({ prod, cats, onSave, onCancel }) {
             );
           })}
 
-          <div className="aform-section" style={{ marginTop: 18, borderColor: p.allow_custom_qty ? 'rgba(249,115,22,.4)' : 'var(--bd)', background: p.allow_custom_qty ? 'rgba(249,115,22,.06)' : 'var(--s2)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <input type="checkbox" id="custom-qty-enabled" style={{ width: 18, height: 18 }} checked={!!p.allow_custom_qty}
-                onChange={e => upd('allow_custom_qty')(e.target.checked)} />
-              <label htmlFor="custom-qty-enabled" style={{ fontSize: 14, fontWeight: 700 }}>🔢 Let customers type any quantity, not just the tiles above</label>
+          <div className="aform-section" style={{ marginTop: 18, borderColor: 'var(--o)', background: 'rgba(249,115,22,.06)' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>🔢 How customers pick quantity</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              {[
+                ['tiles', 'Preset amounts only', 'Just the tiles above (1, 6, 10...)'],
+                ['counter', 'Type any amount only', 'No tiles — just a +/- counter'],
+                ['both', 'Both', 'Tiles, plus a "Custom" option'],
+              ].map(([id, label, desc]) => (
+                <div key={id} onClick={() => upd('qty_mode')(id)}
+                  style={{ cursor: 'pointer', padding: '10px 10px', borderRadius: 8, border: `1.5px solid ${(p.qty_mode || 'tiles') === id ? 'var(--o)' : 'var(--bd)'}`, background: (p.qty_mode || 'tiles') === id ? 'rgba(249,115,22,.12)' : 'var(--s2)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 3 }}>{label}</div>
+                  <div style={{ fontSize: 10, color: 'var(--mu)', lineHeight: 1.4 }}>{desc}</div>
+                </div>
+              ))}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--mu)', marginTop: 6, marginLeft: 28, lineHeight: 1.6 }}>
-              When ON, a "Custom" tile appears next to your quantity tiles. Price for anything in-between is calculated automatically by interpolating between your two nearest tiers above — no extra pricing to set up. Customers still can't go below your lowest tier or above your highest.
+            <div style={{ fontSize: 12, color: 'var(--mu)', marginTop: 10, lineHeight: 1.6 }}>
+              Any quantity, whether picked from a tile or typed in, is priced by interpolating between your two nearest tiers above — the discount curve always applies, even in "Type any amount only" mode.
             </div>
           </div>
           <div style={{ height: 1, background: 'var(--bd)', margin: '14px 0' }} />
