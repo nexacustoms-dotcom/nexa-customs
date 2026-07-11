@@ -297,7 +297,7 @@ function ProductsTab() {
                         ? <img src={img} alt="" style={{ width: 38, height: 38, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--bd)' }} />
                         : <span style={{ fontSize: 10, color: 'var(--mu)', background: 'var(--s2)', padding: '3px 7px', borderRadius: 4 }}>No img</span>}
                     </td>
-                    <td style={{ color: 'var(--o)', fontFamily: "'DM Mono',monospace" }}>${p.pricing[0]?.p.toFixed(2)}</td>
+                    <td style={{ color: 'var(--o)', fontFamily: "'DM Mono',monospace" }}>${(p.pricing?.[0]?.p ?? 0).toFixed(2)}</td>
                     <td>{p.badge && <span className="badge-orange">{p.badge}</span>}</td>
                     <td><span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 700, background: p.disabled ? 'rgba(239,68,68,.1)' : 'rgba(34,197,94,.1)', color: p.disabled ? '#f87171' : 'var(--gr)', border: `1px solid ${p.disabled ? 'rgba(239,68,68,.2)' : 'rgba(34,197,94,.2)'}` }}>{p.disabled ? 'Hidden' : 'Active'}</span></td>
                     <td style={{ display: 'flex', gap: 6 }}>
@@ -1324,7 +1324,7 @@ function PricingTab() {
                     </span>
                   </td>
                   <td style={{ color:'var(--mu)', fontSize:12 }}>{p.pricing.length}</td>
-                  <td style={{ color:'var(--o)', fontFamily:"'DM Mono',monospace" }}>${p.pricing[0]?.p.toFixed(2)}</td>
+                  <td style={{ color:'var(--o)', fontFamily:"'DM Mono',monospace" }}>${(p.pricing?.[0]?.p ?? 0).toFixed(2)}</td>
                   <td style={{ color:'var(--mu)', fontSize:12 }}>{(p.opts||[]).length} groups</td>
                   <td><button className="abtn abtn-add" onClick={() => setEditingId(p.id)}>✏️ Edit</button></td>
                 </tr>

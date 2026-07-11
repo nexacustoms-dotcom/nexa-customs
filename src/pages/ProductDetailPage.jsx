@@ -319,6 +319,8 @@ export default function ProductDetailPage() {
                     ) : null;
                   })()}
                 </div>
+              ) : (!prod.pricing || prod.pricing.length === 0) ? (
+                <div style={{ fontSize: 12, color: 'var(--mu)', padding: '10px 0' }}>Pricing isn't set up for this product yet — please call us at {store.phone || '(437) 997-9921'} for a quote.</div>
               ) : (() => {
                 const qtyMode = prod.qty_mode || (prod.allow_custom_qty ? 'both' : 'tiles');
                 const minQ = prod.pricing[0].q, maxQ = prod.pricing[prod.pricing.length - 1].q;
