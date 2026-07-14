@@ -1,6 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, sendEmailJS, imgUrl } from '../context/AppContext';
+
+// Loaded only when a customer actually uploads an image in the artwork step —
+// keeps this off the initial bundle for every other page on the site.
+const BackgroundRemover = lazy(() => import('../components/BackgroundRemover'));
 
 // ── CART ──────────────────────────────────────────────────────────────────────
 export function CartPage() {
@@ -94,6 +98,8 @@ export function CheckoutPage() {
   const [placing, setPlacing] = useState(false);
   const [artworkFiles, setArtworkFiles] = useState([]);
   const [artworkUploading, setArtworkUploading] = useState(false);
+  const [imageQueue, setImageQueue] = useState([]); // image files awaiting a bg-removal decision
+  const [activeImage, setActiveImage] = useState(null);
   const [delivery, setDelivery] = useState('pickup');
   const [billing, setBilling] = useState({
     sameAsContact: true,
@@ -221,18 +227,47 @@ export function CheckoutPage() {
     if (invalid.length) { showToast('Unsupported: ' + invalid[0].name); return; }
     const tooBig = files.filter(f => f.size > 50 * 1024 * 1024);
     if (tooBig.length) { showToast('Max 50MB per file'); return; }
+
+    // Plain images (png/jpg) get routed through the optional background-removal
+    // step first. PDFs/AI/EPS/PSD/SVG/ZIP upload immediately as before.
+    const bgEligible = ['png','jpg','jpeg'];
+    const images = files.filter(f => bgEligible.includes(f.name.split('.').pop().toLowerCase()));
+    const others = files.filter(f => !images.includes(f));
+
+    if (others.length) {
+      setArtworkUploading(true);
+      const tempNo = 'TEMP-' + Date.now();
+      const uploaded = [];
+      for (const file of others) {
+        const url = await uploadArtwork(file, tempNo);
+        uploaded.push({ name: file.name, size: file.size, url, file });
+      }
+      setArtworkUploading(false);
+      setArtworkFiles(prev => [...prev, ...uploaded]);
+      const ok = uploaded.filter(x => x.url).length;
+      showToast(ok > 0 ? `${ok} file(s) uploaded!` : 'Upload failed — email files after ordering');
+    }
+
+    if (images.length) setImageQueue(q => [...q, ...images]);
+    if (e.target) e.target.value = '';
+  }
+
+  // Pull the next queued image into the bg-removal widget once the previous one is done
+  useEffect(() => {
+    if (!activeImage && imageQueue.length > 0) {
+      setActiveImage(imageQueue[0]);
+      setImageQueue(q => q.slice(1));
+    }
+  }, [imageQueue, activeImage]);
+
+  async function finishImageUpload(finalFile) {
+    setActiveImage(null);
     setArtworkUploading(true);
     const tempNo = 'TEMP-' + Date.now();
-    const uploaded = [];
-    for (const file of files) {
-      const url = await uploadArtwork(file, tempNo);
-      uploaded.push({ name: file.name, size: file.size, url, file });
-    }
+    const url = await uploadArtwork(finalFile, tempNo);
     setArtworkUploading(false);
-    setArtworkFiles(prev => [...prev, ...uploaded]);
-    const ok = uploaded.filter(x => x.url).length;
-    showToast(ok > 0 ? `${ok} file(s) uploaded!` : 'Upload failed — email files after ordering');
-    if (e.target) e.target.value = '';
+    setArtworkFiles(prev => [...prev, { name: finalFile.name, size: finalFile.size, url, file: finalFile }]);
+    showToast(url ? `${finalFile.name} uploaded!` : 'Upload failed — email files after ordering');
   }
 
   async function saveOrder(no, pmId = '') {
@@ -639,6 +674,16 @@ export function CheckoutPage() {
                   ))}
                   <span style={{ fontSize: 11, color: 'var(--mu)', alignSelf: 'center' }}>· Max 50MB/file</span>
                 </div>
+
+                {activeImage && (
+                  <Suspense fallback={<div style={{ padding: 20, fontSize: 12, color: 'var(--mu)' }}>Loading…</div>}>
+                    <BackgroundRemover
+                      file={activeImage}
+                      onConfirm={finishImageUpload}
+                      onSkip={() => finishImageUpload(activeImage)}
+                    />
+                  </Suspense>
+                )}
 
                 <div
                   onClick={() => artworkRef.current?.click()}
