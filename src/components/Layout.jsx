@@ -24,6 +24,7 @@ export function Topbar() {
 const NAV = [
   { id: 'home', label: 'Home' },
   { id: 'products', label: 'Products' },
+  { id: 'blog', label: 'Guides' },
   { id: 'quote', label: 'Get a Quote' },
   { id: 'contact', label: 'Contact' },
 ];
@@ -35,7 +36,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const count = cart.length;
 
-  const URL_MAP = { 'home':'/', 'products':'/products', 'cart':'/cart', 'checkout':'/checkout', 'success':'/order-confirmed', 'quote':'/quote', 'contact':'/contact', 'admin':'/admin', 'faq':'/faq', 'shipping':'/shipping', 'returns':'/returns', 'terms':'/terms', 'turnaround':'/turnaround', 'order-status':'/order-status', 'privacy':'/privacy' };
+  const URL_MAP = { 'home':'/', 'products':'/products', 'blog':'/blog', 'cart':'/cart', 'checkout':'/checkout', 'success':'/order-confirmed', 'quote':'/quote', 'contact':'/contact', 'admin':'/admin', 'faq':'/faq', 'shipping':'/shipping', 'returns':'/returns', 'terms':'/terms', 'turnaround':'/turnaround', 'order-status':'/order-status', 'privacy':'/privacy' };
   function navGo(p) { setOpen(false); document.body.style.overflow = ''; navigate(URL_MAP[p] || '/'+p); }
   function toggleHam() { setOpen(o => { document.body.style.overflow = !o ? 'hidden' : ''; return !o; }); }
 
@@ -131,7 +132,7 @@ export function Footer() {
   const { store, cats } = useApp();
   const navigate = useNavigate();
   function go(p) {
-    const map = { home:'/', products:'/products', cart:'/cart', checkout:'/checkout', quote:'/quote', contact:'/contact', admin:'/admin', faq:'/faq', shipping:'/shipping', returns:'/returns', terms:'/terms', turnaround:'/turnaround', about:'/about', 'order-status':'/order-status', 'privacy':'/privacy' };
+    const map = { home:'/', products:'/products', blog:'/blog', cart:'/cart', checkout:'/checkout', quote:'/quote', contact:'/contact', admin:'/admin', faq:'/faq', shipping:'/shipping', returns:'/returns', terms:'/terms', turnaround:'/turnaround', about:'/about', 'order-status':'/order-status', 'privacy':'/privacy' };
     navigate(map[p] || '/' + p);
   }
   const GTA = ['Mississauga','Toronto','Brampton','Oakville','Burlington','Vaughan','Markham','Richmond Hill','Etobicoke','North York','Scarborough','Milton','Georgetown','Pickering','Ajax','Hamilton'];
@@ -182,7 +183,7 @@ export function Footer() {
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Quick Links</div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 7 }}>
-              {[['Home','home'],['All Products','products'],['Get a Quote','quote'],['Track Order','order-status'],['About Us','about'],['Contact Us','contact'],['FAQ','faq'],['Turnaround Times','turnaround'],['Shipping Policy','shipping']].map(([l, p]) => (
+              {[['Home','home'],['All Products','products'],['Guides','blog'],['Get a Quote','quote'],['Track Order','order-status'],['About Us','about'],['Contact Us','contact'],['FAQ','faq'],['Turnaround Times','turnaround'],['Shipping Policy','shipping']].map(([l, p]) => (
                 <li key={l} onClick={() => go(p)} style={{ fontSize: 12, color: 'var(--mu)', cursor: 'pointer' }}
                   onMouseEnter={e => e.currentTarget.style.color = 'var(--tx)'}
                   onMouseLeave={e => e.currentTarget.style.color = 'var(--mu)'}

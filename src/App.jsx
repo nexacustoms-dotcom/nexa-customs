@@ -7,6 +7,7 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import ProductCard from './components/ProductCard';
 import AdminPage from './pages/AdminPage';
+import BlogIndexPage from './pages/BlogIndexPage';
 import { CartPage, CheckoutPage, SuccessPage, QuotePage, ContactPage, OrderStatusPage } from './pages/TransactionalPages';
 import { usePageSEO } from './hooks/usePageSEO';
 
@@ -278,6 +279,7 @@ function AppRoutes() {
         <Route path="/order-status" element={<Layout><OrderStatusPage /></Layout>} />
         <Route path="/quote" element={<Layout><QuotePage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
+        <Route path="/blog" element={<Layout><BlogIndexPage /></Layout>} />
 
         {/* Policy pages */}
         <Route path="/faq" element={<Layout><PolicyPage slug="faq" /></Layout>} />

@@ -8,6 +8,7 @@ const BASE   = 'Nexa Customs — GTA Print Shop · Mississauga';
 const TITLES = {
   '/':               'Nexa Customs — Print Shop · Signs · Vehicle Wraps · GTA & Canada',
   '/products':       'All Print Products — Nexa Customs · GTA Print Shop',
+  '/blog':           'Guides & Resources — Nexa Customs GTA Print Shop',
   '/quote':          'Get a Free Print Quote — Nexa Customs GTA',
   '/contact':        'Contact Nexa Customs — (437) 997-9921 · Mississauga GTA',
   '/about':          'About Nexa Customs Inc. — GTA Print Shop Since 2010',
@@ -27,6 +28,7 @@ const TITLES = {
 const DESCRIPTIONS = {
   '/':          "GTA's trusted print shop in Mississauga. Business cards, banners, vehicle wraps & stickers. Free proof, same-day pickup, ships Canada-wide. Call (437) 997-9921.",
   '/products':  'Browse 80+ print products at Nexa Customs. Business cards, banners, vehicle wraps, stickers & signs. Serving GTA — Toronto, Mississauga, Brampton, Oakville.',
+  '/blog':      'Practical guides on print materials, sign regulations, and getting the most out of your order — from the GTA print shop that prints it. Nexa Customs, Mississauga.',
   '/quote':     'Get a free custom print quote from Nexa Customs. Serving Toronto, Mississauga, Brampton, Oakville GTA. Ships Canada-wide. Reply within 1 business day.',
   '/contact':   'Contact Nexa Customs at (437) 997-9921. Located in Mississauga, GTA. Free pickup or Canada-wide shipping. Mon–Fri 9AM–6PM, Sat by appointment.',
   '/about':     "Nexa Customs Inc. — GTA print shop serving Toronto, Mississauga, Brampton & Oakville. Business cards, signs, vehicle wraps & more. Quality guaranteed.",

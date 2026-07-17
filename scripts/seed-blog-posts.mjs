@@ -343,15 +343,16 @@ We print retractable banners, tension-fabric backdrops, and rigid foam board sig
 
 async function main() {
   console.log('Fetching current custom_pages from Supabase...');
-  const res = await fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.custom_pages&select=data`, {
+  const getRes = await fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.custom_pages&select=data`, {
     headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` },
   });
-  if (!res.ok) {
-    console.error('Failed to fetch site_config:', res.status, await res.text());
+  if (!getRes.ok) {
+    console.error('❌ Failed to fetch site_config:', getRes.status, await getRes.text());
     process.exit(1);
   }
-  const rows = await res.json();
+  const rows = await getRes.json();
   const existing = Array.isArray(rows?.[0]?.data) ? rows[0].data : [];
+  console.log(`Found ${rows.length ? 'existing' : 'no'} custom_pages row — ${existing.length} page(s) currently there.`);
   const existingSlugs = new Set(existing.map(p => p.slug));
 
   const toAdd = NEW_POSTS.filter(p => !existingSlugs.has(p.slug));
@@ -371,28 +372,47 @@ async function main() {
   console.log(`Adding ${toAdd.length} new post(s):`);
   toAdd.forEach(p => console.log(`  + ${p.slug}`));
 
-  const putRes = await fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.custom_pages`, {
-    method: 'PATCH',
+  // Upsert — POST + merge-duplicates, same method the app itself uses to save
+  // pages from Admin. This CREATES the row if id=custom_pages doesn't exist
+  // yet, unlike a plain PATCH which only updates an existing row.
+  const upsertRes = await fetch(`${SUPA_URL}/rest/v1/site_config`, {
+    method: 'POST',
     headers: {
       apikey: SUPA_KEY,
       Authorization: `Bearer ${SUPA_KEY}`,
       'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
+      Prefer: 'resolution=merge-duplicates,return=representation',
     },
-    body: JSON.stringify({ data: merged, updated_at: new Date().toISOString() }),
+    body: JSON.stringify({ id: 'custom_pages', data: merged, updated_at: new Date().toISOString() }),
   });
 
-  if (!putRes.ok) {
-    console.error('Failed to update site_config:', putRes.status, await putRes.text());
+  const responseText = await upsertRes.text();
+  if (!upsertRes.ok) {
+    console.error('❌ Failed to write to Supabase:', upsertRes.status, responseText);
+    console.error('\nIf this says something about RLS or permission denied, the anon key does not have write access to site_config — that needs a Supabase policy check, not a script fix.');
     process.exit(1);
   }
 
-  console.log('✅ Done. New posts are live at:');
+  // Verify by reading it back — don't just trust a 200
+  const verifyRes = await fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.custom_pages&select=data`, {
+    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` },
+  });
+  const verifyRows = await verifyRes.json();
+  const verifyData = Array.isArray(verifyRows?.[0]?.data) ? verifyRows[0].data : [];
+  const nowPresent = toAdd.filter(p => verifyData.some(v => v.slug === p.slug));
+
+  if (nowPresent.length !== toAdd.length) {
+    console.error(`❌ Wrote to Supabase but verification shows only ${nowPresent.length}/${toAdd.length} posts actually saved. Something is still wrong — check the site_config table directly in the Supabase dashboard.`);
+    process.exit(1);
+  }
+
+  console.log('✅ Verified — new posts are confirmed live at:');
   toAdd.forEach(p => console.log(`   https://nexacustoms.ca/p/${p.slug}`));
   console.log('\nNext steps:');
-  console.log('  1. Open /admin → Pages, add a hero image to each new post with the image button');
-  console.log('  2. Double-check title/slug if you want to tweak either');
-  console.log('  3. Run: node scripts/generate-sitemap.mjs   (so the new posts get indexed)');
+  console.log('  1. Open /admin → Pages — hard refresh (Ctrl+Shift+R) if you don\'t see them right away, Admin caches pages locally');
+  console.log('  2. Add a hero image to each new post with the image button');
+  console.log('  3. Double-check title/slug if you want to tweak either');
+  console.log('  4. Run: node scripts/generate-sitemap.mjs   (so the new posts get indexed)');
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
