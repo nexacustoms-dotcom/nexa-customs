@@ -145,6 +145,7 @@ export default function LabelConfigurator({ prod }) {
     addToCart({
       id: prod.id + '-' + Date.now(),
       name: prod.name,
+      cat: prod.cat,
       qty,
       opts,
       price: totalPrice,

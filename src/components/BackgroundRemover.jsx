@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 
 // ────────────────────────────────────────────────────────────────────────────
-// Core algorithm: flood-fill from image edges based on sampled background
-// color, with soft edge feathering. Runs 100% client-side on canvas — no
-// API calls, no server cost, no external libraries.
+// Background removal — flood-fill from image edges based on sampled
+// background color, with soft edge feathering. Runs 100% client-side on
+// canvas — no API calls, no server cost, no external libraries.
 // ────────────────────────────────────────────────────────────────────────────
 function stripBackground(imgEl, threshold = 32) {
   const maxD = 1400; // cap working size for speed; upscales fine for stickers
@@ -19,7 +19,6 @@ function stripBackground(imgEl, threshold = 32) {
   const imgData = ctx.getImageData(0, 0, iw, ih);
   const data = imgData.data;
 
-  // Sample background color from corners + edge midpoints
   const samplePts = [
     [0, 0], [iw - 1, 0], [0, ih - 1], [iw - 1, ih - 1],
     [Math.floor(iw / 2), 0], [Math.floor(iw / 2), ih - 1],
@@ -37,8 +36,7 @@ function stripBackground(imgEl, threshold = 32) {
     return Math.sqrt((r - bgR) ** 2 + (g - bgG) ** 2 + (b - bgB) ** 2);
   }
 
-  // Flood fill from all 4 edges to find connected background region
-  const mask = new Uint8Array(iw * ih); // 0 = bg, 1 = fg
+  const mask = new Uint8Array(iw * ih);
   const visited = new Uint8Array(iw * ih);
   const queue = [];
   for (let x = 0; x < iw; x++) { queue.push(x); queue.push((ih - 1) * iw + x); }
@@ -64,7 +62,6 @@ function stripBackground(imgEl, threshold = 32) {
   }
   for (let i = 0; i < iw * ih; i++) if (!visited[i]) mask[i] = 1;
 
-  // Apply mask, feathering the boundary so edges don't look jagged
   const result = new Uint8ClampedArray(data);
   for (let y = 0; y < ih; y++) {
     for (let x = 0; x < iw; x++) {
@@ -86,23 +83,79 @@ function stripBackground(imgEl, threshold = 32) {
   return canvas.toDataURL('image/png');
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// Outline — stamps a solid-color silhouette of the cutout around a ring of
+// offset positions to build up an even border of the chosen thickness, then
+// draws the original artwork back on top, centered. Classic "sticker border"
+// look, no per-pixel contour tracing needed.
+// ────────────────────────────────────────────────────────────────────────────
+function addOutline(imgEl, color, widthPx) {
+  const iw = imgEl.naturalWidth || imgEl.width;
+  const ih = imgEl.naturalHeight || imgEl.height;
+  const pad = widthPx + 4;
+
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = iw; maskCanvas.height = ih;
+  const mctx = maskCanvas.getContext('2d');
+  mctx.drawImage(imgEl, 0, 0, iw, ih);
+  mctx.globalCompositeOperation = 'source-in';
+  mctx.fillStyle = color;
+  mctx.fillRect(0, 0, iw, ih);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = iw + pad * 2; canvas.height = ih + pad * 2;
+  const ctx = canvas.getContext('2d');
+
+  const steps = Math.max(20, Math.round(widthPx * 2.5));
+  for (let i = 0; i < steps; i++) {
+    const angle = (i / steps) * Math.PI * 2;
+    const dx = Math.cos(angle) * widthPx;
+    const dy = Math.sin(angle) * widthPx;
+    ctx.drawImage(maskCanvas, pad + dx, pad + dy);
+  }
+  ctx.drawImage(imgEl, pad, pad, iw, ih);
+  return canvas.toDataURL('image/png');
+}
+
 function dataUrlToFile(dataUrl, filename) {
   return fetch(dataUrl).then(r => r.blob()).then(blob => new File([blob], filename, { type: 'image/png' }));
 }
+function loadImg(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
 
-// ────────────────────────────────────────────────────────────────────────────
-// Widget — one image at a time, minimal controls: preview, one button to
-// remove the background, and a choice to use the processed or original file.
+const OUTLINE_COLORS = [
+  { label: 'White', value: '#ffffff' },
+  { label: 'Black', value: '#000000' },
+];
+const OUTLINE_WIDTHS = [
+  { label: 'Thin', value: 6 },
+  { label: 'Medium', value: 12 },
+  { label: 'Thick', value: 20 },
+];
+
 // ────────────────────────────────────────────────────────────────────────────
 export default function BackgroundRemover({ file, onConfirm, onSkip }) {
   const [srcUrl, setSrcUrl] = useState(null);
-  const [processedUrl, setProcessedUrl] = useState(null);
+  const [processedUrl, setProcessedUrl] = useState(null); // after bg removal
+  const [outlineUrl, setOutlineUrl] = useState(null);      // after outline applied
   const [processing, setProcessing] = useState(false);
+  const [outlining, setOutlining] = useState(false);
   const [error, setError] = useState('');
-  const imgElRef = useRef(null);
+
+  const [outlineOn, setOutlineOn] = useState(false);
+  const [outlineColor, setOutlineColor] = useState('#ffffff');
+  const [outlineWidth, setOutlineWidth] = useState(12);
+  const [customColor, setCustomColor] = useState('#ffffff');
 
   useEffect(() => {
-    setSrcUrl(null); setProcessedUrl(null); setError('');
+    setSrcUrl(null); setProcessedUrl(null); setOutlineUrl(null); setError('');
+    setOutlineOn(false);
     const reader = new FileReader();
     reader.onload = e => setSrcUrl(e.target.result);
     reader.readAsDataURL(file);
@@ -113,7 +166,6 @@ export default function BackgroundRemover({ file, onConfirm, onSkip }) {
     setProcessing(true); setError('');
     const img = new Image();
     img.onload = () => {
-      // Let the "processing" state paint before the (synchronous) heavy work runs
       requestAnimationFrame(() => {
         try {
           const out = stripBackground(img, 32);
@@ -128,10 +180,33 @@ export default function BackgroundRemover({ file, onConfirm, onSkip }) {
     img.src = srcUrl;
   }
 
-  async function useImage(processed) {
-    const finalUrl = processed ? processedUrl : srcUrl;
+  // Recompute the outline whenever it's toggled on, or its color/width changes
+  useEffect(() => {
+    if (!outlineOn || !processedUrl) { setOutlineUrl(null); return; }
+    let cancelled = false;
+    setOutlining(true);
+    loadImg(processedUrl).then(img => {
+      if (cancelled) return;
+      requestAnimationFrame(() => {
+        try {
+          const out = addOutline(img, outlineColor, outlineWidth);
+          if (!cancelled) setOutlineUrl(out);
+        } catch (e) {
+          if (!cancelled) setError('Could not add an outline to this image.');
+        }
+        if (!cancelled) setOutlining(false);
+      });
+    });
+    return () => { cancelled = true; };
+  }, [outlineOn, outlineColor, outlineWidth, processedUrl]);
+
+  const displayUrl = outlineOn && outlineUrl ? outlineUrl : (processedUrl || srcUrl);
+
+  async function useImage(useProcessed) {
+    if (!useProcessed) { onConfirm(file); return; }
     const base = file.name.replace(/\.[^.]+$/, '');
-    const outFile = processed ? await dataUrlToFile(finalUrl, `${base}-nobg.png`) : file;
+    const suffix = outlineOn && outlineUrl ? '-sticker' : '-nobg';
+    const outFile = await dataUrlToFile(displayUrl, `${base}${suffix}.png`);
     onConfirm(outFile);
   }
 
@@ -142,20 +217,28 @@ export default function BackgroundRemover({ file, onConfirm, onSkip }) {
     backgroundColor: '#1b1b21',
   };
 
+  const swatchStyle = (active, color) => ({
+    width: 26, height: 26, borderRadius: 7, cursor: 'pointer',
+    background: color, border: active ? '2px solid var(--o)' : '1px solid var(--bd)',
+    boxShadow: color === '#ffffff' ? 'inset 0 0 0 1px #00000022' : 'none',
+  });
+
   return (
     <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 20, marginBottom: 18 }}>
-      <div className="D" style={{ fontSize: 16, marginBottom: 4 }}>✂️ Remove background?</div>
+      <div className="D" style={{ fontSize: 16, marginBottom: 4 }}>✂️ Sticker Tools</div>
       <p style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 14, lineHeight: 1.6 }}>
-        {file.name} — if this is a photo or logo for a sticker/decal, we can cut out the background for you. Optional — you can also just use the original file.
+        {file.name} — cut out the background and add a sticker-style border. Both optional — you can also just use the original file.
       </p>
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: 16 }}>
         <div style={{ ...checker, width: 180, height: 180, borderRadius: 10, overflow: 'hidden', border: '1px solid var(--bd)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {srcUrl && (
-            <img src={processedUrl || srcUrl} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+            <img src={displayUrl} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
           )}
         </div>
-        <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+        <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Step 1: background removal */}
           {!processedUrl ? (
             <button
               onClick={handleRemove}
@@ -166,8 +249,53 @@ export default function BackgroundRemover({ file, onConfirm, onSkip }) {
               {processing ? 'Removing background…' : '✂️ Remove Background'}
             </button>
           ) : (
-            <div style={{ fontSize: 12, color: 'var(--gr)', fontWeight: 600 }}>✅ Background removed — checkered area shows transparency</div>
+            <div style={{ fontSize: 12, color: 'var(--gr)', fontWeight: 600 }}>✅ Background removed</div>
           )}
+
+          {/* Step 2: outline, only offered once bg is removed */}
+          {processedUrl && (
+            <div style={{ background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 'var(--r)', padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                <input type="checkbox" checked={outlineOn} onChange={e => setOutlineOn(e.target.checked)} />
+                Add sticker outline
+                {outlining && <span style={{ color: 'var(--mu)', fontWeight: 400 }}>(rendering…)</span>}
+              </label>
+
+              {outlineOn && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 11, color: 'var(--mu)', width: 52 }}>Color</span>
+                    {OUTLINE_COLORS.map(c => (
+                      <div key={c.value} title={c.label} onClick={() => setOutlineColor(c.value)} style={swatchStyle(outlineColor === c.value, c.value)} />
+                    ))}
+                    <input
+                      type="color"
+                      value={customColor}
+                      onChange={e => { setCustomColor(e.target.value); setOutlineColor(e.target.value); }}
+                      title="Custom color"
+                      style={{ width: 26, height: 26, padding: 0, border: outlineColor === customColor ? '2px solid var(--o)' : '1px solid var(--bd)', borderRadius: 7, cursor: 'pointer', background: 'none' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 11, color: 'var(--mu)', width: 52 }}>Width</span>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {OUTLINE_WIDTHS.map(w => (
+                        <button
+                          key={w.value}
+                          onClick={() => setOutlineWidth(w.value)}
+                          className={outlineWidth === w.value ? 'btn btn-primary' : 'btn btn-ghost'}
+                          style={{ fontSize: 11, padding: '4px 10px' }}
+                        >
+                          {w.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {error && <div style={{ fontSize: 12, color: '#ef4444' }}>{error}</div>}
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>

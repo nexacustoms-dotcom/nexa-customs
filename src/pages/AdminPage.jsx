@@ -905,13 +905,13 @@ function PagesTab() {
     showToast('✅ Page saved!'); setEditingBuiltin(null);
   }
 
-  function startEditCustom(pg, idx) { setForm({ title:pg.title, slug:pg.slug, nav:pg.nav||false, content:pg.content||'', body:'', faqs:[], relatedCat: pg.relatedCat || '' }); setEditing(idx); setEditingBuiltin(null); }
+  function startEditCustom(pg, idx) { setForm({ title:pg.title, slug:pg.slug, nav:pg.nav||false, content:pg.content||'', body:'', faqs:[], relatedCat: pg.relatedCat || '', metaDesc: pg.metaDesc || '' }); setEditing(idx); setEditingBuiltin(null); }
 
   function saveCustom() {
     if (!form.title.trim() || !form.slug.trim()) { showToast('Title and slug required'); return; }
     const slug = form.slug.toLowerCase().replace(/[^a-z0-9-]/g,'-');
-    if (editing === 'new') setPages(prev => [...prev, { id:'cp-'+Date.now(), title:form.title, slug, nav:form.nav, content:form.content, relatedCat:form.relatedCat || null }]);
-    else setPages(prev => prev.map((p,i) => i===editing ? {...p, title:form.title, slug, nav:form.nav, content:form.content, relatedCat:form.relatedCat || null} : p));
+    if (editing === 'new') setPages(prev => [...prev, { id:'cp-'+Date.now(), title:form.title, slug, nav:form.nav, content:form.content, relatedCat:form.relatedCat || null, metaDesc: form.metaDesc || '' }]);
+    else setPages(prev => prev.map((p,i) => i===editing ? {...p, title:form.title, slug, nav:form.nav, content:form.content, relatedCat:form.relatedCat || null, metaDesc: form.metaDesc || ''} : p));
     showToast('✅ Page saved!'); setEditing(null);
   }
 
@@ -996,6 +996,10 @@ function PagesTab() {
             {(cats || []).map(c => <option key={c.id} value={c.id}>{c.l}</option>)}
           </select>
         </div>
+        <div className="afg"><label className="aflbl">Meta Description (SEO — 120–158 chars ideal, blank = auto-generated from content)</label>
+          <input className="ainp" maxLength={200} value={form.metaDesc || ''} onChange={upd('metaDesc')} placeholder="e.g. Real estate sign rules in Mississauga & the GTA — sizes, placement, and when signs must come down." />
+          <div style={{ fontSize:11, color: (form.metaDesc||'').length > 158 ? '#ef4444' : 'var(--mu)', marginTop:4 }}>{(form.metaDesc||'').length} / 158 chars</div>
+        </div>
         <div className="afg"><label className="aflbl">Content (plain text, blank lines = paragraphs)</label>
           <div style={{ marginBottom: 8 }}><InsertImageButton onInsert={snippet => setForm(f => ({ ...f, content: f.content + snippet }))} /></div>
           <textarea className="ainp" rows="12" style={{ resize:'vertical', lineHeight:1.6 }} value={form.content} onChange={upd('content')} />
@@ -1013,7 +1017,7 @@ function PagesTab() {
     <div>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
         <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:24 }}>Pages</h2>
-        <button className="abtn abtn-add" onClick={() => { setForm({title:'',slug:'',nav:false,content:'',body:'',faqs:[],relatedCat:''}); setEditing('new'); }}>+ New Page</button>
+        <button className="abtn abtn-add" onClick={() => { setForm({title:'',slug:'',nav:false,content:'',body:'',faqs:[],relatedCat:'',metaDesc:''}); setEditing('new'); }}>+ New Page</button>
       </div>
 
       {/* Builtin pages — fully editable */}

@@ -82,7 +82,7 @@ export default function ProductDetailPage() {
       return g?.opts?.find(o => o.id === val)?.l || val;
     }).filter(Boolean);
     if (isCustomSize && custW && custH) optLabels.push(`${custW}′ × ${custH}′`);
-    addToCart({ id: prod.id, name: prod.name, qty: selQty, opts: optLabels, price, unitPrice, turnaround, imgs: prod.imgs?.filter(x=>x?.length) || [] });
+    addToCart({ id: prod.id, name: prod.name, cat: prod.cat, qty: selQty, opts: optLabels, price, unitPrice, turnaround, imgs: prod.imgs?.filter(x=>x?.length) || [] });
     showToast(`✅ Added to cart!`);
   }
 

@@ -228,9 +228,10 @@ export function CheckoutPage() {
     const tooBig = files.filter(f => f.size > 50 * 1024 * 1024);
     if (tooBig.length) { showToast('Max 50MB per file'); return; }
 
-    // Plain images (png/jpg) get routed through the optional background-removal
-    // step first. PDFs/AI/EPS/PSD/SVG/ZIP upload immediately as before.
-    const bgEligible = ['png','jpg','jpeg'];
+    // Background removal / outline tool is only relevant to stickers & labels —
+    // skip it entirely for other orders (banners, business cards, etc.)
+    const isStickerOrder = cart.some(i => i.cat === 'labels-stickers');
+    const bgEligible = isStickerOrder ? ['png','jpg','jpeg'] : [];
     const images = files.filter(f => bgEligible.includes(f.name.split('.').pop().toLowerCase()));
     const others = files.filter(f => !images.includes(f));
 

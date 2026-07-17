@@ -83,7 +83,7 @@ function ensureTag(selector, tag, attrs) {
 
 export function usePageSEO() {
   const location = useLocation();
-  const { curProd } = useApp();
+  const { curProd, pages } = useApp();
 
   useEffect(() => {
     const path = location.pathname;
@@ -107,6 +107,20 @@ export function usePageSEO() {
       const catSlug = path.split('/')[2];
       title = CAT_TITLES[catSlug] || `${catSlug.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase())} — Nexa Customs GTA`;
       desc  = CAT_DESCS[catSlug] || DESCRIPTIONS['/products'];
+    } else if (path.startsWith('/p/')) {
+      const pageSlug = path.split('/')[2];
+      const page = (pages || []).find(pg => pg.slug === pageSlug);
+      if (page) {
+        title = `${page.title} — Nexa Customs`;
+        // Never fall back to the homepage description here — that's exactly
+        // the duplicate-meta-description bug already fixed for products.
+        if (page.metaDesc) {
+          desc = page.metaDesc;
+        } else {
+          const plain = (page.content || '').replace(/^##.*$/gm, '').replace(/^>>>\s*/gm, '').replace(/[\[\]!()]/g, '').replace(/\s+/g, ' ').trim();
+          desc = plain.length > 158 ? plain.slice(0, 155) + '...' : (plain || `${page.title} — a guide from Nexa Customs, GTA print shop.`);
+        }
+      }
     }
 
     // Never index transactional / private / disabled-product pages
@@ -135,5 +149,5 @@ export function usePageSEO() {
     set('meta[name="twitter:title"]',      'meta', { name:'twitter:title' },       'content', title);
     set('meta[name="twitter:description"]','meta', { name:'twitter:description' }, 'content', desc);
 
-  }, [location.pathname, curProd?.id]);
+  }, [location.pathname, curProd?.id, pages]);
 }
