@@ -8,7 +8,7 @@ const BASE   = 'Nexa Customs — GTA Print Shop · Mississauga';
 const TITLES = {
   '/':               'Nexa Customs — Print Shop · Signs · Vehicle Wraps · GTA & Canada',
   '/products':       'All Print Products — Nexa Customs · GTA Print Shop',
-  '/blog':           'Guides & Resources — Nexa Customs GTA Print Shop',
+  '/blog':           'Blog — Nexa Customs GTA Print Shop',
   '/quote':          'Get a Free Print Quote — Nexa Customs GTA',
   '/contact':        'Contact Nexa Customs — (437) 997-9921 · Mississauga GTA',
   '/about':          'About Nexa Customs Inc. — GTA Print Shop Since 2010',
@@ -26,8 +26,8 @@ const TITLES = {
 
 // All descriptions trimmed to 120–158 chars (sweet spot for Google & Bing)
 const DESCRIPTIONS = {
-  '/':          "GTA's trusted print shop in Mississauga. Business cards, banners, vehicle wraps & stickers. Free proof, same-day pickup, ships Canada-wide. Call (437) 997-9921.",
-  '/products':  'Browse 80+ print products at Nexa Customs. Business cards, banners, vehicle wraps, stickers & signs. Serving GTA — Toronto, Mississauga, Brampton, Oakville.',
+  '/':          "GTA's trusted print shop near you in Mississauga. Business cards, banners, wraps & stickers. Same-day pickup, ships across Ontario. (437) 997-9921.",
+  '/products':  'Browse 80+ print products near you — business cards, banners, vehicle wraps, stickers & signs. Serving Toronto, Mississauga, Brampton, GTA & Ontario.',
   '/blog':      'Practical guides on print materials, sign regulations, and getting the most out of your order — from the GTA print shop that prints it. Nexa Customs, Mississauga.',
   '/quote':     'Get a free custom print quote from Nexa Customs. Serving Toronto, Mississauga, Brampton, Oakville GTA. Ships Canada-wide. Reply within 1 business day.',
   '/contact':   'Contact Nexa Customs at (437) 997-9921. Located in Mississauga, GTA. Free pickup or Canada-wide shipping. Mon–Fri 9AM–6PM, Sat by appointment.',
@@ -58,10 +58,10 @@ const CAT_TITLES = {
 
 // All 12 categories — all within 120–158 chars
 const CAT_DESCS = {
-  'business-cards':   'Professional business cards in Mississauga & GTA. 14pt, 16pt, soft-touch, spot UV & more. Free proof, same-day pickup, ships Canada-wide.',
-  'signs-banners':    'Custom vinyl banners & signs in GTA. Indoor/outdoor, custom sizes, grommets, retractable stands. Rush available. Ships Canada-wide.',
-  'vehicle-graphics': 'Vehicle wraps & fleet graphics in Toronto, Mississauga & Brampton. Full wraps, partial wraps, decals, truck lettering. Free quote.',
-  'labels-stickers':  'Custom labels & stickers in GTA. Die-cut, roll labels, BOPP waterproof, clear & holographic. Serving Toronto, Mississauga, Brampton.',
+  'business-cards':   'Affordable business cards near you in Mississauga & GTA. 14pt, 16pt, soft-touch, spot UV & more. Free proof, same-day pickup, ships Canada-wide.',
+  'signs-banners':    'Custom vinyl banners & signs near you — GTA sign company for indoor/outdoor signage, retractable stands, custom sizes. Rush available, ships Canada-wide.',
+  'vehicle-graphics': 'Vehicle & car wraps near you in Toronto, Mississauga, Brampton & Vaughan. Full/partial wraps, van wraps, window decals, truck lettering. Free quote.',
+  'labels-stickers':  'Custom labels & stickers near you in GTA. Die-cut, roll labels, BOPP waterproof, clear & holographic. Serving Toronto, Mississauga, Markham.',
   'flyers-postcards': 'Flyer & postcard printing in GTA. 1,000 flyers from $99. Single & double-sided, gloss or matte. Ships Canada-wide. Rush available.',
   'marketing':        'Marketing materials printing in GTA. Brochures, door hangers, rack cards, table tents. Serving Toronto, Mississauga, Brampton.',
   'stationery':       'Business stationery printing in GTA. Letterhead, envelopes, notepads & NCR forms. Professional quality, fast turnaround, ships Canada-wide.',
@@ -109,7 +109,7 @@ export function usePageSEO() {
       const catSlug = path.split('/')[2];
       title = CAT_TITLES[catSlug] || `${catSlug.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase())} — Nexa Customs GTA`;
       desc  = CAT_DESCS[catSlug] || DESCRIPTIONS['/products'];
-    } else if (path.startsWith('/p/')) {
+    } else if (path.startsWith('/blog/') || path.startsWith('/p/')) {
       const pageSlug = path.split('/')[2];
       const page = (pages || []).find(pg => pg.slug === pageSlug);
       if (page) {

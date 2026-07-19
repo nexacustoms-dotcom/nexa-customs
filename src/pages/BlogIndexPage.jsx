@@ -1,9 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 
-// Strip the site's lightweight markup (## headings, >>> callouts, image/table
-// syntax) down to plain text for a short card excerpt.
-function excerpt(content, max = 150) {
+// Strip the site's lightweight markup down to plain text for a card excerpt.
+function excerpt(content, max = 130) {
   if (!content) return '';
   const plain = content
     .replace(/^##\s?.*$/gm, '')
@@ -16,58 +15,139 @@ function excerpt(content, max = 150) {
   return plain.length > max ? plain.slice(0, max).trim() + '…' : plain;
 }
 
+// Pull the first embedded image out of a post's content, if it has one.
+function leadImage(content) {
+  const m = (content || '').match(/!\[[^\]]*\]\(([^)]+)\)/);
+  return m ? m[1] : null;
+}
+
+// Small printer's registration-mark crosshair — corner accent for the hero.
+function CropMark({ style }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" style={{ position: 'absolute', opacity: 0.35, ...style }}>
+      <line x1="9" y1="0" x2="9" y2="18" stroke="var(--mu)" strokeWidth="1" />
+      <line x1="0" y1="9" x2="18" y2="9" stroke="var(--mu)" strokeWidth="1" />
+      <circle cx="9" cy="9" r="4.5" fill="none" stroke="var(--mu)" strokeWidth="1" />
+    </svg>
+  );
+}
+
+// Halftone-dot placeholder for posts without a hero image yet — an actual
+// print-production technique, so it reads as on-brand rather than a generic
+// stock-photo stand-in.
+function HalftoneFill({ tall }) {
+  return (
+    <div style={{
+      width: '100%', height: tall ? 220 : 130, borderRadius: 10,
+      background: `radial-gradient(circle, rgba(249,115,22,.38) 1.6px, transparent 1.7px) 0 0/12px 12px, var(--s2)`,
+      border: '1px solid var(--bd)', flexShrink: 0,
+    }} />
+  );
+}
+
+function PerfDivider() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, margin: '2px 0' }}>
+      <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--sf)', border: '1px solid var(--bd)', marginLeft: -3 }} />
+      <div style={{ flex: 1, borderTop: '1px dashed var(--bd)' }} />
+      <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--sf)', border: '1px solid var(--bd)', marginRight: -3 }} />
+    </div>
+  );
+}
+
 export default function BlogIndexPage() {
   const { pages, cats } = useApp();
   const navigate = useNavigate();
 
-  // nav !== false: respects the existing "Show in footer navigation" toggle
-  // in Admin as an opt-out, while treating unset (older pages) as visible.
   const posts = (pages || []).filter(p => p.nav !== false && p.content);
+  const [featured, ...rest] = posts;
 
   return (
-    <div className="W" style={{ padding: '48px 28px 80px', maxWidth: 1100 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--mu)', marginBottom: 20 }}>
+    <div className="W" style={{ padding: '48px 28px 90px', maxWidth: 1100 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--mu)', marginBottom: 28 }}>
         <span onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Home</span>
         <span>/</span>
-        <span style={{ color: 'var(--tx)' }}>Guides & Resources</span>
+        <span style={{ color: 'var(--tx)' }}>Blog</span>
       </div>
 
-      <div style={{ marginBottom: 36, paddingBottom: 24, borderBottom: '1px solid var(--bd)' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 10 }}>
-          Nexa Customs
+      {/* Hero — framed like a proof sheet, with registration marks at the corners */}
+      <div style={{ position: 'relative', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: '34px 32px', marginBottom: 44, background: 'var(--sf)' }}>
+        <CropMark style={{ top: -9, left: -9 }} />
+        <CropMark style={{ top: -9, right: -9 }} />
+        <CropMark style={{ bottom: -9, left: -9 }} />
+        <CropMark style={{ bottom: -9, right: -9 }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+          <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--o)' }} />
+          <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--o)' }}>
+            On the Press — Nexa Customs Blog
+          </span>
         </div>
-        <h1 className="D" style={{ fontSize: 'clamp(30px,4.4vw,52px)', marginBottom: 10, lineHeight: 1.1 }}>Guides & Resources</h1>
-        <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 640, lineHeight: 1.7 }}>
-          Practical guides on print materials, sign regulations, and getting the most out of your order — written by the shop that prints it.
+        <h1 className="D" style={{ fontSize: 'clamp(32px,4.6vw,54px)', marginBottom: 12, lineHeight: 1.05 }}>Guides from the shop floor</h1>
+        <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 600, lineHeight: 1.7 }}>
+          Materials, bylaws, and production notes — written by the people running the press, not a content agency.
         </p>
       </div>
 
       {posts.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--mu)' }}>
-          No guides published yet — check back soon.
-        </div>
+        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--mu)' }}>No guides published yet — check back soon.</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 20 }}>
-          {posts.map(p => {
-            const cat = cats?.find(c => c.id === p.relatedCat);
-            return (
-              <div
-                key={p.slug}
-                onClick={() => navigate('/p/' + p.slug)}
-                style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 22, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'border-color .15s, transform .15s' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--o)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--bd)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-              >
-                {cat && (
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--o)' }}>{cat.l}</div>
-                )}
-                <div className="D" style={{ fontSize: 19, lineHeight: 1.25 }}>{p.title}</div>
-                <p style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.65, flex: 1 }}>{excerpt(p.content)}</p>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--o)' }}>Read guide →</div>
+        <>
+          {/* Featured — most recent post gets a wide treatment */}
+          {featured && (
+            <div
+              onClick={() => navigate('/blog/' + featured.slug)}
+              style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.1fr) minmax(0,1fr)', gap: 26, background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, marginBottom: 32, cursor: 'pointer', transition: 'border-color .15s' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--o)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--bd)'}
+            >
+              {leadImage(featured.content)
+                ? <img src={leadImage(featured.content)} alt="" style={{ width: '100%', height: '100%', minHeight: 200, objectFit: 'cover', borderRadius: 10, border: '1px solid var(--bd)' }} />
+                : <HalftoneFill tall />}
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--o)', border: '1px solid rgba(249,115,22,.35)', borderRadius: 5, padding: '2px 7px' }}>Latest</span>
+                  {cats?.find(c => c.id === featured.relatedCat) && (
+                    <span style={{ fontSize: 11, color: 'var(--mu)' }}>{cats.find(c => c.id === featured.relatedCat).l}</span>
+                  )}
+                </div>
+                <div className="D" style={{ fontSize: 'clamp(22px,2.6vw,30px)', lineHeight: 1.15 }}>{featured.title}</div>
+                <p style={{ fontSize: 13.5, color: 'var(--mu)', lineHeight: 1.7 }}>{excerpt(featured.content, 190)}</p>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--o)' }}>Read guide →</div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          )}
+
+          {/* Rest of the posts — ticket-style cards with a perforated tear-line */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 20 }}>
+            {rest.map(p => {
+              const cat = cats?.find(c => c.id === p.relatedCat);
+              const img = leadImage(p.content);
+              return (
+                <div
+                  key={p.slug}
+                  onClick={() => navigate('/blog/' + p.slug)}
+                  style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 18, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'border-color .15s, transform .15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--o)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--bd)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                  {img
+                    ? <img src={img} alt="" style={{ width: '100%', height: 130, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--bd)' }} />
+                    : <HalftoneFill />}
+
+                  {cat && (
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--o)' }}>{cat.l}</div>
+                  )}
+                  <div className="D" style={{ fontSize: 18, lineHeight: 1.25 }}>{p.title}</div>
+                  <p style={{ fontSize: 12.5, color: 'var(--mu)', lineHeight: 1.6, flex: 1 }}>{excerpt(p.content)}</p>
+
+                  <PerfDivider />
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--o)' }}>Read guide →</div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

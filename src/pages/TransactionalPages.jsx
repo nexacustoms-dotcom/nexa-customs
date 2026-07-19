@@ -286,7 +286,7 @@ export function CheckoutPage() {
         total,
         delivery,
         turnaround,
-        status: 'New',
+        status: 'Order Received',
         source: 'Website',
         payment_method: payMethod,
         stripe_pm_id: pmId || '',
@@ -1315,13 +1315,15 @@ export function OrderStatusPage() {
   const [order,   setOrder]   = useState(null);
   const [error,   setError]   = useState('');
 
-  const STATUSES = ['New','In Progress','Ready','Completed'];
+  const STATUSES = ['Order Received','Proof Sent','Printing','Printed','Shipped','Delivered'];
   const STATUS_INFO = {
-    'New':         { icon: '📋', label: 'Order Received',             desc: 'We have your order and are reviewing your artwork.' },
-    'In Progress': { icon: '🖨️',  label: 'In Production',             desc: 'Your order is on the press and being printed.' },
-    'Ready':       { icon: '✅',  label: 'Ready for Pickup / Shipped', desc: "Your order is complete! Come pick it up or it's on its way." },
-    'Completed':   { icon: '🎉', label: 'Completed',                  desc: 'Order delivered. Thank you for choosing Nexa Customs!' },
-    'Cancelled':   { icon: '❌', label: 'Cancelled',                  desc: 'This order has been cancelled. Contact us if you have questions.' },
+    'Order Received': { icon: '📋', label: 'Order Received', desc: 'We have your order and are reviewing your artwork.' },
+    'Proof Sent':      { icon: '🖼️', label: 'Proof Sent',     desc: 'Check your email — we\'ve sent a proof for your approval before we print.' },
+    'Printing':        { icon: '🖨️', label: 'Printing',       desc: 'Your order is on the press right now.' },
+    'Printed':         { icon: '📦', label: 'Printed',        desc: 'Printing is done — your order is being finished and packed.' },
+    'Shipped':         { icon: '🚚', label: 'Shipped',        desc: "Your order is on its way." },
+    'Delivered':       { icon: '🎉', label: 'Delivered',      desc: 'Order delivered. Thank you for choosing Nexa Customs!' },
+    'Cancelled':       { icon: '❌', label: 'Cancelled',      desc: 'This order has been cancelled. Contact us if you have questions.' },
   };
 
   async function lookup() {
@@ -1334,7 +1336,7 @@ export function OrderStatusPage() {
     if (!supaUrl || !supaKey) { setError('Order tracking unavailable — store not configured.'); setLoading(false); return; }
     try {
       const res = await fetch(
-        supaUrl + '/rest/v1/orders?order_number=eq.' + encodeURIComponent(no) + '&select=order_number,status,items,total,delivery,created_at,customer_name,customer_email',
+        supaUrl + '/rest/v1/orders?order_number=eq.' + encodeURIComponent(no) + '&select=order_number,status,items,total,delivery,tracking_number,created_at,customer_name,customer_email',
         { headers: { apikey: supaKey, Authorization: 'Bearer ' + supaKey } }
       );
       const data = await res.json();
@@ -1346,7 +1348,13 @@ export function OrderStatusPage() {
     setLoading(false);
   }
 
-  const st = order ? (STATUS_INFO[order.status] || STATUS_INFO['New']) : null;
+  const isPickup = order?.delivery === 'pickup';
+  const st = order ? (() => {
+    const base = STATUS_INFO[order.status] || STATUS_INFO['Order Received'];
+    if (order.status === 'Shipped' && isPickup) return { ...base, label: 'Ready for Pickup', desc: 'Your order is ready — come pick it up at 6033 Shawson Dr, Unit 40, Mississauga.' };
+    if (order.status === 'Delivered' && isPickup) return { ...base, label: 'Picked Up', desc: 'Order picked up. Thank you for choosing Nexa Customs!' };
+    return base;
+  })() : null;
   const activeIdx = order ? STATUSES.indexOf(order.status) : -1;
 
   return (
@@ -1390,20 +1398,27 @@ export function OrderStatusPage() {
 
             {order.status !== 'Cancelled' && (
               <div style={{ marginBottom: 24 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 4 }}>
                   {STATUSES.map((s, i) => {
                     const done    = i <= activeIdx;
                     const current = i === activeIdx;
+                    const shortLabel = s === 'Order Received' ? 'Received' : s === 'Proof Sent' ? 'Proof' : s === 'Printing' ? 'Printing' : s === 'Printed' ? 'Printed' : s === 'Shipped' ? (isPickup ? 'Ready' : 'Shipped') : (isPickup ? 'Picked Up' : 'Delivered');
                     return (
                       <div key={s} style={{ textAlign: 'center' }}>
                         <div style={{ height: 5, borderRadius: 4, background: done ? 'var(--o)' : 'var(--bd)', marginBottom: 6 }} />
-                        <div style={{ fontSize: 10, fontWeight: current ? 700 : 400, color: current ? 'var(--o)' : done ? 'var(--tx)' : 'var(--mu)' }}>
-                          {s === 'New' ? 'Received' : s === 'In Progress' ? 'Printing' : s === 'Ready' ? 'Ready' : 'Done'}
+                        <div style={{ fontSize: 9, fontWeight: current ? 700 : 400, color: current ? 'var(--o)' : done ? 'var(--tx)' : 'var(--mu)' }}>
+                          {shortLabel}
                         </div>
                       </div>
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {order.tracking_number && (
+              <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--mu)', marginBottom: 18, padding: '10px 14px', background: 'var(--s2)', borderRadius: 8 }}>
+                Tracking #: <span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--tx)', fontWeight: 700 }}>{order.tracking_number}</span>
               </div>
             )}
 

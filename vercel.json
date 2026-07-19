@@ -1,6 +1,11 @@
 {
   "redirects": [
     {
+      "source": "/p/:slug",
+      "destination": "/blog/:slug",
+      "permanent": true
+    },
+    {
       "source": "/product-category/signs",
       "destination": "/products/signs-banners",
       "permanent": true

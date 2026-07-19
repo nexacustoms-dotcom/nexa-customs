@@ -513,7 +513,7 @@ export default function ProductDetailPage() {
             <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, marginBottom: 16 }}>Helpful Guides</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 12 }}>
               {relatedPosts.map(post => (
-                <div key={post.id} onClick={() => navigate(`/p/${post.slug}`)} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, padding: '16px 18px', cursor: 'pointer', transition: 'border-color .15s' }}
+                <div key={post.id} onClick={() => navigate(`/blog/${post.slug}`)} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, padding: '16px 18px', cursor: 'pointer', transition: 'border-color .15s' }}
                   onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--o)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--bd)'}>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 6 }}>Read More</div>
                   <div style={{ fontWeight: 700, fontSize: 14 }}>{post.title} →</div>

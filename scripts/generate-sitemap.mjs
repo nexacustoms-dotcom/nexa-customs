@@ -80,7 +80,7 @@ prods.forEach(p => {
 
 if (customPages.length) {
   urls.push(`  <!-- ═══ Custom pages ═══ -->`);
-  customPages.forEach(p => urls.push(url(`${DOMAIN}/p/${p.slug}`, "0.5", "monthly")));
+  customPages.forEach(p => urls.push(url(`${DOMAIN}/blog/${p.slug}`, "0.5", "monthly")));
 }
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>

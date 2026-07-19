@@ -1,6 +1,6 @@
 // Nexa Customs Admin Panel v2
 import { useState, useRef } from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, sendEmailJS } from '../context/AppContext';
 
 const TABS = [
   { id: 'orders',     label: '📦 Orders' },
@@ -1746,8 +1746,8 @@ function printOrderSheet(o) {
   const no = o.order_number || o.id;
   const date = new Date(o.created_at || Date.now()).toLocaleDateString('en-CA', { year:'numeric', month:'long', day:'numeric' });
   const items = (o.items || '').split(',').map(i => '<li>' + i.trim() + '</li>').join('');
-  const statusColor = o.status === 'New' ? '#92400e' : o.status === 'In Progress' ? '#1e40af' : o.status === 'Ready' ? '#065f46' : '#374151';
-  const statusBg = o.status === 'New' ? '#fef3c7' : o.status === 'In Progress' ? '#dbeafe' : o.status === 'Ready' ? '#d1fae5' : '#f3f4f6';
+  const statusColor = o.status === 'Order Received' ? '#92400e' : o.status === 'Proof Sent' ? '#6b21a8' : o.status === 'Printing' ? '#1e40af' : o.status === 'Printed' ? '#854d0e' : o.status === 'Shipped' ? '#065f46' : '#374151';
+  const statusBg = o.status === 'Order Received' ? '#fef3c7' : o.status === 'Proof Sent' ? '#f3e8ff' : o.status === 'Printing' ? '#dbeafe' : o.status === 'Printed' ? '#fef9c3' : o.status === 'Shipped' ? '#d1fae5' : '#f3f4f6';
   const html = '<!DOCTYPE html><html><head><title>Order ' + no + '</title>'
     + '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;padding:32px;max-width:720px;margin:0 auto}'
     + '.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #f97316}'
@@ -1770,7 +1770,7 @@ function printOrderSheet(o) {
     + '<div style="font-size:12px;color:#666;margin-top:4px">Print · Signs · Graphics · Mississauga</div>'
     + '<div style="font-size:12px;color:#666">(437) 997-9921 · info@nexacustoms.ca</div></div>'
     + '<div style="text-align:right"><div class="ono">' + no + '</div>'
-    + '<div style="margin-top:4px"><span class="badge">' + (o.status || 'New') + '</span></div>'
+    + '<div style="margin-top:4px"><span class="badge">' + (o.status || 'Order Received') + '</span></div>'
     + '<div style="font-size:12px;color:#666;margin-top:4px">' + date + '</div></div></div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">'
     + '<div><div class="sec-title">Customer Info</div>'
@@ -1806,7 +1806,7 @@ function printOrderSheet(o) {
 
 // ── ORDERS TAB ─────────────────────────────────────────────────────────────────
 function OrdersTab() {
-  const { ls, showToast } = useApp();
+  const { ls, showToast, cfg } = useApp();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -1839,30 +1839,128 @@ function OrdersTab() {
     setLoading(false);
   }
 
-  async function updateStatus(id, status) {
+  // The actual customer-facing copy for each stage. Composed here in code
+  // rather than as separate EmailJS templates, since the free EmailJS plan
+  // only allows 2 templates total — this reuses one flexible template.
+  function getStatusEmail(status, order, trackingNumber) {
+    const name = (order.customer_name || '').split(' ')[0] || 'there';
+    const no = order.order_number || order.id;
+    const isPickup = order.delivery === 'pickup';
+    const trackLine = trackingNumber ? ` Your tracking number is ${trackingNumber}.` : '';
+
+    const COPY = {
+      'Order Received': {
+        subject: `We've got your order, ${name}! (${no})`,
+        headline: 'Order Received ✅',
+        body: `Thanks for ordering with Nexa Customs! We've received order ${no} and our team is reviewing it now. We'll email you again once a proof is ready for approval, or once we move to printing if no proof is needed.\n\nYou can check your order status anytime at nexacustoms.ca/order-status.`,
+      },
+      'Proof Sent': {
+        subject: `Your proof is ready for approval — ${no}`,
+        headline: 'Proof Sent 🖼️',
+        body: `A design proof for order ${no} is ready for your review. If you don't see it attached or in a separate email shortly, just reply here and we'll resend it.\n\nPlease reply with your approval or any changes as soon as you can — we won't start printing until we hear back from you, so a quick reply keeps your order on schedule.`,
+      },
+      'Printing': {
+        subject: `Your order is on the press! — ${no}`,
+        headline: 'Printing 🖨️',
+        body: `Good news — order ${no} is being printed right now. We'll email you again as soon as it's done.`,
+      },
+      'Printed': {
+        subject: `Printing complete — ${no}`,
+        headline: 'Printed 📦',
+        body: `Order ${no} has finished printing and is now being finished and packed${isPickup ? ' for pickup' : ' for shipping'}. ${isPickup ? "We'll let you know the moment it's ready to grab." : "We'll send tracking details as soon as it ships."}`,
+      },
+      'Shipped': isPickup ? {
+        subject: `Your order is ready for pickup! — ${no}`,
+        headline: 'Ready for Pickup 🏪',
+        body: `Order ${no} is ready! Come pick it up at 6033 Shawson Dr, Unit 40, Mississauga, ON L5T 1J6.\n\nHours: Mon–Fri 9AM–6PM, Sat by appointment.`,
+      } : {
+        subject: `Your order has shipped! — ${no}`,
+        headline: 'Shipped 🚚',
+        body: `Order ${no} is on its way.${trackLine}`,
+      },
+      'Delivered': isPickup ? {
+        subject: `Thanks for picking up your order! — ${no}`,
+        headline: 'Picked Up 🎉',
+        body: `Thanks for picking up order ${no}! We'd love to hear how it turned out — and if anything isn't right, just reply to this email.`,
+      } : {
+        subject: `Delivered — thanks for choosing Nexa Customs!`,
+        headline: 'Delivered 🎉',
+        body: `Order ${no} has been delivered. Thank you for choosing Nexa Customs — we'd love to hear how it turned out! If anything isn't right, just reply to this email.`,
+      },
+      'Cancelled': {
+        subject: `Order ${no} has been cancelled`,
+        headline: 'Cancelled ❌',
+        body: `Order ${no} has been cancelled. If this wasn't expected or you have questions, just reply to this email or call us at (437) 997-9921.`,
+      },
+    };
+    return COPY[status] || null;
+  }
+
+  async function updateStatus(id, status, order) {
     const url = import.meta.env.VITE_SUPA_URL || ls.raw('nxt_supa_url', '');
     const key = import.meta.env.VITE_SUPA_KEY || ls.raw('nxt_supa_key', '');
+
+    // Shipped is the one stage worth asking for a tracking number — skipped
+    // automatically for pickup orders since there's nothing to track.
+    let trackingNumber = order?.tracking_number || '';
+    if (status === 'Shipped' && order?.delivery !== 'pickup') {
+      const entered = window.prompt('Tracking number (optional, leave blank to skip):', trackingNumber || '');
+      if (entered !== null) trackingNumber = entered.trim();
+    }
+
+    const patchBody = { status };
+    if (trackingNumber) patchBody.tracking_number = trackingNumber;
+
     await fetch(`${url}/rest/v1/orders?id=eq.${encodeURIComponent(id)}`, {
       method: 'PATCH',
       headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(patchBody),
     });
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-    if (selected?.id === id) setSelected(prev => ({ ...prev, status }));
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status, ...(trackingNumber ? { tracking_number: trackingNumber } : {}) } : o));
+    if (selected?.id === id) setSelected(prev => ({ ...prev, status, ...(trackingNumber ? { tracking_number: trackingNumber } : {}) }));
     showToast('✅ Status updated to ' + status);
+
+    // Auto-send the customer-facing status email
+    if (order?.customer_email) {
+      const ejsSvc = cfg.ejsSvc(); const ejsKey = cfg.ejsKey(); const ejsStatusTpl = cfg.ejsStatusTpl();
+      if (!ejsSvc || !ejsKey || !ejsStatusTpl) {
+        showToast('⚠️ Status saved, but customer email not sent — set VITE_EJS_STATUS_TPL to enable auto-emails');
+        return;
+      }
+      const content = getStatusEmail(status, { ...order, tracking_number: trackingNumber }, trackingNumber);
+      if (!content) return;
+      try {
+        await sendEmailJS(ejsSvc, ejsStatusTpl, ejsKey, {
+          to_email: order.customer_email,
+          from_name: 'Nexa Customs',
+          reply_to: 'info@nexacustoms.ca',
+          customer_name: order.customer_name || 'there',
+          order_number: order.order_number || order.id,
+          subject: content.subject,
+          status_headline: content.headline,
+          status_message: content.body,
+          tracking_line: trackingNumber ? `Tracking number: ${trackingNumber}` : '',
+        });
+        showToast('📧 Status email sent to ' + order.customer_email);
+      } catch (err) {
+        showToast('⚠️ Status saved, but email failed: ' + err.message);
+      }
+    }
   }
 
   const STATUS_COLORS = {
-    'New':        { bg: 'rgba(249,115,22,.15)', color: 'var(--o)',  border: 'rgba(249,115,22,.3)' },
-    'In Progress':{ bg: 'rgba(96,165,250,.15)', color: '#60a5fa',   border: 'rgba(96,165,250,.3)' },
-    'Ready':      { bg: 'rgba(34,197,94,.15)',  color: 'var(--gr)', border: 'rgba(34,197,94,.3)' },
-    'Completed':  { bg: 'rgba(100,100,100,.15)',color: '#888',      border: 'rgba(100,100,100,.3)' },
-    'Cancelled':  { bg: 'rgba(239,68,68,.15)',  color: '#f87171',   border: 'rgba(239,68,68,.3)' },
+    'Order Received': { bg: 'rgba(249,115,22,.15)', color: 'var(--o)',   border: 'rgba(249,115,22,.3)' },
+    'Proof Sent':      { bg: 'rgba(168,85,247,.15)', color: '#c084fc',   border: 'rgba(168,85,247,.3)' },
+    'Printing':        { bg: 'rgba(96,165,250,.15)', color: '#60a5fa',   border: 'rgba(96,165,250,.3)' },
+    'Printed':         { bg: 'rgba(250,204,21,.15)', color: '#facc15',   border: 'rgba(250,204,21,.3)' },
+    'Shipped':         { bg: 'rgba(34,197,94,.15)',  color: 'var(--gr)', border: 'rgba(34,197,94,.3)' },
+    'Delivered':       { bg: 'rgba(100,100,100,.15)',color: '#888',      border: 'rgba(100,100,100,.3)' },
+    'Cancelled':       { bg: 'rgba(239,68,68,.15)',  color: '#f87171',   border: 'rgba(239,68,68,.3)' },
   };
 
   const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
   const totalRevenue = orders.filter(o => o.status !== 'Cancelled').reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
-  const newCount = orders.filter(o => o.status === 'New').length;
+  const newCount = orders.filter(o => o.status === 'Order Received').length;
 
   return (
     <div>
@@ -1880,7 +1978,7 @@ function OrdersTab() {
             ['📦', 'Total Orders', orders.length, ''],
             ['🆕', 'New', newCount, newCount > 0 ? 'var(--o)' : 'var(--mu)'],
             ['💰', 'Total Revenue', `$${totalRevenue.toFixed(2)}`, 'var(--gr)'],
-            ['✅', 'Completed', orders.filter(o => o.status === 'Completed').length, ''],
+            ['🎉', 'Delivered', orders.filter(o => o.status === 'Delivered').length, ''],
           ].map(([ico, label, val, color]) => (
             <div key={label} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, padding: '16px 18px' }}>
               <div style={{ fontSize: 22, marginBottom: 6 }}>{ico}</div>
@@ -1894,7 +1992,7 @@ function OrdersTab() {
       {/* Filter */}
       {orders.length > 0 && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
-          {['all', 'New', 'In Progress', 'Ready', 'Completed', 'Cancelled'].map(f => (
+          {['all', 'Order Received', 'Proof Sent', 'Printing', 'Printed', 'Shipped', 'Delivered', 'Cancelled'].map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", border: `1px solid ${filter === f ? 'var(--o)' : 'var(--bd)'}`, background: filter === f ? 'rgba(249,115,22,.12)' : 'var(--s2)', color: filter === f ? 'var(--o)' : 'var(--mu)' }}>
               {f === 'all' ? `All (${orders.length})` : `${f} (${orders.filter(o => o.status === f).length})`}
             </button>
@@ -1927,7 +2025,7 @@ function OrdersTab() {
                 </thead>
                 <tbody>
                   {filtered.map(o => {
-                    const sc = STATUS_COLORS[o.status] || STATUS_COLORS['New'];
+                    const sc = STATUS_COLORS[o.status] || STATUS_COLORS['Order Received'];
                     const date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-CA', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
                     return (
                       <tr key={o.id} onClick={() => setSelected(selected?.id === o.id ? null : o)} style={{ cursor: 'pointer', background: selected?.id === o.id ? 'rgba(249,115,22,.06)' : 'transparent' }}>
@@ -1941,7 +2039,7 @@ function OrdersTab() {
                         </td>
                         <td style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--o)' }}>${parseFloat(o.total || 0).toFixed(2)}</td>
                         <td><span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 6, background: o.payment_method === 'stripe' ? 'rgba(99,102,241,.15)' : 'rgba(34,197,94,.1)', color: o.payment_method === 'stripe' ? '#818cf8' : 'var(--gr)', border: `1px solid ${o.payment_method === 'stripe' ? 'rgba(99,102,241,.3)' : 'rgba(34,197,94,.2)'}`, fontWeight: 700 }}>{o.payment_method === 'stripe' ? '💳 Card' : '🏪 Pickup'}</span></td>
-                        <td><span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 700, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>{o.status || 'New'}</span></td>
+                        <td><span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 700, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>{o.status || 'Order Received'}</span></td>
                         <td style={{ fontSize: 11, color: 'var(--mu)', whiteSpace: 'nowrap' }}>{date}</td>
                         <td><button className="abtn" onClick={e => { e.stopPropagation(); setSelected(selected?.id === o.id ? null : o); }}>View</button></td>
                       </tr>
@@ -1980,7 +2078,7 @@ function OrdersTab() {
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>Order Info</div>
                 <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 8, lineHeight: 1.6 }}><strong style={{ color: 'var(--tx)' }}>Items:</strong> {selected.items}</div>
-                {[['Delivery', selected.delivery], ['Turnaround', selected.turnaround], ['Payment', selected.payment_method], ['Source', selected.source]].filter(([,v]) => v).map(([l, v]) => (
+                {[['Delivery', selected.delivery], ['Tracking #', selected.tracking_number], ['Turnaround', selected.turnaround], ['Payment', selected.payment_method], ['Source', selected.source]].filter(([,v]) => v).map(([l, v]) => (
                   <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
                     <span style={{ color: 'var(--mu)' }}>{l}</span>
                     <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{v}</span>
@@ -1998,11 +2096,11 @@ function OrdersTab() {
               <div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}>Update Status</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                  {['New', 'In Progress', 'Ready', 'Completed', 'Cancelled'].map(s => {
+                  {['Order Received', 'Proof Sent', 'Printing', 'Printed', 'Shipped', 'Delivered', 'Cancelled'].map(s => {
                     const sc = STATUS_COLORS[s];
                     const isActive = selected.status === s;
                     return (
-                      <button key={s} onClick={() => updateStatus(selected.id, s)} style={{ padding: '10px 14px', borderRadius: 8, border: `1px solid ${isActive ? sc.border : 'var(--bd)'}`, background: isActive ? sc.bg : 'var(--s2)', color: isActive ? sc.color : 'var(--mu)', fontWeight: isActive ? 700 : 500, fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", textAlign: 'left', transition: 'all .15s' }}>
+                      <button key={s} onClick={() => updateStatus(selected.id, s, selected)} style={{ padding: '10px 14px', borderRadius: 8, border: `1px solid ${isActive ? sc.border : 'var(--bd)'}`, background: isActive ? sc.bg : 'var(--s2)', color: isActive ? sc.color : 'var(--mu)', fontWeight: isActive ? 700 : 500, fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", textAlign: 'left', transition: 'all .15s' }}>
                         {isActive ? '● ' : '○ '}{s}
                       </button>
                     );

@@ -289,6 +289,7 @@ function AppRoutes() {
         <Route path="/privacy" element={<Layout><PolicyPage slug="privacy" /></Layout>} />
         <Route path="/turnaround" element={<Layout><PolicyPage slug="turnaround" /></Layout>} />
         <Route path="/about" element={<Layout><PolicyPage slug="about" /></Layout>} />
+        <Route path="/blog/:slug" element={<Layout><CustomPageRoute /></Layout>} />
         <Route path="/p/:slug" element={<Layout><CustomPageRoute /></Layout>} />
 
         {/* 404 */}

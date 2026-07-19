@@ -32,6 +32,7 @@ const cfg = {
   ejsKey:  () => import.meta.env.VITE_EJS_KEY  || ls.raw('nxt_ejs_key', ''),
   ejsTo:   () => import.meta.env.VITE_EJS_TO   || ls.raw('nxt_ejs_to', ''),
   ejsCtTpl:() => import.meta.env.VITE_EJS_CT_TPL || ls.raw('nxt_ejs_ct_tpl', ''),
+  ejsStatusTpl:() => import.meta.env.VITE_EJS_STATUS_TPL || ls.raw('nxt_ejs_status_tpl', ''),
 };
 
 // Universal EmailJS sender using REST API — no library needed, shows real errors
