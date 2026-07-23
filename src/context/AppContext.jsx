@@ -428,11 +428,13 @@ Can't make it in person? No problem. We ship to every province and territory acr
 What We Print
 We specialize in the full range of commercial print including business cards, vinyl banners, vehicle wraps and fleet graphics, window graphics, custom stickers and labels, flyers, postcards, foam boards, real estate signs, restaurant menus, posters, canvas prints, and calendars.
 
+We specialize in the full range of commercial print including business cards, vinyl banners, vehicle wraps, fleet graphics, window graphics, custom stickers, flyers, postcards, foam boards, real estate signs, restaurant menus, posters, canvas prints, and calendars
+
 Our Equipment
 Our Epson SureColor R5070 wide-format resin printer delivers vivid, long-lasting colours for banners, signs, and large-format work. Combined with precision digital printing for business cards and marketing materials, every job meets commercial quality standards.
 
 Our Promise
-Every order includes a free digital proof — we never go to press without your approval. Quality is guaranteed: if there is a manufacturing defect on our end, we reprint at no charge. No questions asked.
+Every order includes a free digital proof we never go to press without your approval. Quality is guaranteed: if there is a manufacturing defect on our end, we reprint at no charge. No questions asked.
 
 Contact Us
 Phone: (437) 997-9921

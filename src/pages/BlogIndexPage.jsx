@@ -83,14 +83,25 @@ export default function BlogIndexPage() {
             On the Press — Nexa Customs Blog
           </span>
         </div>
-        <h1 className="D" style={{ fontSize: 'clamp(32px,4.6vw,54px)', marginBottom: 12, lineHeight: 1.05 }}>Guides from the shop floor</h1>
-        <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 600, lineHeight: 1.7 }}>
-          Materials, bylaws, and production notes — written by the people running the press, not a content agency.
-        </p>
+       <h1 className="D" style={{ fontSize: 'clamp(32px,4.6vw,54px)', marginBottom: 12, lineHeight: 1.05 }}>Guides from the shop floor</h1>
+<p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 600, lineHeight: 1.7 }}>
+  Materials, bylaws, and production notes written by the people running the press, not a content agency.
+</p>
+
+<h2 style={{ fontSize: 'clamp(16px,2vw,22px)', fontWeight: 700, marginTop: 20, marginBottom: 8, color: 'var(--fg)' }}>
+  Print Tips, Design Guides & Business Branding Advice
+</h2>
+<p style={{ fontSize: 14, color: '#aaa', maxWidth: 620, lineHeight: 1.75, marginBottom: 0 }}>
+  {'Real-world printing tips for GTA businesses from choosing the right paper stock to designing banners that convert. Written by the Nexa Customs team in Mississauga, covering '}
+  <a href="/products" style={{ color: '#f90', textDecoration: 'none', fontWeight: 500 }}>
+    business cards, vehicle wraps, signs, and stickers
+  </a>
+  {' so you get better print results every time.'}
+</p>
       </div>
 
       {posts.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--mu)' }}>No guides published yet — check back soon.</div>
+        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--mu)' }}></div>
       ) : (
         <>
           {/* Featured — most recent post gets a wide treatment */}

@@ -110,10 +110,21 @@ export default function HomePage() {
       {/* CATEGORIES */}
       <section style={{ padding: '56px 0' }}>
         <div className="W">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-            <h2 className="D" style={{ fontSize: 'clamp(26px,3.5vw,42px)' }}>Shop By Category</h2>
-            <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => navigate('/products')}>View All →</button>
-          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+  <h2 className="D" style={{ fontSize: 'clamp(26px,3.5vw,42px)' }}>Shop By Category</h2>
+  <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => navigate('/products')}>View All →</button>
+</div>
+
+<p style={{ fontSize: 15, color: '#aaa', marginBottom: 28, maxWidth: 680, lineHeight: 1.7 }}>
+  Explore our full range of custom print products from{' '}
+  <a href="/products" style={{ color: '#f90', textDecoration: 'none', fontWeight: 500 }}>
+    business cards and vinyl banners
+  </a>{' '}
+  to vehicle wraps, stickers, and signage. Nexa Customs is Mississauga's trusted{' '}
+    print shop
+  {' '}
+  for businesses across the GTA same-day pickup, free proof, ships Canada-wide.
+</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }} className="cat-grid">
             {cats.slice(0, 12).map(c => (
               <div key={c.id} onClick={() => navigate(`/products/${c.id}`)}
@@ -138,6 +149,13 @@ export default function HomePage() {
             <div>
               <div className="badge-orange" style={{ marginBottom: 10 }}>Top Sellers</div>
               <h2 className="D" style={{ fontSize: 'clamp(26px,3.5vw,42px)' }}>Most Popular Products</h2>
+              <p style={{ fontSize: 15, color: '#aaa', maxWidth: 580, lineHeight: 1.7, margin: '0 0 0 0' }}>
+  {'Mississauga\'s most-ordered custom print products business cards, banners, vehicle wraps, stickers, and more. '}
+  <a href="/products" style={{ color: '#f90', textDecoration: 'none', fontWeight: 500 }}>
+    Browse all products
+  </a>
+  {' and get a free proof with every order.'}
+</p>
             </div>
             <button className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => navigate('/products')}>All Products →</button>
           </div>
@@ -150,6 +168,18 @@ export default function HomePage() {
       {/* FEATURES */}
       <section style={{ padding: '68px 0' }}>
         <div className="W">
+          <div style={{ marginBottom: 32 }}>
+    <h2 className="D" style={{ fontSize: 'clamp(22px,3vw,36px)', marginBottom: 10 }}>
+      Why Businesses Choose Nexa Customs
+    </h2>
+    <p style={{ fontSize: 15, color: '#aaa', maxWidth: 580, lineHeight: 1.7, margin: 0 }}>
+      {'From rush orders to large-format printing we make it easy for businesses across Mississauga and the GTA to get '}
+      <a href="https://maps.app.goo.gl/VTDW9Cx2daL9KZtF8" style={{ color: '#f90', textDecoration: 'none', fontWeight: 500 }}>
+        professional print, signs, and graphics
+      </a>
+      {' delivered fast, printed right, every time.'}
+    </p>
+  </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 13 }} className="feat-grid">
             {[
               { ico: '⚡', t: 'Same-Day Pickup', d: 'Order before 10:30 AM for same-day pickup at our Mississauga location.' },
@@ -197,7 +227,99 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+       {/* FAQ SECTION */}
+<section style={{ background: 'var(--dk)', padding: '72px 0' }}>
+  <div className="W">
 
+    {/* Heading */}
+    <div style={{ textAlign: 'center', marginBottom: 48 }}>
+      <div className="badge-orange" style={{ marginBottom: 12 }}>FAQs</div>
+      <h2 className="D" style={{ fontSize: 'clamp(26px,3.5vw,42px)', marginBottom: 12 }}>
+        Frequently Asked Questions
+      </h2>
+      <p style={{ fontSize: 15, color: '#aaa', maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>
+        {'Everything you need to know about custom printing at Nexa Customs Mississauga\'s trusted print shop.'}
+      </p>
+    </div>
+
+    {/* FAQ Grid */}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16, maxWidth: 960, margin: '0 auto' }}>
+      {[
+        {
+          q: 'Where is Nexa Customs located?',
+          a: 'Nexa Customs is located at 6033 Shawson Dr, Unit 40, Mississauga, Ontario, L5T 1J6. We serve businesses across the GTA including Toronto, Brampton, Oakville, and Vaughan.'
+        },
+        {
+          q: 'Does Nexa Customs offer same-day printing?',
+          a: 'Yes. Nexa Customs offers same-day pickup in Mississauga for orders placed before 10:30 AM. Rush printing is available 24 hours for select products.'
+        },
+        {
+          q: 'What products does Nexa Customs print?',
+          a: 'Nexa Customs prints business cards, vinyl banners, vehicle wraps, stickers, labels, flyers, postcards, signage, foam boards, posters, window graphics, real estate signs, and more.'
+        },
+        {
+          q: 'Does Nexa Customs ship across Canada?',
+          a: 'Yes. Nexa Customs ships Canada-wide with fast courier delivery. Flat-rate shipping is available across Ontario, with delivery to all major Canadian cities.'
+        },
+        {
+          q: 'What is the best print shop near Mississauga?',
+          a: 'Nexa Customs is one of the GTA\'s most trusted print shops, based in Mississauga. We offer full-colour printing, free design proofs, same-day pickup, and Canada-wide shipping — serving businesses since 2020.'
+        },
+        {
+          q: 'Do you provide a free proof before printing?',
+          a: 'Yes. Every order at Nexa Customs includes a free digital proof before it goes to press. We revise until you are 100% satisfied, with no additional charge.'
+        },
+        {
+          q: 'Can I get custom vehicle wraps in Mississauga?',
+          a: 'Yes. Nexa Customs produces custom vehicle wraps, fleet graphics, and magnetic vehicle signs for businesses across Mississauga, Toronto, Brampton, and the GTA.'
+        },
+        {
+          q: 'What file formats does Nexa Customs accept?',
+          a: 'Nexa Customs accepts PDF, AI, EPS, PSD, and high-resolution PNG or JPG files. For best results, submit files at 300 DPI in CMYK colour mode with bleed included.'
+        },
+      ].map((item, i) => (
+        <div key={i} style={{
+          background: 'var(--sf)',
+          border: '1px solid var(--bd)',
+          borderRadius: 'var(--rl)',
+          padding: '24px 22px',
+        }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div style={{
+              minWidth: 28, height: 28,
+              background: 'rgba(249,115,22,.1)',
+              border: '1px solid rgba(249,115,22,.25)',
+              borderRadius: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, fontWeight: 700, color: '#f90', flexShrink: 0
+            }}>Q</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8, lineHeight: 1.5 }}>{item.q}</div>
+              <div style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.75 }}>{item.a}</div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+  </div>
+</section>
+
+{/* FAQ SCHEMA */}
+<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Where is Nexa Customs located?", "acceptedAnswer": { "@type": "Answer", "text": "Nexa Customs is located at 6033 Shawson Dr, Unit 40, Mississauga, Ontario, L5T 1J6. We serve businesses across the GTA including Toronto, Brampton, Oakville, and Vaughan." }},
+    { "@type": "Question", "name": "Does Nexa Customs offer same-day printing?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Nexa Customs offers same-day pickup in Mississauga for orders placed before 10:30 AM. Rush printing is available 24 hours for select products." }},
+    { "@type": "Question", "name": "What products does Nexa Customs print?", "acceptedAnswer": { "@type": "Answer", "text": "Nexa Customs prints business cards, vinyl banners, vehicle wraps, stickers, labels, flyers, postcards, signage, foam boards, posters, window graphics, real estate signs, and more." }},
+    { "@type": "Question", "name": "Does Nexa Customs ship across Canada?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Nexa Customs ships Canada-wide with fast courier delivery. Flat-rate shipping is available across Ontario, with delivery to all major Canadian cities." }},
+    { "@type": "Question", "name": "What is the best print shop near Mississauga?", "acceptedAnswer": { "@type": "Answer", "text": "Nexa Customs is one of the GTA's most trusted print shops, based in Mississauga. We offer full-colour printing, free design proofs, same-day pickup, and Canada-wide shipping — serving businesses since 2020." }},
+    { "@type": "Question", "name": "Do you provide a free proof before printing?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every order at Nexa Customs includes a free digital proof before it goes to press. We revise until you are 100% satisfied, with no additional charge." }},
+    { "@type": "Question", "name": "Can I get custom vehicle wraps in Mississauga?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Nexa Customs produces custom vehicle wraps, fleet graphics, and magnetic vehicle signs for businesses across Mississauga, Toronto, Brampton, and the GTA." }},
+    { "@type": "Question", "name": "What file formats does Nexa Customs accept?", "acceptedAnswer": { "@type": "Answer", "text": "Nexa Customs accepts PDF, AI, EPS, PSD, and high-resolution PNG or JPG files. For best results, submit files at 300 DPI in CMYK colour mode with bleed included." }},
+  ]
+})}} />       
       {/* CTA BANNER */}
       <section style={{ padding: '68px 0' }}>
         <div className="W" style={{ textAlign: 'center' }}>

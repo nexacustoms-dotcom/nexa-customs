@@ -6551,7 +6551,7 @@ export const DEFAULT_STORE = {
   hero_accent: 'Your Brand',
   hero2: 'Impossible To Ignore',
   hero_badge: "Mississauga's Print Experts Since 2010",
-  hero_sub: 'From business cards to vehicle wraps — full-colour print, signs, and graphics for businesses across Ontario.',
+  hero_sub: "From business cards to vehicle wraps Nexa Customs is Mississauga's go-to print shop for full-colour signs, banners, stickers, and fleet graphics. Serving the GTA, Brampton, Toronto, and businesses across Ontario.",
   phone: '(437) 997-9921',
   phone_raw: '14379979921',
   email: 'info@nexacustoms.ca',

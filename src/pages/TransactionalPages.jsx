@@ -1122,7 +1122,18 @@ export function QuotePage() {
       <div style={{ textAlign: 'center', marginBottom: 36 }}>
         <div className="badge-orange" style={{ marginBottom: 12 }}>Free Consultation</div>
         <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,56px)', marginBottom: 8 }}>Request a Quote</h1>
-        <p style={{ fontSize: 13, color: 'var(--mu)', maxWidth: 440, margin: '0 auto' }}>Tell us about your project. We will get back to you within 1 business day.</p>
+<p style={{ fontSize: 13, color: 'var(--mu)', maxWidth: 440, margin: '0 auto' }}>Tell us about your project. We will get back to you within 1 business day.</p>
+
+<h2 style={{ fontSize: 'clamp(15px,1.8vw,20px)', fontWeight: 700, marginTop: 18, marginBottom: 8, color: 'var(--fg)' }}>
+  Free Print Quotes for Businesses Across Mississauga & the GTA
+</h2>
+<p style={{ fontSize: 14, color: '#aaa', maxWidth: 520, lineHeight: 1.75, margin: '0 auto', textAlign: 'center' }}>
+  {'Whether you need '}
+  <a href="/products" style={{ color: '#f90', textDecoration: 'none', fontWeight: 500 }}>
+    business cards, vinyl banners, vehicle wraps, or custom signage
+  </a>
+  {' fill out the form and our Mississauga print team will send you a no-obligation quote within 1 business day. Bulk orders, rush printing, and Canada-wide shipping available.'}
+</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24 }} className="qp-layout">
         <div>
@@ -1256,7 +1267,22 @@ export function ContactPage() {
     <div className="W" style={{ padding: '40px 28px 76px' }}>
       <div style={{ textAlign: 'center', marginBottom: 36 }}>
         <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,56px)', marginBottom: 8 }}>Get In Touch</h1>
-        <p style={{ fontSize: 13, color: 'var(--mu)' }}>We are here to help with any print project, big or small.</p>
+<p style={{ fontSize: 13, color: 'var(--mu)' }}>We are here to help with any print project, big or small.</p>
+
+<h2 style={{ fontSize: 'clamp(16px,2vw,22px)', fontWeight: 700, marginTop: 20, marginBottom: 8, color: 'var(--fg)' }}>
+  Contact Nexa Customs — Mississauga Print Shop
+</h2>
+<p style={{ fontSize: 14, color: '#aaa', maxWidth: 860, lineHeight: 1.75, margin: '0 auto 0' }}>
+  {'Have a print project in mind? Our Mississauga team is available Mon\u2013Fri 9AM\u20136PM to help with '}
+  <a href="/products" style={{ color: '#f90', textDecoration: 'none', fontWeight: 500 }}>
+    business cards, banners, vehicle wraps, signs, and stickers
+  </a>
+  {' call us at '}
+  <a href="tel:+14379979921" style={{ color: '#f90', textDecoration: 'none', fontWeight: 500 }}>
+    (437) 997-9921
+  </a>
+  {', WhatsApp us, or fill out the form below. Same-day pickup available in Mississauga.'}
+</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 24 }} className="ct-grid">
         {[
@@ -1273,36 +1299,109 @@ export function ContactPage() {
           </div>
         ))}
       </div>
-      <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, maxWidth: 560, margin: '0 auto' }}>
-        <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Send Us a Message</div>
+      
+     {/* GOOGLE MAPS EMBED */}
+<div style={{ borderRadius: 'var(--rl)', overflow: 'hidden', border: '1px solid var(--bd)', height: 320, maxWidth: 860, margin: '0 auto 24px' }}>
+  <iframe
+    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2887.123456789!2d-79.6441!3d43.6532!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882b3b1234567890%3A0xabcdef1234567890!2s6033+Shawson+Dr+Unit+40%2C+Mississauga%2C+ON+L5T+1J6!5e0!3m2!1sen!2sca!4v1234567890"
+    width="100%"
+    height="320"
+    style={{ border: 0, display: 'block' }}
+    allowFullScreen=""
+    loading="lazy"
+    referrerPolicy="no-referrer-when-downgrade"
+    title="Nexa Customs — 6033 Shawson Dr Unit 40, Mississauga, ON"
+  />
+</div>
 
-        {sent ? (
-          <div style={{ textAlign: 'center', padding: '32px 16px' }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
-            <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 8 }}>Message Sent!</div>
-            <p style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.7, marginBottom: 20 }}>
-              Thanks for reaching out, <strong>{form.name || 'there'}</strong>! We will reply to your email within 1 business day.<br />
-              For urgent orders call us at <a href="tel:4379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>(437) 997-9921</a>.
-            </p>
-            <button className="btn btn-ghost" onClick={() => setSent(false)} style={{ fontSize: 13 }}>Send Another Message</button>
-          </div>
-        ) : (
-          <>
-            <div className="frow">
-              <div className="fgrp"><label className="flbl">Name *</label><input className="finp" placeholder="Your name" value={form.name} onChange={upd('name')} /></div>
-              <div className="fgrp"><label className="flbl">Email *</label><input className="finp" placeholder="your@email.com" value={form.email} onChange={upd('email')} /></div>
-            </div>
-            <div className="fgrp"><label className="flbl">Phone (optional)</label><input className="finp" placeholder="(416) 555-0000" value={form.phone} onChange={upd('phone')} /></div>
-            <div className="fgrp"><label className="flbl">Message *</label><textarea className="ftxt" rows="4" placeholder="Tell us about your project..." value={form.msg} onChange={upd('msg')} /></div>
-            <button className="btn btn-primary" onClick={handleSend} disabled={sending}
-              style={{ width: '100%', justifyContent: 'center', fontSize: 14, padding: 13, borderRadius: 'var(--r)', opacity: sending ? 0.7 : 1, cursor: sending ? 'wait' : 'pointer' }}>
-              {sending ? 'Sending…' : 'Send Message →'}
-            </button>
-          </>
-        )}
-      </div>
+{/* TRUST STRIP */}
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, maxWidth: 860, margin: '0 auto 24px' }}>
+  {[
+    { ico: '⚡', t: 'Same-Day Pickup', d: 'Order before 10:30 AM' },
+    { ico: '🛡️', t: 'Quality Guaranteed', d: 'We reprint at no charge' },
+    { ico: '🚚', t: 'Ships Canada-Wide', d: 'Flat rate, no surprises' },
+  ].map(f => (
+    <div key={f.t} style={{
+      background: 'var(--sf)',
+      border: '1px solid var(--bd)',
+      borderRadius: 'var(--rl)',
+      padding: '14px 12px',
+      textAlign: 'center'
+    }}>
+      <div style={{ fontSize: 20, marginBottom: 6 }}>{f.ico}</div>
+      <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 3 }}>{f.t}</div>
+      <div style={{ fontSize: 11, color: 'var(--mu)', lineHeight: 1.5 }}>{f.d}</div>
     </div>
-  );
+  ))}
+</div>
+
+{/* CONTACT FORM — unchanged */}
+<div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, maxWidth: 860, margin: '0 auto' }}>
+  <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Send Us a Message</div>
+
+  {sent ? (
+    <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+      <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
+      <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 8 }}>Message Sent!</div>
+      <p style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.7, marginBottom: 20 }}>
+        Thanks for reaching out, <strong>{form.name || 'there'}</strong>! We will reply to your email within 1 business day.<br />
+        For urgent orders call us at <a href="tel:4379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>(437) 997-9921</a>.
+      </p>
+      <button className="btn btn-ghost" onClick={() => setSent(false)} style={{ fontSize: 13 }}>Send Another Message</button>
+    </div>
+  ) : (
+    <>
+      <div className="frow">
+        <div className="fgrp"><label className="flbl">Name *</label><input className="finp" placeholder="Your name" value={form.name} onChange={upd('name')} /></div>
+        <div className="fgrp"><label className="flbl">Email *</label><input className="finp" placeholder="your@email.com" value={form.email} onChange={upd('email')} /></div>
+      </div>
+      <div className="fgrp"><label className="flbl">Phone (optional)</label><input className="finp" placeholder="(416) 555-0000" value={form.phone} onChange={upd('phone')} /></div>
+      <div className="fgrp"><label className="flbl">Message *</label><textarea className="ftxt" rows="4" placeholder="Tell us about your project..." value={form.msg} onChange={upd('msg')} /></div>
+      <button className="btn btn-primary" onClick={handleSend} disabled={sending}
+        style={{ width: '100%', justifyContent: 'center', fontSize: 14, padding: 13, borderRadius: 'var(--r)', opacity: sending ? 0.7 : 1, cursor: sending ? 'wait' : 'pointer' }}>
+        {sending ? 'Sending…' : 'Send Message →'}
+      </button>
+    </>
+  )}
+</div>
+
+{/* FAQ SECTION */}
+<div style={{ maxWidth: 860, margin: '24px auto 0' }}>
+  <div className="D" style={{ fontSize: 18, marginBottom: 16, textAlign: 'center' }}>Common Questions</div>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    {[
+      { q: 'What are your business hours?', a: 'Monday to Friday, 9:00 AM to 6:00 PM. Saturday by appointment. Closed Sundays.' },
+      { q: 'Can I pick up my order the same day?', a: 'Yes. Same-day pickup is available for orders placed before 10:30 AM at our Mississauga location.' },
+      { q: 'How quickly do you respond to messages?', a: 'We respond to all emails and form submissions within 1 business day. For faster help call or WhatsApp (437) 997-9921.' },
+      { q: 'Do you serve clients outside Mississauga?', a: 'Yes. We ship Canada-wide and serve businesses across the GTA — Toronto, Brampton, Oakville, Vaughan, and all of Ontario.' },
+    ].map((item, i) => (
+      <div key={i} style={{
+        background: 'var(--sf)',
+        border: '1px solid var(--bd)',
+        borderRadius: 'var(--rl)',
+        padding: '16px 18px',
+      }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <div style={{
+            minWidth: 24, height: 24,
+            background: 'rgba(249,115,22,.1)',
+            border: '1px solid rgba(249,115,22,.25)',
+            borderRadius: 5,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 700, color: '#f90', flexShrink: 0
+          }}>Q</div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 5, lineHeight: 1.5 }}>{item.q}</div>
+            <div style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.7 }}>{item.a}</div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
+  </div>
+);
 }
 
 // ── ORDER STATUS PAGE ─────────────────────────────────────────────────────────
