@@ -35,19 +35,19 @@ export default function HomePage() {
           <div style={{ position: 'absolute', top: -120, right: -60, width: 640, height: 640, borderRadius: '50%', background: 'radial-gradient(circle,rgba(249,115,22,.1) 0%,transparent 68%)' }} />
         </div>
         <div className="W">
-          <div style={{ maxWidth: 760, margin: '0 auto 40px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ marginBottom: 40, position: 'relative', zIndex: 1 }}>
             <div className="badge-orange" style={{ marginBottom: 18 }}>{store.hero_badge || "Mississauga's Print Experts Since 2010"}</div>
-            <h1 className="D" style={{ fontSize: 'clamp(44px,6vw,76px)', marginBottom: 20, lineHeight: 1.03 }}>
-              {store.hero1}{' '}
-              <span style={{ color: 'var(--o)' }}>{store.hero_accent}</span>{' '}
+            <h1 className="D" style={{ fontSize: 'clamp(44px,6vw,76px)', marginBottom: 20, lineHeight: 1.03, maxWidth: 780 }}>
+              {store.hero1}<br />
+              <span style={{ color: 'var(--o)' }}>{store.hero_accent}</span><br />
               {store.hero2}
             </h1>
-            <p style={{ fontSize: 15, color: 'var(--mu)', maxWidth: 500, margin: '0 auto 30px', lineHeight: 1.78 }}>{store.hero_sub}</p>
-            <div style={{ display: 'flex', gap: 10, marginBottom: 36, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <p style={{ fontSize: 15, color: 'var(--mu)', maxWidth: 480, marginBottom: 30, lineHeight: 1.78 }}>{store.hero_sub}</p>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 36, flexWrap: 'wrap' }}>
               <button className="btn btn-primary" onClick={() => navigate('/products')}>Shop All Products →</button>
               <button className="btn btn-ghost" onClick={() => navigate('/quote')}>Get a Free Quote</button>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
               {[['10K+', 'Orders Completed'], ['500+', 'Happy Clients'], ['24hr', 'Rush Available'], ['4.9★', 'Google Rating']].map(([n, l], i, arr) => (
                 <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
                   <div>
