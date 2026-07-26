@@ -22,8 +22,8 @@ export default function HomePage() {
 
   useEffect(() => { const t = setInterval(() => setSlide(i => (i + 1) % slides.length), 4000); return () => clearInterval(t); }, [slides.length]);
 
-  const featured = prods.filter(p => !p.disabled && (p.badge === 'Most Popular' || p.badge === 'Best Seller')).slice(0, 4);
-  const displayProds = featured.length >= 4 ? featured : prods.filter(p => !p.disabled).slice(0, 4);
+  const featured = prods.filter(p => !p.disabled && (p.badge === 'Most Popular' || p.badge === 'Best Seller')).slice(0, 8);
+  const displayProds = featured.length >= 8 ? featured : [...featured, ...prods.filter(p => !p.disabled && !featured.includes(p))].slice(0, 8);
 
   return (
     <div>
@@ -35,73 +35,74 @@ export default function HomePage() {
           <div style={{ position: 'absolute', top: -120, right: -60, width: 640, height: 640, borderRadius: '50%', background: 'radial-gradient(circle,rgba(249,115,22,.1) 0%,transparent 68%)' }} />
         </div>
         <div className="W">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 410px', gap: 60, alignItems: 'center', position: 'relative', zIndex: 1 }} className="hero-grid">
-            <div>
-              <div className="badge-orange" style={{ marginBottom: 18 }}>{store.hero_badge || "Mississauga's Print Experts Since 2010"}</div>
-              <h1 className="D" style={{ fontSize: 'clamp(52px,6vw,84px)', marginBottom: 22 }}>
-                {store.hero1}<br />
-                <span style={{ color: 'var(--o)' }}>{store.hero_accent}</span><br />
-                {store.hero2}
-              </h1>
-              <p style={{ fontSize: 15, color: 'var(--mu)', maxWidth: 460, marginBottom: 32, lineHeight: 1.78 }}>{store.hero_sub}</p>
-              <div style={{ display: 'flex', gap: 10, marginBottom: 44, flexWrap: 'wrap' }}>
-                <button className="btn btn-primary" onClick={() => navigate('/products')}>Shop All Products →</button>
-                <button className="btn btn-ghost" onClick={() => navigate('/quote')}>Get a Free Quote</button>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
-                {[['10K+', 'Orders Completed'], ['500+', 'Happy Clients'], ['24hr', 'Rush Available'], ['4.9★', 'Google Rating']].map(([n, l], i, arr) => (
-                  <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-                    <div>
-                      <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 28, lineHeight: 1 }}>{n}</div>
-                      <div style={{ fontSize: 11, color: 'var(--mu)' }}>{l}</div>
-                    </div>
-                    {i < arr.length - 1 && <div style={{ width: 1, height: 36, background: 'var(--bd)' }} />}
+          <div style={{ maxWidth: 760, margin: '0 auto 40px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+            <div className="badge-orange" style={{ marginBottom: 18 }}>{store.hero_badge || "Mississauga's Print Experts Since 2010"}</div>
+            <h1 className="D" style={{ fontSize: 'clamp(44px,6vw,76px)', marginBottom: 20, lineHeight: 1.03 }}>
+              {store.hero1}{' '}
+              <span style={{ color: 'var(--o)' }}>{store.hero_accent}</span>{' '}
+              {store.hero2}
+            </h1>
+            <p style={{ fontSize: 15, color: 'var(--mu)', maxWidth: 500, margin: '0 auto 30px', lineHeight: 1.78 }}>{store.hero_sub}</p>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 36, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button className="btn btn-primary" onClick={() => navigate('/products')}>Shop All Products →</button>
+              <button className="btn btn-ghost" onClick={() => navigate('/quote')}>Get a Free Quote</button>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap', justifyContent: 'center' }}>
+              {[['10K+', 'Orders Completed'], ['500+', 'Happy Clients'], ['24hr', 'Rush Available'], ['4.9★', 'Google Rating']].map(([n, l], i, arr) => (
+                <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
+                  <div>
+                    <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 26, lineHeight: 1 }}>{n}</div>
+                    <div style={{ fontSize: 11, color: 'var(--mu)' }}>{l}</div>
                   </div>
+                  {i < arr.length - 1 && <div style={{ width: 1, height: 34, background: 'var(--bd)' }} />}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Big full-width slide showcase */}
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 20, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,.55)', minHeight: 480, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', cursor: slides[slide]?.link ? 'pointer' : 'default' }}
+              onClick={() => slides[slide]?.link && navigate(slides[slide].link)}>
+              {slides[slide]?.link && (
+                <div style={{ position: 'absolute', top: 18, right: 18, background: 'var(--o)', color: '#000', fontSize: 12, fontWeight: 800, padding: '7px 16px', borderRadius: 20, zIndex: 2, letterSpacing: '.05em', textTransform: 'uppercase' }}>Shop Now →</div>
+              )}
+              {slides[slide]?.img
+                ? (
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <img src={imgUrl(slides[slide].img, 1800)} alt={slides[slide].title} width="1800" height="480" style={{ width: '100%', height: 480, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
+                    {(slides[slide]?.title || slides[slide]?.sub) && (
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.8))', padding: '80px 40px 32px', textAlign: 'left' }}>
+                        {slides[slide]?.title && <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 'clamp(26px,3.4vw,40px)', textTransform: 'uppercase', color: '#fff', marginBottom: 6 }}>{slides[slide].title}</div>}
+                        {slides[slide]?.sub && <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, maxWidth: 520 }}>{slides[slide].sub}</div>}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ padding: 48, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                    <div style={{ fontSize: 110, marginBottom: 22 }}>{slides[slide]?.ico || '🖨️'}</div>
+                    <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 'clamp(28px,3.6vw,44px)', textTransform: 'uppercase', marginBottom: 10 }}>{slides[slide]?.title}</div>
+                    <div style={{ fontSize: 14, color: 'var(--mu)', lineHeight: 1.6, maxWidth: 480 }}>{slides[slide]?.sub}</div>
+                  </div>
+                )
+              }
+              <button onClick={e => { e.stopPropagation(); setSlide(i => (i - 1 + slides.length) % slides.length); }} style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', width: 42, height: 42, borderRadius: '50%', background: 'rgba(0,0,0,.45)', border: '1px solid rgba(255,255,255,.2)', color: '#fff', fontSize: 18, cursor: 'pointer', zIndex: 2 }}>‹</button>
+              <button onClick={e => { e.stopPropagation(); setSlide(i => (i + 1) % slides.length); }} style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', width: 42, height: 42, borderRadius: '50%', background: 'rgba(0,0,0,.45)', border: '1px solid rgba(255,255,255,.2)', color: '#fff', fontSize: 18, cursor: 'pointer', zIndex: 2 }}>›</button>
+              <div style={{ display: 'flex', gap: 7, padding: '10px 0', position: 'absolute', bottom: 16 }}>
+                {slides.map((_, i) => (
+                  <div key={i} onClick={e => { e.stopPropagation(); setSlide(i); }} style={{ width: 8, height: 8, borderRadius: '50%', background: i === slide ? 'var(--o)' : 'rgba(255,255,255,.35)', cursor: 'pointer', transition: 'background .2s' }} />
                 ))}
               </div>
             </div>
 
-            {/* Slide showcase */}
-            <div className="hero-right">
-              <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 18, overflow: 'hidden', boxShadow: '0 36px 88px rgba(0,0,0,.55)', minHeight: 260, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', cursor: slides[slide]?.link ? 'pointer' : 'default' }}
-                onClick={() => slides[slide]?.link && navigate(slides[slide].link)}>
-                {slides[slide]?.link && (
-                  <div style={{ position: 'absolute', top: 10, right: 10, background: 'var(--o)', color: '#000', fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 20, zIndex: 2, letterSpacing: '.05em', textTransform: 'uppercase' }}>Shop Now →</div>
-                )}
-                {slides[slide]?.img
-                  ? (
-                    <div style={{ position: 'relative', width: '100%' }}>
-                      <img src={imgUrl(slides[slide].img, 1200)} alt={slides[slide].title} width="1200" height="260" style={{ width: '100%', height: 260, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
-                      {(slides[slide]?.title || slides[slide]?.sub) && (
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.75))', padding: '28px 16px 14px' }}>
-                          {slides[slide]?.title && <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, textTransform: 'uppercase', color: '#fff', marginBottom: 3 }}>{slides[slide].title}</div>}
-                          {slides[slide]?.sub && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.82)', lineHeight: 1.5 }}>{slides[slide].sub}</div>}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div style={{ padding: 36, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                      <div style={{ fontSize: 64, marginBottom: 16 }}>{slides[slide]?.ico || '🖨️'}</div>
-                      <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, textTransform: 'uppercase', marginBottom: 8 }}>{slides[slide]?.title}</div>
-                      <div style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.6 }}>{slides[slide]?.sub}</div>
-                    </div>
-                  )
-                }
-                <div style={{ display: 'flex', gap: 6, padding: '10px 0', position: 'absolute', bottom: 8 }}>
-                  {slides.map((_, i) => (
-                    <div key={i} onClick={e => { e.stopPropagation(); setSlide(i); }} style={{ width: 6, height: 6, borderRadius: '50%', background: i === slide ? 'var(--o)' : 'var(--bd)', cursor: 'pointer', transition: 'background .2s' }} />
-                  ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginTop: 18 }} className="hero-trust-grid">
+              {[['⭐', '4.9/5', 'Google'], ['⚡', 'Same Day', 'Pickup'], ['✅', 'Free Proof', 'Included'], ['🇨🇦', 'Ontario', 'Wide']].map(([ico, v, l]) => (
+                <div key={l} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 10, padding: '14px 8px', textAlign: 'center' }}>
+                  <span style={{ fontSize: 20 }}>{ico}</span>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{v}</div>
+                  <div style={{ fontSize: 10, color: 'var(--mu)' }}>{l}</div>
                 </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginTop: 14 }}>
-                {[['⭐', '4.9/5', 'Google'], ['⚡', 'Same Day', 'Pickup'], ['✅', 'Free Proof', 'Included'], ['🇨🇦', 'Ontario', 'Wide']].map(([ico, v, l]) => (
-                  <div key={l} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 10, padding: '12px 8px', textAlign: 'center' }}>
-                    <span style={{ fontSize: 18 }}>{ico}</span>
-                    <div style={{ fontSize: 12, fontWeight: 700 }}>{v}</div>
-                    <div style={{ fontSize: 9, color: 'var(--mu)' }}>{l}</div>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -211,9 +212,7 @@ export default function HomePage() {
       </section>
 
       <style>{`
-        .hero-grid { }
-        .hero-right { }
-        @media(max-width:1060px) { .hero-grid { grid-template-columns:1fr !important; } .hero-right { display:none !important; } }
+        @media(max-width:640px) { .hero-trust-grid { grid-template-columns:repeat(2,1fr) !important; } }
         @media(max-width:1060px) { .cat-grid { grid-template-columns:repeat(4,1fr) !important; } }
         @media(max-width:640px) { .cat-grid { grid-template-columns:repeat(3,1fr) !important; } }
         @media(max-width:1060px) { .prod-grid-4,.feat-grid { grid-template-columns:repeat(2,1fr) !important; } }

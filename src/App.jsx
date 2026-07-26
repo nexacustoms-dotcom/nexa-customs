@@ -249,8 +249,10 @@ function Layout({ children, noNav }) {
   usePageSEO();
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {!noNav && <Topbar />}
-      {!noNav && <Navbar />}
+      {!noNav && <header>
+        <Topbar />
+        <Navbar />
+      </header>}
       <main style={{ flex: 1 }}>{children}</main>
       {!noNav && <Footer />}
       <Toast />

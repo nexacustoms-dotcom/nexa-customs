@@ -85,17 +85,19 @@ function ensureTag(selector, tag, attrs) {
 
 export function usePageSEO() {
   const location = useLocation();
-  const { curProd, pages } = useApp();
+  const { curProd, pages, cats } = useApp();
 
   useEffect(() => {
     const path = location.pathname;
     let title  = BASE;
     let desc   = DESCRIPTIONS['/'];
     let canonical = DOMAIN + path;
+    let matched = false; // becomes true only for a real, recognized route
 
     if (TITLES[path]) {
       title = TITLES[path];
       desc  = DESCRIPTIONS[path] || desc;
+      matched = true;
     } else if (path.startsWith('/products/') && curProd) {
       title = `${curProd.name} — Nexa Customs · GTA Print Shop`;
       // Product desc: keep under 158 chars. Never fall back to the homepage
@@ -105,10 +107,15 @@ export function usePageSEO() {
         ? `${curProd.desc} Free proof, same-day pickup in Mississauga GTA or ships Canada-wide.`
         : `${curProd.name} — custom printing in Mississauga & the GTA. Free proof, same-day pickup or ships Canada-wide. Call (437) 997-9921.`;
       desc = rawDesc.length > 158 ? rawDesc.slice(0, 155) + '...' : rawDesc;
+      matched = true;
     } else if (path.startsWith('/products/')) {
       const catSlug = path.split('/')[2];
-      title = CAT_TITLES[catSlug] || `${catSlug.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase())} — Nexa Customs GTA`;
-      desc  = CAT_DESCS[catSlug] || DESCRIPTIONS['/products'];
+      const isRealCat = !!CAT_TITLES[catSlug] || (cats || []).some(c => c.id === catSlug);
+      if (isRealCat) {
+        title = CAT_TITLES[catSlug] || `${catSlug.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase())} — Nexa Customs GTA`;
+        desc  = CAT_DESCS[catSlug] || DESCRIPTIONS['/products'];
+        matched = true;
+      }
     } else if (path.startsWith('/blog/') || path.startsWith('/p/')) {
       const pageSlug = path.split('/')[2];
       const page = (pages || []).find(pg => pg.slug === pageSlug);
@@ -122,13 +129,18 @@ export function usePageSEO() {
           const plain = (page.content || '').replace(/^##.*$/gm, '').replace(/^>>>\s*/gm, '').replace(/[\[\]!()]/g, '').replace(/\s+/g, ' ').trim();
           desc = plain.length > 158 ? plain.slice(0, 155) + '...' : (plain || `${page.title} — a guide from Nexa Customs, GTA print shop.`);
         }
+        matched = true;
       }
     }
 
-    // Never index transactional / private / disabled-product pages
+    // Never index transactional / private / disabled-product pages — or a
+    // path that didn't match any real route (soft-404: Vercel's SPA rewrite
+    // returns 200 for any unknown URL, so this is the only way to keep
+    // genuinely broken/fake URLs out of the index).
     const noIndexPaths = ['/cart', '/checkout', '/order-confirmed', '/admin'];
     const isDisabledProduct = path.startsWith('/products/') && curProd?.disabled;
-    const shouldIndex  = !noIndexPaths.some(p => path.startsWith(p)) && !isDisabledProduct;
+    const dataStillLoading = (cats || []).length === 0 && (pages || []).length === 0;
+    const shouldIndex = !noIndexPaths.some(p => path.startsWith(p)) && !isDisabledProduct && (matched || dataStillLoading);
 
     document.title = title;
 
