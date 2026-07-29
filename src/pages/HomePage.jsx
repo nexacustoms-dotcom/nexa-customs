@@ -4,6 +4,19 @@ import { useApp, imgUrl } from '../context/AppContext';
 import { DEFAULT_STORE } from '../data/products';
 import ProductCard from '../components/ProductCard';
 
+// Simple, consistent line icons — replaces emoji per UI/UX best practice
+// (emoji render inconsistently across OS/browsers and read as unpolished).
+const ICONS = {
+  star: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7L6 21l1.6-7L2.2 9.2l7.1-.6z"/></svg>,
+  bolt: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h6l-1 8 10-12h-6z"/></svg>,
+  check: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>,
+  map: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 20l-6-2V4l6 2 6-2 6 2v14l-6-2-6 2z"/><path d="M9 6v14M15 4v14"/></svg>,
+  shield: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5z"/><path d="m9 12 2 2 4-4"/></svg>,
+  palette: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2a10 10 0 1 0 0 20 3 3 0 0 0 0-6h-2a2 2 0 0 1 0-4h6a4 4 0 0 0 0-8z"/></svg>,
+  truck: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
+  printer: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>,
+};
+
 export default function HomePage() {
   const { cats, prods, store: _store, showProduct } = useApp();
   const store = { ...DEFAULT_STORE, ..._store };
@@ -80,25 +93,27 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <div style={{ padding: 48, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                    <div style={{ fontSize: 110, marginBottom: 22 }}>{slides[slide]?.ico || '🖨️'}</div>
+                    <div style={{ marginBottom: 22, color: 'var(--mu)', display: 'flex' }}>{(ICONS[slides[slide]?.ico] || ICONS.printer)(96)}</div>
                     <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 'clamp(28px,3.6vw,44px)', textTransform: 'uppercase', marginBottom: 10 }}>{slides[slide]?.title}</div>
                     <div style={{ fontSize: 14, color: 'var(--mu)', lineHeight: 1.6, maxWidth: 480 }}>{slides[slide]?.sub}</div>
                   </div>
                 )
               }
-              <button onClick={e => { e.stopPropagation(); setSlide(i => (i - 1 + slides.length) % slides.length); }} style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', width: 42, height: 42, borderRadius: '50%', background: 'rgba(0,0,0,.45)', border: '1px solid rgba(255,255,255,.2)', color: '#fff', fontSize: 18, cursor: 'pointer', zIndex: 2 }}>‹</button>
-              <button onClick={e => { e.stopPropagation(); setSlide(i => (i + 1) % slides.length); }} style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', width: 42, height: 42, borderRadius: '50%', background: 'rgba(0,0,0,.45)', border: '1px solid rgba(255,255,255,.2)', color: '#fff', fontSize: 18, cursor: 'pointer', zIndex: 2 }}>›</button>
-              <div style={{ display: 'flex', gap: 7, padding: '10px 0', position: 'absolute', bottom: 16 }}>
+              <button onClick={e => { e.stopPropagation(); setSlide(i => (i - 1 + slides.length) % slides.length); }} style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'rgba(0,0,0,.45)', border: '1px solid rgba(255,255,255,.2)', color: '#fff', fontSize: 18, cursor: 'pointer', zIndex: 2 }}>‹</button>
+              <button onClick={e => { e.stopPropagation(); setSlide(i => (i + 1) % slides.length); }} style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', width: 44, height: 44, borderRadius: '50%', background: 'rgba(0,0,0,.45)', border: '1px solid rgba(255,255,255,.2)', color: '#fff', fontSize: 18, cursor: 'pointer', zIndex: 2 }}>›</button>
+              <div style={{ display: 'flex', gap: 8, padding: '10px 0', position: 'absolute', bottom: 16 }}>
                 {slides.map((_, i) => (
-                  <div key={i} onClick={e => { e.stopPropagation(); setSlide(i); }} style={{ width: 8, height: 8, borderRadius: '50%', background: i === slide ? 'var(--o)' : 'rgba(255,255,255,.35)', cursor: 'pointer', transition: 'background .2s' }} />
+                  <div key={i} onClick={e => { e.stopPropagation(); setSlide(i); }} style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: i === slide ? 'var(--o)' : 'rgba(255,255,255,.35)', transition: 'background .2s' }} />
+                  </div>
                 ))}
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginTop: 18 }} className="hero-trust-grid">
-              {[['⭐', '4.9/5', 'Google'], ['⚡', 'Same Day', 'Pickup'], ['✅', 'Free Proof', 'Included'], ['🇨🇦', 'Ontario', 'Wide']].map(([ico, v, l]) => (
+              {[[ICONS.star(18), '4.9/5', 'Google'], [ICONS.bolt(18), 'Same Day', 'Pickup'], [ICONS.check(18), 'Free Proof', 'Included'], [ICONS.map(18), 'Ontario', 'Wide']].map(([ico, v, l]) => (
                 <div key={l} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 10, padding: '14px 8px', textAlign: 'center' }}>
-                  <span style={{ fontSize: 20 }}>{ico}</span>
+                  <span style={{ color: 'var(--o)', display: 'flex' }}>{ico}</span>
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{v}</div>
                   <div style={{ fontSize: 10, color: 'var(--mu)' }}>{l}</div>
                 </div>
@@ -153,13 +168,13 @@ export default function HomePage() {
         <div className="W">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 13 }} className="feat-grid">
             {[
-              { ico: '⚡', t: 'Same-Day Pickup', d: 'Order before 10:30 AM for same-day pickup at our Mississauga location.' },
-              { ico: '🛡️', t: 'Quality Guaranteed', d: 'Not satisfied? We reprint at no charge. Every order checked before delivery.' },
-              { ico: '🎨', t: 'Free Design Proof', d: "See your print before it goes to press. Revisions until you're 100% happy." },
-              { ico: '🚚', t: 'Ontario-Wide Shipping', d: 'Fast courier delivery across Ontario. Flat rate, no surprises.' },
+              { ico: ICONS.bolt(20), t: 'Same-Day Pickup', d: 'Order before 10:30 AM for same-day pickup at our Mississauga location.' },
+              { ico: ICONS.shield(20), t: 'Quality Guaranteed', d: 'Not satisfied? We reprint at no charge. Every order checked before delivery.' },
+              { ico: ICONS.palette(20), t: 'Free Design Proof', d: "See your print before it goes to press. Revisions until you're 100% happy." },
+              { ico: ICONS.truck(20), t: 'Ontario-Wide Shipping', d: 'Fast courier delivery across Ontario. Flat rate, no surprises.' },
             ].map(f => (
               <div key={f.t} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: '24px 20px' }}>
-                <div style={{ width: 40, height: 40, background: 'rgba(249,115,22,.1)', border: '1px solid rgba(249,115,22,.18)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginBottom: 13 }}>{f.ico}</div>
+                <div style={{ width: 40, height: 40, background: 'rgba(249,115,22,.1)', border: '1px solid rgba(249,115,22,.18)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--o)', marginBottom: 13 }}>{f.ico}</div>
                 <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 5 }}>{f.t}</div>
                 <div style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.65 }}>{f.d}</div>
               </div>

@@ -515,34 +515,34 @@ export function CheckoutPage() {
                 <p style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 22, lineHeight: 1.6 }}>We will use this to send your order confirmation and artwork proof.</p>
                 <div className="frow">
                   <div className="fgrp">
-                    <label className="flbl">First Name *</label>
-                    <input className="finp" placeholder="Ravi" value={form.fn} onChange={upd('fn')} style={{ borderColor: errors.fn ? '#ef4444' : '' }} />
-                    {errors.fn && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }}>* {errors.fn}</div>}
+                    <label className="flbl" htmlFor="fn">First Name *</label>
+                    <input className="finp" placeholder="Ravi" value={form.fn} id="fn" onChange={upd('fn')} style={{ borderColor: errors.fn ? '#ef4444' : '' }} />
+                    {errors.fn && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }} role="alert">* {errors.fn}</div>}
                   </div>
                   <div className="fgrp">
-                    <label className="flbl">Last Name</label>
-                    <input className="finp" placeholder="Sharma" value={form.ln} onChange={upd('ln')} />
+                    <label className="flbl" htmlFor="ln">Last Name</label>
+                    <input className="finp" placeholder="Sharma" value={form.ln} id="ln" onChange={upd('ln')} />
                   </div>
                 </div>
                 <div className="frow">
                   <div className="fgrp">
-                    <label className="flbl">Email Address *</label>
-                    <input className="finp" type="email" placeholder="ravi@company.com" value={form.email} onChange={upd('email')} style={{ borderColor: errors.email ? '#ef4444' : '' }} />
-                    {errors.email && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }}>* {errors.email}</div>}
+                    <label className="flbl" htmlFor="email">Email Address *</label>
+                    <input className="finp" type="email" placeholder="ravi@company.com" value={form.email} id="email" onChange={upd('email')} style={{ borderColor: errors.email ? '#ef4444' : '' }} />
+                    {errors.email && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }} role="alert">* {errors.email}</div>}
                   </div>
                   <div className="fgrp">
-                    <label className="flbl">Phone Number *</label>
-                    <input className="finp" type="tel" placeholder="(437) 997-9921" value={form.phone} onChange={upd('phone')} style={{ borderColor: errors.phone ? '#ef4444' : '' }} />
-                    {errors.phone && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }}>* {errors.phone}</div>}
+                    <label className="flbl" htmlFor="phone">Phone Number *</label>
+                    <input className="finp" type="tel" placeholder="(437) 997-9921" value={form.phone} id="phone" onChange={upd('phone')} style={{ borderColor: errors.phone ? '#ef4444' : '' }} />
+                    {errors.phone && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }} role="alert">* {errors.phone}</div>}
                   </div>
                 </div>
                 <div className="fgrp">
-                  <label className="flbl">Company Name (optional)</label>
-                  <input className="finp" placeholder="Your Company Inc." value={form.company} onChange={upd('company')} />
+                  <label className="flbl" htmlFor="company">Company Name (optional)</label>
+                  <input className="finp" placeholder="Your Company Inc." value={form.company} id="company" onChange={upd('company')} />
                 </div>
                 <div className="fgrp">
-                  <label className="flbl">Special Instructions (optional)</label>
-                  <textarea className="ftxt" rows="3" placeholder="Deadline, colour references, special requirements..." value={form.notes} onChange={upd('notes')} />
+                  <label className="flbl" htmlFor="notes">Special Instructions (optional)</label>
+                  <textarea className="ftxt" rows="3" placeholder="Deadline, colour references, special requirements..." value={form.notes} id="notes" onChange={upd('notes')} />
                 </div>
                 <button onClick={goNext} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: 15, padding: '14px 20px', borderRadius: 'var(--r)', marginTop: 6 }}>
                   Continue to Delivery →
@@ -588,23 +588,23 @@ export function CheckoutPage() {
                     <div className="D" style={{ fontSize: 22, marginBottom: 4 }}>Shipping Address</div>
                     <p style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 18, lineHeight: 1.6 }}>Enter the address where you want your order delivered.</p>
                     <div className="fgrp">
-                      <label className="flbl">Street Address *</label>
+                      <label className="flbl" htmlFor="shipping_address">Street Address *</label>
                       <input className="finp" placeholder="123 Main Street, Unit 4" value={shipping.address}
                         onChange={e => { setShipping(s => ({...s, address: e.target.value})); setErrors(er => ({...er, ship_address: ''})); }}
                         style={{ borderColor: errors.ship_address ? '#ef4444' : '' }} />
-                      {errors.ship_address && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>⚠ {errors.ship_address}</div>}
+                      {errors.ship_address && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }} role="alert">⚠ {errors.ship_address}</div>}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                       <div className="fgrp">
-                        <label className="flbl">City *</label>
+                        <label className="flbl" htmlFor="shipping_city">City *</label>
                         <input className="finp" placeholder="Mississauga" value={shipping.city}
                           onChange={e => { setShipping(s => ({...s, city: e.target.value})); setErrors(er => ({...er, ship_city: ''})); }}
                           style={{ borderColor: errors.ship_city ? '#ef4444' : '' }} />
-                        {errors.ship_city && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>⚠ {errors.ship_city}</div>}
+                        {errors.ship_city && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }} role="alert">⚠ {errors.ship_city}</div>}
                       </div>
                       <div className="fgrp">
-                        <label className="flbl">Province</label>
-                        <select className="fsel" value={shipping.province} onChange={e => setShipping(s => ({...s, province: e.target.value}))}>
+                        <label className="flbl" htmlFor="shipping_province">Province</label>
+                        <select className="fsel" id="shipping_province" value={shipping.province} onChange={e => setShipping(s => ({...s, province: e.target.value}))}>
                           {['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'].map(p => <option key={p}>{p}</option>)}
                         </select>
                       </div>
@@ -615,11 +615,11 @@ export function CheckoutPage() {
                         <input className="finp" placeholder="L5T 1J6" value={shipping.postal} maxLength={7}
                           onChange={e => { setShipping(s => ({...s, postal: e.target.value.toUpperCase()})); setErrors(er => ({...er, ship_postal: ''})); }}
                           style={{ borderColor: errors.ship_postal ? '#ef4444' : '', fontFamily: "'DM Mono',monospace", letterSpacing: '.1em' }} />
-                        {errors.ship_postal && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>⚠ {errors.ship_postal}</div>}
+                        {errors.ship_postal && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }} role="alert">⚠ {errors.ship_postal}</div>}
                       </div>
                       <div className="fgrp">
-                        <label className="flbl">Country</label>
-                        <select className="fsel" value={shipping.country} onChange={e => setShipping(s => ({...s, country: e.target.value}))}>
+                        <label className="flbl" htmlFor="shipping_country">Country</label>
+                        <select className="fsel" id="shipping_country" value={shipping.country} onChange={e => setShipping(s => ({...s, country: e.target.value}))}>
                           <option>Canada</option>
                           <option>United States</option>
                         </select>
@@ -801,8 +801,8 @@ export function CheckoutPage() {
                     <div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }} className="bill-grid">
                         <div className="fgrp" style={{ gridColumn: '1/-1' }}>
-                          <label className="flbl">Cardholder Name</label>
-                          <input className="finp" placeholder={`${form.fn} ${form.ln}`.trim() || 'Full name on card'} value={billing.name} onChange={e => setBilling(b => ({...b, name: e.target.value}))} />
+                          <label className="flbl" htmlFor="billing_name">Cardholder Name</label>
+                          <input className="finp" id="billing_name" placeholder={`${form.fn} ${form.ln}`.trim() || 'Full name on card'} value={billing.name} onChange={e => setBilling(b => ({...b, name: e.target.value}))} />
                         </div>
                         <div className="fgrp" style={{ gridColumn: '1/-1' }}>
                           <label className="flbl">Card Details</label>
@@ -830,38 +830,38 @@ export function CheckoutPage() {
                           <div>
                             <div className="frow" style={{ marginBottom: 0 }}>
                               <div className="fgrp">
-                                <label className="flbl">First Name</label>
-                                <input className="finp" value={billing.fn} onChange={e => setBilling(b => ({...b, fn: e.target.value}))} placeholder="First name" />
+                                <label className="flbl" htmlFor="billing_fn">First Name</label>
+                                <input className="finp" id="billing_fn" value={billing.fn} onChange={e => setBilling(b => ({...b, fn: e.target.value}))} placeholder="First name" />
                               </div>
                               <div className="fgrp">
-                                <label className="flbl">Last Name</label>
-                                <input className="finp" value={billing.ln} onChange={e => setBilling(b => ({...b, ln: e.target.value}))} placeholder="Last name" />
+                                <label className="flbl" htmlFor="billing_ln">Last Name</label>
+                                <input className="finp" id="billing_ln" value={billing.ln} onChange={e => setBilling(b => ({...b, ln: e.target.value}))} placeholder="Last name" />
                               </div>
                             </div>
                             <div className="fgrp">
-                              <label className="flbl">Street Address</label>
-                              <input className="finp" value={billing.address} onChange={e => setBilling(b => ({...b, address: e.target.value}))} placeholder="123 Main Street, Unit 4" />
+                              <label className="flbl" htmlFor="billing_address">Street Address</label>
+                              <input className="finp" id="billing_address" value={billing.address} onChange={e => setBilling(b => ({...b, address: e.target.value}))} placeholder="123 Main Street, Unit 4" />
                             </div>
                             <div className="frow">
                               <div className="fgrp">
-                                <label className="flbl">City</label>
-                                <input className="finp" value={billing.city} onChange={e => setBilling(b => ({...b, city: e.target.value}))} placeholder="Mississauga" />
+                                <label className="flbl" htmlFor="billing_city">City</label>
+                                <input className="finp" id="billing_city" value={billing.city} onChange={e => setBilling(b => ({...b, city: e.target.value}))} placeholder="Mississauga" />
                               </div>
                               <div className="fgrp">
-                                <label className="flbl">Province</label>
-                                <select className="fsel" value={billing.province} onChange={e => setBilling(b => ({...b, province: e.target.value}))}>
+                                <label className="flbl" htmlFor="billing_province">Province</label>
+                                <select className="fsel" id="billing_province" value={billing.province} onChange={e => setBilling(b => ({...b, province: e.target.value}))}>
                                   {['ON','QC','BC','AB','MB','SK','NS','NB','NL','PE','YT','NT','NU'].map(p => <option key={p}>{p}</option>)}
                                 </select>
                               </div>
                             </div>
                             <div className="frow">
                               <div className="fgrp">
-                                <label className="flbl">Postal Code</label>
-                                <input className="finp" value={billing.postal} onChange={e => setBilling(b => ({...b, postal: e.target.value.toUpperCase()}))} placeholder="L5T 1J6" maxLength={7} />
+                                <label className="flbl" htmlFor="billing_postal">Postal Code</label>
+                                <input className="finp" id="billing_postal" value={billing.postal} onChange={e => setBilling(b => ({...b, postal: e.target.value.toUpperCase()}))} placeholder="L5T 1J6" maxLength={7} />
                               </div>
                               <div className="fgrp">
-                                <label className="flbl">Country</label>
-                                <select className="fsel" value={billing.country} onChange={e => setBilling(b => ({...b, country: e.target.value}))}>
+                                <label className="flbl" htmlFor="billing_country">Country</label>
+                                <select className="fsel" id="billing_country" value={billing.country} onChange={e => setBilling(b => ({...b, country: e.target.value}))}>
                                   <option>Canada</option>
                                   <option>United States</option>
                                 </select>
@@ -1129,28 +1129,28 @@ export function QuotePage() {
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, marginBottom: 14 }}>
             <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Your Information</div>
             <div className="frow">
-              <div className="fgrp"><label className="flbl">First Name *</label><input className="finp" placeholder="Ravi" value={form.fname} onChange={upd('fname')} /></div>
-              <div className="fgrp"><label className="flbl">Last Name</label><input className="finp" placeholder="Sharma" value={form.lname} onChange={upd('lname')} /></div>
+              <div className="fgrp"><label className="flbl" htmlFor="fname">First Name *</label><input className="finp" placeholder="Ravi" value={form.fname} id="fname" onChange={upd('fname')} /></div>
+              <div className="fgrp"><label className="flbl" htmlFor="lname">Last Name</label><input className="finp" placeholder="Sharma" value={form.lname} id="lname" onChange={upd('lname')} /></div>
             </div>
             <div className="frow">
-              <div className="fgrp"><label className="flbl">Email *</label><input className="finp" type="email" placeholder="ravi@nexacustoms.ca" value={form.email} onChange={upd('email')} /></div>
-              <div className="fgrp"><label className="flbl">Phone</label><input className="finp" type="tel" placeholder="(437) 997-9921" value={form.phone} onChange={upd('phone')} /></div>
+              <div className="fgrp"><label className="flbl" htmlFor="email">Email *</label><input className="finp" type="email" placeholder="ravi@nexacustoms.ca" value={form.email} id="email" onChange={upd('email')} /></div>
+              <div className="fgrp"><label className="flbl" htmlFor="phone">Phone</label><input className="finp" type="tel" placeholder="(437) 997-9921" value={form.phone} id="phone" onChange={upd('phone')} /></div>
             </div>
-            <div className="fgrp"><label className="flbl">Company Name</label><input className="finp" placeholder="Your Company Inc." value={form.company} onChange={upd('company')} /></div>
+            <div className="fgrp"><label className="flbl" htmlFor="company">Company Name</label><input className="finp" placeholder="Your Company Inc." value={form.company} id="company" onChange={upd('company')} /></div>
           </div>
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, marginBottom: 14 }}>
             <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Project Details</div>
-            <div className="fgrp"><label className="flbl">Product Category</label>
-              <select className="fsel" value={form.cat} onChange={upd('cat')}>
+            <div className="fgrp"><label className="flbl" htmlFor="cat">Product Category</label>
+              <select className="fsel" value={form.cat} id="cat" onChange={upd('cat')}>
                 {cats.map(c => <option key={c.id}>{c.l}</option>)}
                 <option>Other / Custom</option>
               </select>
             </div>
             <div className="frow">
-              <div className="fgrp"><label className="flbl">Quantity</label><input className="finp" placeholder="e.g. 500" value={form.qty} onChange={upd('qty')} /></div>
-              <div className="fgrp"><label className="flbl">Deadline</label><input className="finp" type="date" value={form.deadline} onChange={upd('deadline')} /></div>
+              <div className="fgrp"><label className="flbl" htmlFor="qty">Quantity</label><input className="finp" placeholder="e.g. 500" value={form.qty} id="qty" onChange={upd('qty')} /></div>
+              <div className="fgrp"><label className="flbl" htmlFor="deadline">Deadline</label><input className="finp" type="date" value={form.deadline} id="deadline" onChange={upd('deadline')} /></div>
             </div>
-            <div className="fgrp"><label className="flbl">Project Description *</label><textarea className="ftxt" rows="4" placeholder="Sizes, finishes, deadline, special requirements..." value={form.desc} onChange={upd('desc')} /></div>
+            <div className="fgrp"><label className="flbl" htmlFor="desc">Project Description *</label><textarea className="ftxt" rows="4" placeholder="Sizes, finishes, deadline, special requirements..." value={form.desc} id="desc" onChange={upd('desc')} /></div>
           </div>
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 20, marginBottom: 14 }}>
             <div className="D" style={{ fontSize: 16, marginBottom: 4 }}>Attach Artwork <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--mu)' }}>(optional)</span></div>
@@ -1289,11 +1289,11 @@ export function ContactPage() {
         ) : (
           <>
             <div className="frow">
-              <div className="fgrp"><label className="flbl">Name *</label><input className="finp" placeholder="Your name" value={form.name} onChange={upd('name')} /></div>
-              <div className="fgrp"><label className="flbl">Email *</label><input className="finp" placeholder="your@email.com" value={form.email} onChange={upd('email')} /></div>
+              <div className="fgrp"><label className="flbl" htmlFor="name">Name *</label><input className="finp" placeholder="Your name" value={form.name} id="name" onChange={upd('name')} /></div>
+              <div className="fgrp"><label className="flbl" htmlFor="email">Email *</label><input className="finp" placeholder="your@email.com" value={form.email} id="email" onChange={upd('email')} /></div>
             </div>
-            <div className="fgrp"><label className="flbl">Phone (optional)</label><input className="finp" placeholder="(416) 555-0000" value={form.phone} onChange={upd('phone')} /></div>
-            <div className="fgrp"><label className="flbl">Message *</label><textarea className="ftxt" rows="4" placeholder="Tell us about your project..." value={form.msg} onChange={upd('msg')} /></div>
+            <div className="fgrp"><label className="flbl" htmlFor="phone">Phone (optional)</label><input className="finp" placeholder="(416) 555-0000" value={form.phone} id="phone" onChange={upd('phone')} /></div>
+            <div className="fgrp"><label className="flbl" htmlFor="msg">Message *</label><textarea className="ftxt" rows="4" placeholder="Tell us about your project..." value={form.msg} id="msg" onChange={upd('msg')} /></div>
             <button className="btn btn-primary" onClick={handleSend} disabled={sending}
               style={{ width: '100%', justifyContent: 'center', fontSize: 14, padding: 13, borderRadius: 'var(--r)', opacity: sending ? 0.7 : 1, cursor: sending ? 'wait' : 'pointer' }}>
               {sending ? 'Sending…' : 'Send Message →'}

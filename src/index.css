@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
-:root{--o:#f97316;--od:#ea6a0a;--ol:rgba(249,115,22,.12);--o25:rgba(249,115,22,.25);--bk:#0c0c0e;--dk:#141417;--sf:#1c1c21;--s2:#242429;--bd:#2e2e36;--tx:#f0ede8;--mu:#7c7c8a;--gr:#22c55e;--r:9px;--rl:15px}
+:root{--o:#f97316;--od:#ea6a0a;--ol:rgba(249,115,22,.12);--o25:rgba(249,115,22,.25);--bk:#0c0c0e;--dk:#141417;--sf:#1c1c21;--s2:#242429;--bd:#2e2e36;--tx:#f0ede8;--mu:#848492;--gr:#22c55e;--r:9px;--rl:15px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'DM Sans',sans-serif;background:var(--bk);color:var(--tx);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}

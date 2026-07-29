@@ -708,13 +708,22 @@ function AppearanceTab() {
                       upd('hero_slides')(updated);
                     }} style={{ fontSize:11, color:'#f87171', background:'rgba(239,68,68,.1)', border:'1px solid rgba(239,68,68,.3)', borderRadius:6, padding:'3px 8px', cursor:'pointer' }}>✕ Remove</button>
                   </div>
-                  <ImageUpload label="Slide Image (optional)" value={sl.img || ''} onChange={v => updSlide('img', v)} folder="branding" note="If set, fills the slide panel. Leave blank to use emoji + text below." />
+                  <ImageUpload label="Slide Image (optional)" value={sl.img || ''} onChange={v => updSlide('img', v)} folder="branding" note="If set, fills the slide panel. Leave blank to use the icon + text below." />
                   <div style={{ marginTop:8 }}><label className="aflbl" style={{fontSize:10}}>Link URL (optional) <span style={{color:'var(--mu)'}}>— where to go when clicked</span></label>
                     <input className="ainp" value={sl.link||''} onChange={e => updSlide('link', e.target.value)} placeholder="/products/business-cards or /products/signs-banners" />
                     <div style={{fontSize:10,color:'var(--mu)',marginTop:3}}>Use internal paths like /products/vehicle-graphics or /quote</div>
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'60px 1fr', gap:8, marginTop:8 }}>
-                    <div><label className="aflbl" style={{fontSize:10}}>Emoji</label><input className="ainp" value={sl.ico||''} onChange={e => updSlide('ico', e.target.value)} style={{textAlign:'center',fontSize:20}} /></div>
+                    <div><label className="aflbl" style={{fontSize:10}}>Icon (fallback)</label>
+                      <select className="ainp" value={sl.ico||'printer'} onChange={e => updSlide('ico', e.target.value)} style={{fontSize:12}}>
+                        <option value="printer">🖨 Printer</option>
+                        <option value="bolt">⚡ Lightning</option>
+                        <option value="shield">🛡 Shield</option>
+                        <option value="palette">🎨 Palette</option>
+                        <option value="truck">🚚 Truck</option>
+                        <option value="star">⭐ Star</option>
+                      </select>
+                    </div>
                     <div><label className="aflbl" style={{fontSize:10}}>Title</label><input className="ainp" value={sl.title||''} onChange={e => updSlide('title', e.target.value)} placeholder="Premium Business Cards" /></div>
                   </div>
                   <div style={{marginTop:6}}><label className="aflbl" style={{fontSize:10}}>Subtitle</label><input className="ainp" value={sl.sub||''} onChange={e => updSlide('sub', e.target.value)} placeholder="From $24.32 · Same-week turnaround" /></div>
