@@ -1,5 +1,6 @@
 import { useApp, imgUrl } from '../context/AppContext';
 import { CAT_BG } from '../data/products';
+import ICONS from './Icons';
 
 export default function ProductCard({ prod, onOpen }) {
   const { cats } = useApp();
@@ -14,7 +15,7 @@ export default function ProductCard({ prod, onOpen }) {
           ? <img src={imgUrl(firstImg, 500)} alt={prod.name} width="500" height="170" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
           : cat?.img
             ? <img src={imgUrl(cat.img, 500)} alt={cat.l} width="500" height="170" decoding="async" style={{ width: '60%', height: '60%', objectFit: 'cover', borderRadius: 8, opacity: 0.6 }} loading="lazy" />
-            : <span style={{ fontSize: 48 }}>{cat?.i || '🖨️'}</span>
+            : <span style={{ display: 'flex', color: 'var(--mu)' }}>{ICONS.printer(48)}</span>
         }
         {prod.badge && (
           <div className="badge-orange" style={{ position: 'absolute', top: 8, left: 8 }}>{prod.badge}</div>

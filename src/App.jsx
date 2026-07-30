@@ -8,6 +8,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import ProductCard from './components/ProductCard';
 import AdminPage from './pages/AdminPage';
 import BlogIndexPage from './pages/BlogIndexPage';
+import ICONS from './components/Icons';
 import { CartPage, CheckoutPage, SuccessPage, QuotePage, ContactPage, OrderStatusPage } from './pages/TransactionalPages';
 import { usePageSEO } from './hooks/usePageSEO';
 
@@ -121,8 +122,8 @@ function PolicyPage({ slug }) {
           <div style={{ fontSize: 12, color: 'var(--mu)' }}>Our team is here to help Mon–Fri 9AM–6PM</div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <a href="tel:+14379979921" style={{ padding: '9px 18px', borderRadius: 8, background: 'var(--o)', color: '#000', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>📞 (437) 997-9921</a>
-          <a href="mailto:info@nexacustoms.ca" style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid var(--bd)', color: 'var(--tx)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>✉️ Email Us</a>
+          <a href="tel:+14379979921" style={{ padding: '9px 18px', borderRadius: 8, background: 'var(--o)', color: '#000', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}><span style={{ display: "inline-flex", verticalAlign: "middle", marginRight: 6 }}>{ICONS.phone(14)}</span>(437) 997-9921</a>
+          <a href="mailto:info@nexacustoms.ca" style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid var(--bd)', color: 'var(--tx)', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}><span style={{ display: "inline-flex", verticalAlign: "middle", marginRight: 6 }}>{ICONS.mail(14)}</span>Email Us</a>
         </div>
       </div>
     </div>
@@ -148,7 +149,7 @@ function NotFoundPage() {
   const navigate = useNavigate();
   return (
     <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 16, padding: 40 }}>
-      <div style={{ fontSize: 64 }}>🔍</div>
+      <div style={{ display: "flex", justifyContent: "center", color: "var(--mu)" }}>{ICONS.search(56)}</div>
       <h1 className="D" style={{ fontSize: 48 }}>Page Not Found</h1>
       <p style={{ fontSize: 14, color: 'var(--mu)' }}>The page you are looking for does not exist.</p>
       <button className="btn btn-primary" onClick={() => navigate('/')}>← Back to Home</button>
@@ -196,7 +197,7 @@ function CategoryPage() {
       <div className="W" style={{ padding: '28px 28px 72px' }}>
         {catProds.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--mu)' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🖨️</div>
+            <div style={{ marginBottom: 16, display: "flex", justifyContent: "center", color: "var(--mu)" }}>{ICONS.printer(44)}</div>
             <div>No products in this category yet.</div>
           </div>
         ) : (
@@ -311,7 +312,7 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 40, background: '#0c0c0e', color: '#fff' }}>
-          <div style={{ fontSize: 64, marginBottom: 20 }}>⚠️</div>
+          <div style={{ marginBottom: 20, display: "flex", justifyContent: "center", color: "#f59e0b" }}>{ICONS.warning(56)}</div>
           <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 36, marginBottom: 12 }}>Something went wrong</h1>
           <p style={{ fontSize: 14, color: '#888', maxWidth: 400, lineHeight: 1.7, marginBottom: 28 }}>
             We encountered an unexpected error. Please refresh the page or contact us at{' '}

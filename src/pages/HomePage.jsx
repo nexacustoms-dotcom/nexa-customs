@@ -3,19 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp, imgUrl } from '../context/AppContext';
 import { DEFAULT_STORE } from '../data/products';
 import ProductCard from '../components/ProductCard';
-
-// Simple, consistent line icons — replaces emoji per UI/UX best practice
-// (emoji render inconsistently across OS/browsers and read as unpolished).
-const ICONS = {
-  star: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7L6 21l1.6-7L2.2 9.2l7.1-.6z"/></svg>,
-  bolt: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h6l-1 8 10-12h-6z"/></svg>,
-  check: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>,
-  map: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 20l-6-2V4l6 2 6-2 6 2v14l-6-2-6 2z"/><path d="M9 6v14M15 4v14"/></svg>,
-  shield: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5z"/><path d="m9 12 2 2 4-4"/></svg>,
-  palette: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2a10 10 0 1 0 0 20 3 3 0 0 0 0-6h-2a2 2 0 0 1 0-4h6a4 4 0 0 0 0-8z"/></svg>,
-  truck: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>,
-  printer: s => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>,
-};
+import ICONS from '../components/Icons';
 
 export default function HomePage() {
   const { cats, prods, store: _store, showProduct } = useApp();
@@ -26,10 +14,10 @@ export default function HomePage() {
   const [tIdx, setTIdx] = useState(0);
 
   const defaultSlides = [
-    { ico: '🪪', title: 'Premium Business Cards', sub: 'From $24.32 · Same-week turnaround · Free design proof', img: '', link: '/products/business-cards' },
-    { ico: '🪧', title: 'Vinyl Banners & Signs', sub: 'Custom sizes · Full colour · Indoor & outdoor · Rush available', img: '', link: '/products/signs-banners' },
-    { ico: '🚗', title: 'Vehicle Wraps', sub: 'Full & partial wraps · Cast vinyl · 5–7 year life · Professional install', img: '', link: '/products/vehicle-graphics' },
-    { ico: '📄', title: 'Flyers & Postcards', sub: '1,000 flyers from $99 · Canada-wide shipping · 100lb gloss or matte', img: '', link: '/products/flyers-postcards' },
+    { ico: 'idcard', title: 'Premium Business Cards', sub: 'From $24.32 · Same-week turnaround · Free design proof', img: '', link: '/products/business-cards' },
+    { ico: 'signpost', title: 'Vinyl Banners & Signs', sub: 'Custom sizes · Full colour · Indoor & outdoor · Rush available', img: '', link: '/products/signs-banners' },
+    { ico: 'car', title: 'Vehicle Wraps', sub: 'Full & partial wraps · Cast vinyl · 5–7 year life · Professional install', img: '', link: '/products/vehicle-graphics' },
+    { ico: 'doc', title: 'Flyers & Postcards', sub: '1,000 flyers from $99 · Canada-wide shipping · 100lb gloss or matte', img: '', link: '/products/flyers-postcards' },
   ];
   const slides = (store.hero_slides && store.hero_slides.length > 0) ? store.hero_slides : defaultSlides;
 

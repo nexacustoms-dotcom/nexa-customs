@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, sendEmailJS, imgUrl } from '../context/AppContext';
+import ICONS from '../components/Icons';
 
 // Loaded only when a customer actually uploads an image in the artwork step —
 // keeps this off the initial bundle for every other page on the site.
@@ -15,7 +16,7 @@ export function CartPage() {
 
   if (cart.length === 0) return (
     <div style={{ minHeight: '52vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, textAlign: 'center', padding: 40 }}>
-      <div style={{ fontSize: 64 }}>🛒</div>
+      <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--mu)' }}>{ICONS.cart(56)}</div>
       <div className="D" style={{ fontSize: 28 }}>Your Cart is Empty</div>
       <p style={{ fontSize: 13, color: 'var(--mu)' }}>Browse our products and add items to get started.</p>
       <button className="btn btn-primary" onClick={() => navigate('/products')}>Shop All Products →</button>
@@ -33,7 +34,7 @@ export function CartPage() {
               return (
               <div key={item.cartId} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 14 }}>
                 <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'var(--s2)', border: '1px solid var(--bd)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {thumb ? <img src={imgUrl(thumb, 120)} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" /> : <span style={{ fontSize: 24 }}>🖨️</span>}
+                  {thumb ? <img src={imgUrl(thumb, 120)} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" /> : <span style={{ display: 'flex', color: 'var(--mu)' }}>{ICONS.printer(22)}</span>}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 5 }}>{item.name}</div>
@@ -46,11 +47,11 @@ export function CartPage() {
                 <button onClick={() => removeFromCart(item.cartId)} style={{ color: 'var(--mu)', padding: 6, borderRadius: 6, fontSize: 15, cursor: 'pointer', background: 'none', border: 'none', flexShrink: 0 }}
                   onMouseEnter={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = 'rgba(239,68,68,.1)'; }}
                   onMouseLeave={e => { e.currentTarget.style.color = 'var(--mu)'; e.currentTarget.style.background = 'none'; }}
-                >✕</button>
+                >{ICONS.close(15)}</button>
               </div>
             );})}
             <div style={{ background: 'rgba(249,115,22,.06)', border: '1px solid rgba(249,115,22,.15)', borderRadius: 10, padding: '13px 17px', fontSize: 13, color: 'var(--mu)' }}>
-              <strong style={{ color: 'var(--tx)' }}>📎 Artwork:</strong> You can upload your files at checkout, or email them to <strong style={{ color: 'var(--o)' }}>info@nexacustoms.ca</strong> after ordering. We accept PDF, AI, EPS, PNG/JPG (300dpi+).
+              <strong style={{ color: 'var(--tx)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>{ICONS.paperclip(13)} Artwork:</strong> You can upload your files at checkout, or email them to <strong style={{ color: 'var(--o)' }}>info@nexacustoms.ca</strong> after ordering. We accept PDF, AI, EPS, PNG/JPG (300dpi+).
             </div>
           </div>
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 22, position: 'sticky', top: 76 }} className="cart-sum">
@@ -64,7 +65,7 @@ export function CartPage() {
               <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, color: 'var(--o)' }}>${total.toFixed(2)}</span>
             </div>
             <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: 15, padding: 14, marginTop: 18, borderRadius: 'var(--r)' }} onClick={() => navigate('/checkout')}>Proceed to Checkout →</button>
-            <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--mu)', marginTop: 10 }}>🔒 Secure checkout · SSL encrypted</div>
+            <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--mu)', marginTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>{ICONS.lock(12)} Secure checkout · SSL encrypted</div>
             <button onClick={() => navigate('/products')} style={{ display: 'block', width: '100%', textAlign: 'center', fontSize: 12, color: 'var(--mu)', marginTop: 10, cursor: 'pointer', background: 'none', border: 'none' }}>← Continue Shopping</button>
           </div>
         </div>
@@ -354,8 +355,8 @@ export function CheckoutPage() {
         message:        `New order!\n\nOrder: ${no}\nCustomer: ${(form.fn + ' ' + form.ln).trim()}\nEmail: ${form.email}\nPhone: ${form.phone}\nItems: ${cart.map(i => `${i.qty}x ${i.name}`).join(', ')}\nTotal: $${total.toFixed(2)}\nDelivery: ${delivery}${delivery !== 'pickup' ? `\nShip To: ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : ' (Pickup at 6033 Shawson Dr)'}\nPayment: ${payMethod}`,
       };
       sendEmailJS(ejsSvc, ejsTpl, ejsKey, p)
-        .then(() => console.log('✅ Order email sent'))
-        .catch(err => { console.error('❌ Order email failed:', err.message); showToast('Order saved! Email error: ' + err.message); });
+        .then(() => console.log('Order email sent'))
+        .catch(err => { console.error('Order email failed:', err.message); showToast('Order saved! Email error: ' + err.message); });
     } else {
       console.warn('EmailJS not configured — skipping order email');
     }
@@ -557,9 +558,9 @@ export function CheckoutPage() {
                   <div className="D" style={{ fontSize: 22, marginBottom: 4 }}>Delivery Method</div>
                   <p style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 20, lineHeight: 1.6 }}>Choose how you want to receive your order.</p>
                   {[
-                    { id: 'pickup', ico: '🏪', label: 'Free Local Pickup', sub: '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM', price: 'Free', tag: 'Most Popular' },
-                    { id: 'post',   ico: '📬', label: 'Canada Post Standard', sub: '3–7 business days · Tracking included', price: `$${pricing.shipping_post.toFixed(2)}`, tag: '' },
-                    { id: 'courier',ico: '🚀', label: 'Courier Express', sub: '1–2 business days · FedEx or UPS', price: `$${pricing.shipping_courier.toFixed(2)}`, tag: 'Fastest' },
+                    { id: 'pickup', ico: ICONS.store(18), label: 'Free Local Pickup', sub: '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM', price: 'Free', tag: 'Most Popular' },
+                    { id: 'post',   ico: ICONS.mailbox(18), label: 'Canada Post Standard', sub: '3–7 business days · Tracking included', price: `$${pricing.shipping_post.toFixed(2)}`, tag: '' },
+                    { id: 'courier',ico: ICONS.rocket(18), label: 'Courier Express', sub: '1–2 business days · FedEx or UPS', price: `$${pricing.shipping_courier.toFixed(2)}`, tag: 'Fastest' },
                   ].map(opt => (
                     <div key={opt.id} onClick={() => setDelivery(opt.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, background: delivery === opt.id ? 'rgba(249,115,22,.08)' : 'var(--s2)', border: `2px solid ${delivery === opt.id ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all .18s', marginBottom: 10 }}>
                       {/* Radio */}
@@ -567,7 +568,7 @@ export function CheckoutPage() {
                         {delivery === opt.id && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#000' }} />}
                       </div>
                       {/* Icon */}
-                      <div style={{ width: 36, height: 36, borderRadius: 9, background: delivery === opt.id ? 'rgba(249,115,22,.15)' : 'var(--dk)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{opt.ico}</div>
+                      <div style={{ width: 36, height: 36, borderRadius: 9, background: delivery === opt.id ? 'rgba(249,115,22,.15)' : 'var(--dk)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--o)', flexShrink: 0 }}>{opt.ico}</div>
                       {/* Label */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -592,7 +593,7 @@ export function CheckoutPage() {
                       <input className="finp" placeholder="123 Main Street, Unit 4" value={shipping.address}
                         onChange={e => { setShipping(s => ({...s, address: e.target.value})); setErrors(er => ({...er, ship_address: ''})); }}
                         style={{ borderColor: errors.ship_address ? '#ef4444' : '' }} />
-                      {errors.ship_address && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }} role="alert">⚠ {errors.ship_address}</div>}
+                      {errors.ship_address && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }} role="alert"><span style={{display:"inline-flex",verticalAlign:"middle",marginRight:4}}>{ICONS.warning(11)}</span>{errors.ship_address}</div>}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                       <div className="fgrp">
@@ -600,7 +601,7 @@ export function CheckoutPage() {
                         <input className="finp" placeholder="Mississauga" value={shipping.city}
                           onChange={e => { setShipping(s => ({...s, city: e.target.value})); setErrors(er => ({...er, ship_city: ''})); }}
                           style={{ borderColor: errors.ship_city ? '#ef4444' : '' }} />
-                        {errors.ship_city && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }} role="alert">⚠ {errors.ship_city}</div>}
+                        {errors.ship_city && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }} role="alert"><span style={{display:"inline-flex",verticalAlign:"middle",marginRight:4}}>{ICONS.warning(11)}</span>{errors.ship_city}</div>}
                       </div>
                       <div className="fgrp">
                         <label className="flbl" htmlFor="shipping_province">Province</label>
@@ -615,7 +616,7 @@ export function CheckoutPage() {
                         <input className="finp" placeholder="L5T 1J6" value={shipping.postal} maxLength={7}
                           onChange={e => { setShipping(s => ({...s, postal: e.target.value.toUpperCase()})); setErrors(er => ({...er, ship_postal: ''})); }}
                           style={{ borderColor: errors.ship_postal ? '#ef4444' : '', fontFamily: "'DM Mono',monospace", letterSpacing: '.1em' }} />
-                        {errors.ship_postal && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }} role="alert">⚠ {errors.ship_postal}</div>}
+                        {errors.ship_postal && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }} role="alert"><span style={{display:"inline-flex",verticalAlign:"middle",marginRight:4}}>{ICONS.warning(11)}</span>{errors.ship_postal}</div>}
                       </div>
                       <div className="fgrp">
                         <label className="flbl" htmlFor="shipping_country">Country</label>
@@ -634,7 +635,7 @@ export function CheckoutPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {cart.map((item, i) => {
                       const ta = item.turnaround || 'standard';
-                      const ico = ta === 'express' ? '🚀' : ta === 'rush' ? '⚡' : '📦';
+                      const ico = ta === 'express' ? ICONS.rocket(13) : ta === 'rush' ? ICONS.bolt(13) : ICONS.box(13);
                       const sub = ta === 'express' ? 'Same / next day' : ta === 'rush' ? '2–3 business days' : '5–7 business days';
                       return (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--s2)', borderRadius: 8, border: '1px solid var(--bd)' }}>
@@ -693,7 +694,7 @@ export function CheckoutPage() {
                   onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--bd)'; e.currentTarget.style.background = 'transparent'; handleArtworkSelect({ target: { files: e.dataTransfer.files } }); }}
                   style={{ border: '2px dashed var(--bd)', borderRadius: 12, padding: '36px 20px', textAlign: 'center', cursor: 'pointer', transition: 'all .2s', marginBottom: 14 }}
                 >
-                  <div style={{ fontSize: 44, marginBottom: 12 }}>{artworkUploading ? '⏳' : '📁'}</div>
+                  <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center', color: 'var(--mu)' }}>{artworkUploading ? ICONS.loader(38) : ICONS.folder(38)}</div>
                   <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 5 }}>
                     {artworkUploading ? 'Uploading your files…' : 'Click to browse or drag & drop'}
                   </div>
@@ -705,18 +706,18 @@ export function CheckoutPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                     {artworkFiles.map((f, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, background: f.url ? 'rgba(34,197,94,.06)' : 'var(--s2)', border: `1px solid ${f.url ? 'rgba(34,197,94,.2)' : 'var(--bd)'}`, borderRadius: 9, padding: '10px 14px' }}>
-                        <span style={{ fontSize: 22, flexShrink: 0 }}>{f.name.match(/\.pdf$/i) ? '📄' : f.name.match(/\.zip$/i) ? '🗜️' : f.name.match(/\.(png|jpg|jpeg|tiff?)$/i) ? '🖼️' : '📎'}</span>
+                        <span style={{ display: 'flex', flexShrink: 0, color: 'var(--mu)' }}>{f.name.match(/\.pdf$/i) ? ICONS.doc(20) : f.name.match(/\.zip$/i) ? ICONS.zip(20) : f.name.match(/\.(png|jpg|jpeg|tiff?)$/i) ? ICONS.image(20) : ICONS.paperclip(20)}</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</div>
                           <div style={{ fontSize: 11, color: 'var(--mu)' }}>
                             {(f.size / 1024 / 1024).toFixed(1)} MB
-                            {f.url ? <span style={{ color: 'var(--gr)', marginLeft: 8 }}>✅ Uploaded</span> : <span style={{ color: '#f59e0b', marginLeft: 8 }}>📧 Email after order</span>}
+                            {f.url ? <span style={{ color: 'var(--gr)', marginLeft: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{ICONS.check(12)} Uploaded</span> : <span style={{ color: '#f59e0b', marginLeft: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{ICONS.mail(12)} Email after order</span>}
                           </div>
                         </div>
                         <button onClick={() => setArtworkFiles(prev => prev.filter((_, idx) => idx !== i))} style={{ color: 'var(--mu)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: '2px 6px', borderRadius: 4 }}
                           onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
                           onMouseLeave={e => e.currentTarget.style.color = 'var(--mu)'}
-                        >✕</button>
+                        >{ICONS.close(15)}</button>
                       </div>
                     ))}
                   </div>
@@ -742,7 +743,7 @@ export function CheckoutPage() {
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 22, marginBottom: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                     <div className="D" style={{ fontSize: 20 }}>Order Review</div>
-                    <button onClick={() => setStep(1)} style={{ fontSize: 11, color: 'var(--o)', background: 'none', border: 'none', cursor: 'pointer' }}>✏️ Edit Info</button>
+                    <button onClick={() => setStep(1)} style={{ fontSize: 11, color: 'var(--o)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>{ICONS.edit(11)} Edit Info</button>
                   </div>
                   {/* Items */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
@@ -759,25 +760,25 @@ export function CheckoutPage() {
                   {/* Summary rows */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 0', borderTop: '1px solid var(--bd)' }}>
                     <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>📍 Delivery</span>
-                      <span style={{ color: 'var(--tx)', fontWeight: 600 }}>
-                        {delivery === 'pickup' ? '🏪 Free Pickup — Mississauga' : delivery === 'post' ? `📬 Canada Post — $${shipCost.toFixed(2)}` : `🚀 Courier — $${shipCost.toFixed(2)}`}
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{ICONS.pin(12)} Delivery</span>
+                      <span style={{ color: 'var(--tx)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        {delivery === 'pickup' ? <>{ICONS.store(12)} Free Pickup — Mississauga</> : delivery === 'post' ? <>{ICONS.mailbox(12)} Canada Post — ${shipCost.toFixed(2)}</> : <>{ICONS.rocket(12)} Courier — ${shipCost.toFixed(2)}</>}
                       </span>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>⏱ Turnaround</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{ICONS.clock(12)} Turnaround</span>
                       <span style={{ color: 'var(--tx)', fontWeight: 600, textTransform: 'capitalize' }}>
                         {[...new Set(cart.map(i => i.turnaround || 'standard'))].join(', ')}
                       </span>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>📎 Artwork</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{ICONS.paperclip(12)} Artwork</span>
                       {artworkFiles.length > 0
-                        ? <span style={{ color: 'var(--gr)', fontWeight: 600 }}>✅ {artworkFiles.length} file(s) uploaded</span>
-                        : <span style={{ color: '#f59e0b', fontWeight: 600 }}>📧 Will email after ordering</span>}
+                        ? <span style={{ color: 'var(--gr)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>{ICONS.check(12)} {artworkFiles.length} file(s) uploaded</span>
+                        : <span style={{ color: '#f59e0b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>{ICONS.mail(12)} Will email after ordering</span>}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
-                      <span>👤 Customer</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{ICONS.person(12)} Customer</span>
                       <span style={{ color: 'var(--tx)', fontWeight: 600 }}>{form.fn} {form.ln} · {form.phone}</span>
                     </div>
                   </div>
@@ -787,11 +788,11 @@ export function CheckoutPage() {
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 22, marginBottom: 14 }}>
                   <div className="D" style={{ fontSize: 20, marginBottom: 14 }}>Payment Method</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(99,102,241,.08)', border: '2px solid rgba(99,102,241,.3)', borderRadius: 12, padding: '14px 18px', marginBottom: 18 }}>
-                    <span style={{ fontSize: 28 }}>💳</span>
+                    <span style={{ display: 'flex', color: 'var(--mu)' }}>{ICONS.card(26)}</span>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 14 }}>Credit / Debit Card</div>
                       <div style={{ fontSize: 11, color: 'var(--mu)', display: 'flex', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
-                        <span>Visa</span><span>·</span><span>Mastercard</span><span>·</span><span>Amex</span><span>·</span><span>Interac</span><span>·</span><span style={{ color: '#818cf8' }}>🔒 Powered by Stripe</span>
+                        <span>Visa</span><span>·</span><span>Mastercard</span><span>·</span><span>Amex</span><span>·</span><span>Interac</span><span>·</span><span style={{ color: '#818cf8', display: 'inline-flex', alignItems: 'center', gap: 3 }}>{ICONS.lock(11)} Powered by Stripe</span>
                       </div>
                     </div>
                   </div>
@@ -807,13 +808,13 @@ export function CheckoutPage() {
                         <div className="fgrp" style={{ gridColumn: '1/-1' }}>
                           <label className="flbl">Card Details</label>
                           <div id="stripe-card-el" style={{ background: 'var(--s2)', border: `1px solid ${stripeErr ? '#ef4444' : 'var(--bd)'}`, borderRadius: 9, padding: 14, minHeight: 44, transition: 'border-color .2s' }} />
-                          {stripeErr && <div style={{ color: '#f87171', fontSize: 11, marginTop: 5 }}>⚠ {stripeErr}</div>}
+                          {stripeErr && <div style={{ color: '#f87171', fontSize: 11, marginTop: 5, display: 'flex', alignItems: 'center', gap: 4 }} role="alert">{ICONS.warning(11)} {stripeErr}</div>}
                           {cfg.stripePk() && stripeCheckDone && !stripeReady && (
                             <div style={{ fontSize: 12, color: '#f87171', marginTop: 8, background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 7, padding: '10px 12px', lineHeight: 1.6 }}>
-                              ⚠️ <strong>Payment form not loading.</strong> Try disabling any ad blocker for this page and refreshing, or <a href="tel:4379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>call us at (437) 997-9921</a>.
+                              <span style={{display:'inline-flex',verticalAlign:'middle',marginRight:4}}>{ICONS.warning(13)}</span><strong>Payment form not loading.</strong> Try disabling any ad blocker for this page and refreshing, or <a href="tel:4379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>call us at (437) 997-9921</a>.
                             </div>
                           )}
-                          {!cfg.stripePk() && <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 8, background: 'rgba(249,115,22,.06)', border: '1px solid rgba(249,115,22,.15)', borderRadius: 7, padding: '8px 12px' }}>💡 Stripe not configured — order will be processed as invoice.</div>}
+                          {!cfg.stripePk() && <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 8, background: 'rgba(249,115,22,.06)', border: '1px solid rgba(249,115,22,.15)', borderRadius: 7, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>{ICONS.bulb(13)} Stripe not configured — order will be processed as invoice.</div>}
                         </div>
                       </div>
 
@@ -871,7 +872,7 @@ export function CheckoutPage() {
                         )}
                         {billing.sameAsContact && (
                           <div style={{ background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: 'var(--mu)' }}>
-                            ✅ Billing name: <strong style={{ color: 'var(--tx)' }}>{form.fn} {form.ln}</strong> · Contact info used for billing
+                            <span style={{display:'inline-flex',verticalAlign:'middle',marginRight:4}}>{ICONS.check(12)}</span>Billing name: <strong style={{ color: 'var(--tx)' }}>{form.fn} {form.ln}</strong> · Contact info used for billing
                           </div>
                         )}
                       </div>
@@ -885,7 +886,7 @@ export function CheckoutPage() {
 
                 {/* Trust badges */}
                 <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginBottom: 16, flexWrap: 'wrap', padding: '6px 0' }}>
-                  {[['🔒','SSL Encrypted'],['✅','Free Proof Included'],['🛡️','Quality Guaranteed'],['📞','(437) 997-9921']].map(([ico, l]) => (
+                  {[[ICONS.lock(14),'SSL Encrypted'],[ICONS.check(14),'Free Proof Included'],[ICONS.shield(14),'Quality Guaranteed'],[ICONS.phone(14),'(437) 997-9921']].map(([ico, l]) => (
                     <div key={l} style={{ fontSize: 11, color: 'var(--mu)', display: 'flex', alignItems: 'center', gap: 5 }}><span>{ico}</span>{l}</div>
                   ))}
                 </div>
@@ -894,7 +895,7 @@ export function CheckoutPage() {
                 <button onClick={handlePlace} disabled={placing} style={{ width: '100%', background: placing ? 'var(--bd)' : 'var(--o)', color: placing ? 'var(--mu)' : '#000', border: 'none', borderRadius: 'var(--r)', padding: '16px 20px', fontSize: 16, fontWeight: 800, cursor: placing ? 'not-allowed' : 'pointer', fontFamily: "'DM Sans',sans-serif", transition: 'all .2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
                   {placing
                     ? <><span style={{ display: 'inline-block', animation: 'spin 0.8s linear infinite' }}>⏳</span> Placing Order…</>
-                    : <>🔒 Place Order — ${total.toFixed(2)}</>
+                    : <>{ICONS.lock(15)} Place Order — ${total.toFixed(2)}</>
                   }
                 </button>
                 <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--mu)' }}>
@@ -934,14 +935,14 @@ export function CheckoutPage() {
                   <div style={{ fontWeight: 600 }}>{form.fn} {form.ln}</div>
                   <div style={{ color: 'var(--mu)' }}>{form.email}</div>
                   <div style={{ color: 'var(--mu)' }}>{form.phone}</div>
-                  <button onClick={() => setStep(1)} style={{ fontSize: 11, color: 'var(--o)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', marginTop: 4 }}>✏️ Edit</button>
+                  <button onClick={() => setStep(1)} style={{ fontSize: 11, color: 'var(--o)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>{ICONS.edit(11)} Edit</button>
                 </div>
               )}
 
               <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--bd)', display: 'flex', justifyContent: 'center', gap: 14 }}>
-                <span style={{ fontSize: 11, color: 'var(--mu)' }}>🔒 Secure</span>
-                <span style={{ fontSize: 11, color: 'var(--mu)' }}>✅ Free Proof</span>
-                <a href="tel:+14379979921" style={{ fontSize: 11, color: 'var(--o)', textDecoration: 'none' }}>📞 Help</a>
+                <span style={{ fontSize: 11, color: 'var(--mu)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>{ICONS.lock(10)} Secure</span>
+                <span style={{ fontSize: 11, color: 'var(--mu)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>{ICONS.check(10)} Free Proof</span>
+                <a href="tel:+14379979921" style={{ fontSize: 11, color: 'var(--o)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 3 }}>{ICONS.phone(10)} Help</a>
               </div>
             </div>
           </div>
@@ -963,7 +964,7 @@ export function SuccessPage() {
 
   return (
     <div style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '60px 20px' }}>
-      <div style={{ fontSize: 72, marginBottom: 20 }}>🎉</div>
+      <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'center', color: 'var(--o)' }}>{ICONS.celebrate(64)}</div>
       <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,54px)', marginBottom: 10, color: 'var(--gr)' }}>Order Confirmed!</h1>
       <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 460, margin: '0 auto 12px', lineHeight: 1.7 }}>Your order has been received. We will be in touch within 1 business day with your proof.</p>
       <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 20, color: 'var(--o)', marginBottom: 20, background: 'rgba(249,115,22,.1)', border: '1px solid rgba(249,115,22,.2)', borderRadius: 8, padding: '10px 28px', display: 'inline-block', letterSpacing: '.05em' }}>{orderNo || 'NCX—'}</div>
@@ -984,14 +985,14 @@ export function SuccessPage() {
         <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, padding: '16px 20px', textAlign: 'left' }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mu)', marginBottom: 10 }}>Next Steps</div>
           {[
-            ['📎 Artwork', 'Email files to info@nexacustoms.ca with your order number'],
+            [ICONS.paperclip(14), 'Artwork', 'Email files to info@nexacustoms.ca with your order number'],
             deliveryType === 'pickup'
-              ? ['📍 Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM']
-              : ['📦 Shipping', shipAddr + ' · ' + (deliveryType === 'post' ? 'Canada Post 3–7 days' : 'Courier 1–2 days')],
-            ['📞 Questions?', 'Call or text (437) 997-9921'],
-          ].map(([k, v]) => (
+              ? [ICONS.pin(14), 'Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM']
+              : [ICONS.box(14), 'Shipping', shipAddr + ' · ' + (deliveryType === 'post' ? 'Canada Post 3–7 days' : 'Courier 1–2 days')],
+            [ICONS.phone(14), 'Questions?', 'Call or text (437) 997-9921'],
+          ].map(([icon, k, v]) => (
             <div key={k} style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid var(--bd)' }}>
-              <span style={{ color: 'var(--o)', flexShrink: 0, fontWeight: 600, minWidth: 90 }}>{k}</span>
+              <span style={{ color: 'var(--o)', flexShrink: 0, fontWeight: 600, minWidth: 90, display: 'flex', alignItems: 'center', gap: 6 }}>{icon} {k}</span>
               <span style={{ color: 'var(--mu)' }}>{v}</span>
             </div>
           ))}
@@ -999,7 +1000,7 @@ export function SuccessPage() {
       </div>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 12 }}>
         <button className="btn btn-primary" onClick={() => navigate('/products')}>Continue Shopping</button>
-        <button className="btn btn-ghost" onClick={() => navigate('/order-status')}>📦 Track Your Order</button>
+        <button className="btn btn-ghost" onClick={() => navigate('/order-status')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>{ICONS.box(14)} Track Your Order</button>
       </div>
       <div style={{ fontSize: 12, color: 'var(--mu)' }}>A confirmation has been sent to your email.</div>
     </div>
@@ -1089,9 +1090,9 @@ export function QuotePage() {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ service_id: ejsSvc, template_id: ejsTpl, user_id: ejsKey, template_params: params }),
         });
-        if (res.ok) { console.log('✅ Quote email sent'); }
-        else { const t = await res.text(); console.error('❌ Quote email failed:', t); showToast('Quote saved! Email error: ' + t); }
-      } catch (e) { console.error('❌ Quote email error:', e.message); }
+        if (res.ok) { console.log('Quote email sent'); }
+        else { const t = await res.text(); console.error('Quote email failed:', t); showToast('Quote saved! Email error: ' + t); }
+      } catch (e) { console.error('Quote email error:', e.message); }
     }
 
     setSending(false);
@@ -1101,7 +1102,7 @@ export function QuotePage() {
   if (sent) {
     return (
       <div className="W" style={{ padding: '80px 28px', textAlign: 'center' }}>
-        <div style={{ fontSize: 72, marginBottom: 20 }}>📋</div>
+        <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'center', color: 'var(--o)' }}>{ICONS.clipboard(64)}</div>
         <h1 className="D" style={{ fontSize: 'clamp(28px,4vw,48px)', marginBottom: 12 }}>Quote Request Received!</h1>
         <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 460, margin: '0 auto 12px', lineHeight: 1.75 }}>
           Thanks <strong>{form.fname}</strong>! We have received your quote request and will get back to you at <strong>{form.email}</strong> within 1 business day.
@@ -1159,7 +1160,7 @@ export function QuotePage() {
               background: quoteFile ? 'rgba(34,197,94,.05)' : 'var(--s2)', borderColor: quoteFile ? 'rgba(34,197,94,.4)' : 'var(--bd)' }}>
               <input type="file" accept=".pdf,.ai,.eps,.png,.jpg,.jpeg,.psd,.svg,.tiff" style={{ display: 'none' }}
                 onChange={e => setQuoteFile(e.target.files[0] || null)} />
-              <span style={{ fontSize: 24 }}>{quoteFile ? '✅' : '📎'}</span>
+              <span style={{ display: 'flex', color: quoteFile ? 'var(--gr)' : 'var(--mu)' }}>{quoteFile ? ICONS.check(22) : ICONS.paperclip(22)}</span>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: quoteFile ? '#22c55e' : 'var(--tx)' }}>
                   {quoteFile ? quoteFile.name : 'Click to attach a file'}
@@ -1183,7 +1184,7 @@ export function QuotePage() {
           </div>
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 20 }}>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Contact Directly</div>
-            {[['📞','(437) 997-9921','tel:+14379979921'],['✉️','info@nexacustoms.ca','mailto:info@nexacustoms.ca'],['📍','6033 Shawson Dr, Unit 40',null]].map(([ico, val, href]) => (
+            {[[ICONS.phone(14),'(437) 997-9921','tel:+14379979921'],[ICONS.mail(14),'info@nexacustoms.ca','mailto:info@nexacustoms.ca'],[ICONS.pin(14),'6033 Shawson Dr, Unit 40',null]].map(([ico, val, href]) => (
               <div key={val} style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9, marginBottom: 10 }}>
                 {ico} {href ? <a href={href} style={{ color: 'var(--o)' }}>{val}</a> : val}
               </div>
@@ -1236,11 +1237,11 @@ export function ContactPage() {
       };
       try {
         await sendEmailJS(ejsSvc, ejsTpl, ejsKey, params);
-        console.log('✅ Contact email sent');
+        console.log('Contact email sent');
         setSent(true);
         setForm({ name: '', email: '', phone: '', msg: '' });
       } catch (err) {
-        console.error('❌ Contact email failed:', err.message);
+        console.error('Contact email failed:', err.message);
         showToast('Email error: ' + err.message);
       }
     } else {
@@ -1260,13 +1261,13 @@ export function ContactPage() {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 24 }} className="ct-grid">
         {[
-          { ico: '📞', t: 'Call Us', val: store.phone, href: `tel:+${store.phone_raw}`, sub: 'Mon–Fri 9AM–6PM · Sat By Appt' },
-          { ico: '✉️', t: 'Email Us', val: store.email, href: `mailto:${store.email}`, sub: 'Response within 1 business day' },
-          { ico: '📍', t: 'Visit Us', val: `${store.address}\n${store.city}`, href: null, sub: null },
-          { ico: '💬', t: 'WhatsApp', val: store.phone, href: `https://wa.me/${store.phone_raw}`, sub: 'Send photos of your project' },
+          { ico: ICONS.phone(28), t: 'Call Us', val: store.phone, href: `tel:+${store.phone_raw}`, sub: 'Mon–Fri 9AM–6PM · Sat By Appt' },
+          { ico: ICONS.mail(28), t: 'Email Us', val: store.email, href: `mailto:${store.email}`, sub: 'Response within 1 business day' },
+          { ico: ICONS.pin(28), t: 'Visit Us', val: `${store.address}\n${store.city}`, href: null, sub: null },
+          { ico: ICONS.chat(28), t: 'WhatsApp', val: store.phone, href: `https://wa.me/${store.phone_raw}`, sub: 'Send photos of your project' },
         ].map(c => (
           <div key={c.t} className="card" style={{ padding: 24 }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>{c.ico}</div>
+            <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center', color: 'var(--o)' }}>{c.ico}</div>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 5 }}>{c.t}</div>
             {c.href ? <a href={c.href} style={{ color: 'var(--o)', fontSize: 14, fontWeight: 700 }}>{c.val}</a> : <div style={{ fontSize: 13, color: 'var(--mu)', whiteSpace: 'pre-line' }}>{c.val}</div>}
             {c.sub && <p style={{ fontSize: 11, color: 'var(--mu)', marginTop: 5 }}>{c.sub}</p>}
@@ -1278,7 +1279,7 @@ export function ContactPage() {
 
         {sent ? (
           <div style={{ textAlign: 'center', padding: '32px 16px' }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center', color: 'var(--gr)' }}>{ICONS.check(48)}</div>
             <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 8 }}>Message Sent!</div>
             <p style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.7, marginBottom: 20 }}>
               Thanks for reaching out, <strong>{form.name || 'there'}</strong>! We will reply to your email within 1 business day.<br />
@@ -1317,13 +1318,13 @@ export function OrderStatusPage() {
 
   const STATUSES = ['Order Received','Proof Sent','Printing','Printed','Shipped','Delivered'];
   const STATUS_INFO = {
-    'Order Received': { icon: '📋', label: 'Order Received', desc: 'We have your order and are reviewing your artwork.' },
-    'Proof Sent':      { icon: '🖼️', label: 'Proof Sent',     desc: 'Check your email — we\'ve sent a proof for your approval before we print.' },
-    'Printing':        { icon: '🖨️', label: 'Printing',       desc: 'Your order is on the press right now.' },
-    'Printed':         { icon: '📦', label: 'Printed',        desc: 'Printing is done — your order is being finished and packed.' },
-    'Shipped':         { icon: '🚚', label: 'Shipped',        desc: "Your order is on its way." },
-    'Delivered':       { icon: '🎉', label: 'Delivered',      desc: 'Order delivered. Thank you for choosing Nexa Customs!' },
-    'Cancelled':       { icon: '❌', label: 'Cancelled',      desc: 'This order has been cancelled. Contact us if you have questions.' },
+    'Order Received': { icon: ICONS.clipboard(44), label: 'Order Received', desc: 'We have your order and are reviewing your artwork.' },
+    'Proof Sent':      { icon: ICONS.image(44),     label: 'Proof Sent',     desc: 'Check your email — we\'ve sent a proof for your approval before we print.' },
+    'Printing':        { icon: ICONS.printer(44),   label: 'Printing',       desc: 'Your order is on the press right now.' },
+    'Printed':         { icon: ICONS.box(44),       label: 'Printed',        desc: 'Printing is done — your order is being finished and packed.' },
+    'Shipped':         { icon: ICONS.truck(44),     label: 'Shipped',        desc: "Your order is on its way." },
+    'Delivered':       { icon: ICONS.celebrate(44), label: 'Delivered',      desc: 'Order delivered. Thank you for choosing Nexa Customs!' },
+    'Cancelled':       { icon: ICONS.closeCircle(44), label: 'Cancelled',    desc: 'This order has been cancelled. Contact us if you have questions.' },
   };
 
   async function lookup() {
@@ -1384,14 +1385,14 @@ export function OrderStatusPage() {
           {error && <div style={{ fontSize: 12, color: '#f87171', marginBottom: 12, padding: '8px 12px', background: 'rgba(239,68,68,.08)', borderRadius: 7 }}>{error}</div>}
           <button onClick={lookup} disabled={loading}
             style={{ width: '100%', padding: '13px', borderRadius: 9, background: 'var(--o)', color: '#000', border: 'none', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, fontFamily: "'DM Sans',sans-serif" }}>
-            {loading ? '🔍 Looking up…' : '🔍 Track Order'}
+            <span style={{display:'inline-flex',alignItems:'center',gap:6}}>{ICONS.search(14)} {loading ? 'Looking up…' : 'Track Order'}</span>
           </button>
         </div>
 
         {order && st && (
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 14, padding: 24 }}>
             <div style={{ textAlign: 'center', marginBottom: 28, padding: '20px', background: 'var(--s2)', borderRadius: 10 }}>
-              <div style={{ fontSize: 48, marginBottom: 8 }}>{st.icon}</div>
+              <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center', color: 'var(--o)' }}>{st.icon}</div>
               <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, marginBottom: 6 }}>{st.label}</div>
               <div style={{ fontSize: 13, color: 'var(--mu)' }}>{st.desc}</div>
             </div>
@@ -1439,7 +1440,7 @@ export function OrderStatusPage() {
             </div>
 
             <div style={{ padding: '12px 14px', background: 'rgba(249,115,22,.06)', borderRadius: 8, fontSize: 12, color: 'var(--mu)', borderLeft: '3px solid var(--o)' }}>
-              📞 Questions? Call <a href="tel:+14379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>(437) 997-9921</a> or email <a href="mailto:info@nexacustoms.ca" style={{ color: 'var(--o)' }}>info@nexacustoms.ca</a>
+              <span style={{display:'inline-flex',verticalAlign:'middle',marginRight:5}}>{ICONS.phone(13)}</span>Questions? Call <a href="tel:+14379979921" style={{ color: 'var(--o)', fontWeight: 700 }}>(437) 997-9921</a> or email <a href="mailto:info@nexacustoms.ca" style={{ color: 'var(--o)' }}>info@nexacustoms.ca</a>
             </div>
           </div>
         )}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import ICONS from '../components/Icons';
 
 // ─── PRICING ENGINE ──────────────────────────────────────────────────────────
 function areaFactor(w, h) {
@@ -72,7 +73,7 @@ const LABEL_PRODUCTS = [
     inkColors: ['CMYK (Full Colour)'],
     finishing: ['Standard'],
     quantities: [100, 250, 500, 1000, 2000, 5000, 10000],
-    turnaround: '3–12 business days', icon: '🏷️',
+    turnaround: '3–12 business days', icon: 'tag',
   },
   {
     id: 'square-cut-labels', name: 'Square Cut Labels', badge: null,
@@ -83,7 +84,7 @@ const LABEL_PRODUCTS = [
     inkColors: ['CMYK (Full Colour)'],
     finishing: ['Standard'],
     quantities: [100, 250, 500, 1000, 2000, 5000],
-    turnaround: '6–12 business days', icon: '🔖',
+    turnaround: '6–12 business days', icon: 'bookmark',
   },
   {
     id: 'paper-roll-labels', name: 'Paper Roll Labels', badge: 'Cost Effective',
@@ -94,7 +95,7 @@ const LABEL_PRODUCTS = [
     inkColors: ['CMYK (Full Colour)'],
     finishing: ['Standard'],
     quantities: [100, 250, 500, 1000, 2000, 3000, 5000],
-    turnaround: '3–12 business days', icon: '📜',
+    turnaround: '3–12 business days', icon: 'scroll',
   },
   {
     id: 'bopp-roll-labels', name: 'BOPP Roll Labels', badge: 'Waterproof',
@@ -105,7 +106,7 @@ const LABEL_PRODUCTS = [
     inkColors: ['CMYK (Full Colour)', 'Black Only'],
     finishing: ['None','Matte Lamination','Gloss Lamination','Spot UV','Soft Touch Lamination'],
     quantities: [100, 250, 500, 1000, 2000, 3000, 5000],
-    turnaround: '3–12 business days', icon: '🔵',
+    turnaround: '3–12 business days', icon: 'circle',
   },
   {
     id: 'white-plastic-labels', name: 'White Plastic Labels', badge: 'Durable',
@@ -116,7 +117,7 @@ const LABEL_PRODUCTS = [
     inkColors: ['CMYK (Full Colour)'],
     finishing: ['None','Matte Lamination','Gloss Lamination'],
     quantities: [100, 250, 500, 1000, 2000, 3000, 5000],
-    turnaround: '3–12 business days', icon: '🏁',
+    turnaround: '3–12 business days', icon: 'flag',
   },
   {
     id: 'clear-plastic-labels', name: 'Clear Plastic Labels', badge: 'Premium',
@@ -127,7 +128,7 @@ const LABEL_PRODUCTS = [
     inkColors: ['CMYK (Full Colour)'],
     finishing: ['None','Matte Lamination','Gloss Lamination','Spot UV'],
     quantities: [100, 250, 500, 1000, 2000, 3000, 5000],
-    turnaround: '3–12 business days', icon: '💎',
+    turnaround: '3–12 business days', icon: 'diamond',
   },
 ];
 
@@ -215,7 +216,7 @@ export default function LabelsStickersPage({ productId }) {
       `Stock: ${stock}`, `Ink: ${inkColor}`, `Finish: ${finishing}`,
     ];
     addToCart({ id: prod.id + '-' + Date.now(), name: prod.name, qty, opts, price: totalPrice, unitPrice: +(totalPrice / qty).toFixed(4), turnaround });
-    showToast(`✅ ${prod.name} added to cart!`);
+    showToast(`${prod.name} added to cart!`);
   }
 
   // Shared input style matching site theme
@@ -235,7 +236,7 @@ export default function LabelsStickersPage({ productId }) {
         {LABEL_PRODUCTS.map(p => (
           <button key={p.id} onClick={() => navigate(`/products/labels-stickers/${p.id}`)}
             className={p.id === prod.id ? 'ob sel' : 'ob'} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {p.icon} {p.name}
+            <span style={{ display: 'flex' }}>{ICONS[p.icon]?.(16)}</span> {p.name}
             {p.badge && <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', background: 'var(--ol)', color: 'var(--o)', borderRadius: 4, textTransform: 'uppercase' }}>{p.badge}</span>}
           </button>
         ))}
@@ -244,7 +245,7 @@ export default function LabelsStickersPage({ productId }) {
       {/* Header */}
       <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: '24px 28px', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 40 }}>{prod.icon}</div>
+          <div style={{ display: 'flex', color: 'var(--o)' }}>{ICONS[prod.icon]?.(36)}</div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 5 }}>
               <h1 className="D" style={{ fontSize: 'clamp(22px,4vw,34px)', margin: 0 }}>{prod.name}</h1>
@@ -254,7 +255,7 @@ export default function LabelsStickersPage({ productId }) {
           </div>
           <div style={{ fontSize: 11, color: 'var(--mu)', textAlign: 'right', whiteSpace: 'nowrap' }}>
             <div>⏱ {prod.turnaround}</div>
-            <div style={{ marginTop: 3 }}>🇨🇦 Ships Canada-wide</div>
+            <div style={{ marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}>{ICONS.truck(11)} Ships Canada-wide</div>
           </div>
         </div>
       </div>
@@ -387,9 +388,9 @@ export default function LabelsStickersPage({ productId }) {
             <div className="flbl" style={{ marginBottom: 12 }}>Turnaround Time</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
               {[
-                { id: 'standard', ico: '📦', label: 'Standard', sub: prod.turnaround, fee: 0 },
-                { id: 'rush',     ico: '⚡', label: 'Rush',     sub: '2–3 business days', fee: rushMult },
-                { id: 'express',  ico: '🚀', label: 'Express',  sub: 'Same / next day',   fee: expressMult },
+                { id: 'standard', ico: ICONS.box(20), label: 'Standard', sub: prod.turnaround, fee: 0 },
+                { id: 'rush',     ico: ICONS.bolt(20), label: 'Rush',     sub: '2–3 business days', fee: rushMult },
+                { id: 'express',  ico: ICONS.rocket(20), label: 'Express',  sub: 'Same / next day',   fee: expressMult },
               ].map(opt => {
                 const sel = turnaround === opt.id;
                 const feeAmt = +(basePrice * opt.fee).toFixed(2);
@@ -413,7 +414,7 @@ export default function LabelsStickersPage({ productId }) {
           {showPricing && rows.length > 0 && (
             <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', overflow: 'hidden' }}>
               <div style={{ padding: '14px 20px 10px', borderBottom: '1px solid var(--bd)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                <div className="flbl" style={{ margin: 0 }}>{isEstimate ? '⚡ Estimated Pricing' : 'Pricing'} — {sizeLabel}</div>
+                <div className="flbl" style={{ margin: 0 }}>{isEstimate ? <><span style={{display:'inline-flex',verticalAlign:'middle',marginRight:4}}>{ICONS.bolt(12)}</span>Estimated Pricing</> : 'Pricing'} — {sizeLabel}</div>
                 {isEstimate && <span style={{ fontSize: 10, color: 'var(--o)', background: 'var(--ol)', padding: '2px 8px', borderRadius: 4 }}>Custom size — estimate only</span>}
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -488,7 +489,7 @@ export default function LabelsStickersPage({ productId }) {
                   <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--bd)', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--mu)' }}>Base price</span><span>${basePrice.toFixed(2)}</span></div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--o)', fontWeight: 700 }}>
-                      <span>{turnaround === 'rush' ? '⚡ Rush' : '🚀 Express'} ({Math.round(taMult*100)}%)</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{turnaround === 'rush' ? ICONS.bolt(12) : ICONS.rocket(12)} {turnaround === 'rush' ? 'Rush' : 'Express'} ({Math.round(taMult*100)}%)</span>
                       <span>+${taFee.toFixed(2)}</span>
                     </div>
                   </div>
@@ -522,12 +523,12 @@ export default function LabelsStickersPage({ productId }) {
             </div>
             {isEstimate && (
               <div style={{ marginTop: 12, fontSize: 11, color: 'var(--mu)', background: 'var(--s2)', borderRadius: 7, padding: '7px 10px', borderLeft: '3px solid var(--o)' }}>
-                📐 Custom size — pricing is an estimate. We will confirm before production.
+                <span style={{display:"inline-flex",verticalAlign:"middle",marginRight:5}}>{ICONS.ruler(13)}</span>Custom size — pricing is an estimate. We will confirm before production.
               </div>
             )}
             {isCustomShape && (
               <div style={{ marginTop: 12, fontSize: 11, color: 'var(--mu)', background: 'var(--s2)', borderRadius: 7, padding: '7px 10px', borderLeft: '3px solid var(--o)' }}>
-                ⚡ Custom shape — our team will follow up within 1 business day with exact pricing.
+                <span style={{display:"inline-flex",verticalAlign:"middle",marginRight:5}}>{ICONS.bolt(13)}</span>Custom shape — our team will follow up within 1 business day with exact pricing.
               </div>
             )}
           </div>
@@ -540,7 +541,7 @@ export default function LabelsStickersPage({ productId }) {
 
           {/* Trust badges */}
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 16 }}>
-            {[['✅', 'Free digital proof before printing'],['🇨🇦', 'Ships Canada-wide'],['⚡', 'Rush & Express available'],['🔒', 'Secure checkout'],['💬', '(437) 997-9921']].map(([ico, t]) => (
+            {[[ICONS.check(14), 'Free digital proof before printing'],[ICONS.truck(14), 'Ships Canada-wide'],[ICONS.bolt(14), 'Rush & Express available'],[ICONS.lock(14), 'Secure checkout'],[ICONS.chat(14), '(437) 997-9921']].map(([ico, t]) => (
               <div key={t} style={{ display: 'flex', gap: 8, fontSize: 12, color: 'var(--mu)', marginBottom: 7, alignItems: 'center' }}>
                 <span>{ico}</span>{t}
               </div>

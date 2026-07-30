@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp, imgUrl } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
+import ICONS from '../components/Icons';
 
 export default function ProductsPage() {
   const { cats, prods } = useApp();
@@ -44,15 +45,16 @@ export default function ProductsPage() {
           <div style={{ position: 'sticky', top: 72 }} className="pl-sidebar">
             <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 12, marginBottom: 10 }}>
               <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: 'var(--mu)', fontSize: 12 }}>🔍</span>
-                <input className="finp" style={{ paddingLeft: 32, fontSize: 12 }} placeholder="Search products…" value={search} onChange={e => setSearch(e.target.value)} />
+                <label htmlFor="product-search" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>Search products</label>
+                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--mu)', display: 'flex' }}>{ICONS.search(14)}</span>
+                <input id="product-search" className="finp" style={{ paddingLeft: 32, fontSize: 12 }} placeholder="Search products…" value={search} onChange={e => setSearch(e.target.value)} />
               </div>
             </div>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 10 }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mu)', padding: '4px 8px 10px', borderBottom: '1px solid var(--bd)', marginBottom: 4 }}>Categories</div>
               <SidebarItem label="All Products" count={prods.length} active={activeCat === 'all'} onClick={() => handleCatClick('all')} />
               {cats.map(c => (
-                <SidebarItem key={c.id} label={c.l} emoji={c.i} img={c.img} count={prods.filter(p => p.cat === c.id).length} active={activeCat === c.id} onClick={() => handleCatClick(c.id)} />
+                <SidebarItem key={c.id} label={c.l} img={c.img} count={prods.filter(p => p.cat === c.id).length} active={activeCat === c.id} onClick={() => handleCatClick(c.id)} />
               ))}
             </div>
           </div>
@@ -67,7 +69,7 @@ export default function ProductsPage() {
             </div>
             {filtered.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--mu)' }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+                <div style={{ marginBottom: 16, color: 'var(--mu)', display: 'flex', justifyContent: 'center' }}>{ICONS.search(44)}</div>
                 <div style={{ fontWeight: 700, marginBottom: 8 }}>No products found</div>
                 <div style={{ fontSize: 12 }}>Try a different search or category</div>
                 <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={() => handleCatClick('all')}>Clear filters</button>
@@ -89,7 +91,7 @@ export default function ProductsPage() {
   );
 }
 
-function SidebarItem({ label, emoji, img, count, active, onClick }) {
+function SidebarItem({ label, img, count, active, onClick }) {
   return (
     <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 7, justifyContent: 'space-between', padding: '7px 8px', borderRadius: 6, fontSize: 12, cursor: 'pointer', transition: 'all .15s', color: active ? 'var(--o)' : 'var(--mu)', background: active ? 'rgba(249,115,22,.09)' : 'transparent', fontWeight: active ? 600 : 400 }}
       onMouseEnter={e => !active && (e.currentTarget.style.color = 'var(--tx)')}
@@ -98,7 +100,7 @@ function SidebarItem({ label, emoji, img, count, active, onClick }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         {img
           ? <img src={imgUrl(img, 80)} alt={label} style={{ width: 20, height: 20, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} loading="lazy" />
-          : <span style={{ fontSize: 14 }}>{emoji}</span>}
+          : <span style={{ display: 'flex', color: 'var(--mu)' }}>{ICONS.image(14)}</span>}
         <span>{label}</span>
       </div>
       <span style={{ fontSize: 10, background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 10, padding: '1px 5px', color: 'var(--mu)', flexShrink: 0 }}>{count}</span>

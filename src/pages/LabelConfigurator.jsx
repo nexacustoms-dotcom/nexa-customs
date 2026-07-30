@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, imgUrl } from '../context/AppContext';
+import ICONS from '../components/Icons';
 
 // ─── PRICING ENGINE ──────────────────────────────────────────────────────────
 // Price scales by √(L×B) — larger labels cost more but not linearly
@@ -152,7 +153,7 @@ export default function LabelConfigurator({ prod }) {
       unitPrice: +(totalPrice / qty).toFixed(4),
       turnaround,
     });
-    showToast(`✅ ${prod.name} added to cart!`);
+    showToast(`${prod.name} added to cart!`);
   }
 
   // Shared input styles matching site theme
@@ -230,8 +231,8 @@ export default function LabelConfigurator({ prod }) {
             </div>
             <p style={{ fontSize: 13, color: 'var(--mu)', marginBottom: 10, lineHeight: 1.7 }}>{prod.desc}</p>
             <div style={{ fontSize: 11, color: 'var(--mu)', display: 'flex', gap: 14 }}>
-              <span>🇨🇦 Ships Canada-wide</span>
-              <span>✅ Free digital proof</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>{ICONS.truck(12)} Ships Canada-wide</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>{ICONS.check(12)} Free digital proof</span>
             </div>
           </div>
         </div>
@@ -332,8 +333,8 @@ export default function LabelConfigurator({ prod }) {
                     {(wOver || hOver || wUnder || hUnder) && (
                       <div style={{ fontSize: 11, color: '#e55', background: 'rgba(238,85,85,0.08)', border: '1px solid rgba(238,85,85,0.25)', borderRadius: 6, padding: '7px 10px', marginTop: 8 }}>
                         {(wOver || hOver)
-                          ? <span>⚠️ Maximum label size is {maxIn}" per side. Please <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a> for larger sizes.</span>
-                          : <span>⚠️ Minimum label size is {minIn}" per side. Please <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a> for smaller sizes.</span>
+                          ? <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ display: 'flex', color: '#f59e0b', flexShrink: 0 }}>{ICONS.warning(13)}</span>Maximum label size is {maxIn}" per side. Please <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a> for larger sizes.</span>
+                          : <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ display: 'flex', color: '#f59e0b', flexShrink: 0 }}>{ICONS.warning(13)}</span>Minimum label size is {minIn}" per side. Please <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a> for smaller sizes.</span>
                         }
                       </div>
                     )}
@@ -383,9 +384,9 @@ export default function LabelConfigurator({ prod }) {
             <div className="flbl" style={{ marginBottom: 12 }}>Turnaround Time</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
               {[
-                { id: 'standard', ico: '📦', label: 'Standard', sub: '5–7 business days', fee: 0, ok: true },
-                { id: 'rush',     ico: '⚡', label: 'Rush',     sub: '2–3 business days', fee: rushMult, ok: rushOk },
-                { id: 'express',  ico: '🚀', label: 'Express',  sub: 'Same / next day',   fee: expressMult, ok: expressOk },
+                { id: 'standard', ico: ICONS.box(20), label: 'Standard', sub: '5–7 business days', fee: 0, ok: true },
+                { id: 'rush',     ico: ICONS.bolt(20), label: 'Rush',     sub: '2–3 business days', fee: rushMult, ok: rushOk },
+                { id: 'express',  ico: ICONS.rocket(20), label: 'Express',  sub: 'Same / next day',   fee: expressMult, ok: expressOk },
               ].map(opt => {
                 const sel = turnaround === opt.id;
                 const feeAmt = +(basePrice * opt.fee).toFixed(2);
@@ -393,7 +394,7 @@ export default function LabelConfigurator({ prod }) {
                   <div key={opt.id} onClick={() => opt.ok && setTurnaround(opt.id)}
                     style={{ border: `2px solid ${sel ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 10, padding: '12px 10px', textAlign: 'center', cursor: opt.ok ? 'pointer' : 'not-allowed', background: sel ? 'var(--ol)' : 'var(--s2)', opacity: opt.ok ? 1 : 0.45, transition: 'all .15s', position: 'relative' }}>
                     {!opt.ok && <div style={{ position: 'absolute', top: 4, right: 7, fontSize: 9, color: 'var(--mu)', fontWeight: 700 }}>N/A</div>}
-                    <div style={{ fontSize: 20, marginBottom: 4 }}>{opt.ico}</div>
+                    <div style={{ marginBottom: 4, display: 'flex', justifyContent: 'center', color: sel ? 'var(--o)' : 'var(--mu)' }}>{opt.ico}</div>
                     <div style={{ fontWeight: 700, fontSize: 12 }}>{opt.label}</div>
                     <div style={{ fontSize: 10, color: 'var(--mu)', marginTop: 2, lineHeight: 1.4 }}>{opt.sub}</div>
                     {opt.fee > 0 && opt.ok && basePrice > 0
@@ -410,7 +411,7 @@ export default function LabelConfigurator({ prod }) {
           {showPricing && rows.length > 0 && (
             <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', overflow: 'hidden' }}>
               <div style={{ padding: '14px 20px 10px', borderBottom: '1px solid var(--bd)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                <div className="flbl" style={{ margin: 0 }}>{isEstimate ? '⚡ Estimated Pricing' : 'Pricing'} — {sizeLabel}</div>
+                <div className="flbl" style={{ margin: 0 }}>{isEstimate ? <><span style={{display:'inline-flex',verticalAlign:'middle',marginRight:4}}>{ICONS.bolt(12)}</span>Estimated Pricing</> : 'Pricing'} — {sizeLabel}</div>
                 {isEstimate && <span style={{ fontSize: 10, color: 'var(--o)', background: 'var(--ol)', padding: '2px 8px', borderRadius: 4 }}>Custom size — estimate only</span>}
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -478,7 +479,7 @@ export default function LabelConfigurator({ prod }) {
                   <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--bd)', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--mu)' }}>Base price</span><span>${basePrice.toFixed(2)}</span></div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--o)', fontWeight: 700 }}>
-                      <span>{turnaround === 'rush' ? '⚡ Rush' : '🚀 Express'} ({Math.round(taMult*100)}%)</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{turnaround === 'rush' ? ICONS.bolt(12) : ICONS.rocket(12)} {turnaround === 'rush' ? 'Rush' : 'Express'} ({Math.round(taMult*100)}%)</span>
                       <span>+${taFee.toFixed(2)}</span>
                     </div>
                   </div>
@@ -512,12 +513,12 @@ export default function LabelConfigurator({ prod }) {
             </div>
             {isEstimate && (
               <div style={{ marginTop: 12, fontSize: 11, color: 'var(--mu)', background: 'var(--s2)', borderRadius: 7, padding: '7px 10px', borderLeft: '3px solid var(--o)' }}>
-                📐 Custom size — pricing is estimated. We will confirm before production.
+                <span style={{display:"inline-flex",verticalAlign:"middle",marginRight:5}}>{ICONS.ruler(13)}</span>Custom size — pricing is estimated. We will confirm before production.
               </div>
             )}
             {isCustomShape && (
               <div style={{ marginTop: 12, fontSize: 11, color: 'var(--mu)', background: 'var(--s2)', borderRadius: 7, padding: '7px 10px', borderLeft: '3px solid var(--o)' }}>
-                ⚡ Custom shape — we will follow up within 1 business day with exact pricing.
+                <span style={{display:"inline-flex",verticalAlign:"middle",marginRight:5}}>{ICONS.bolt(13)}</span>Custom shape — we will follow up within 1 business day with exact pricing.
               </div>
             )}
           </div>
@@ -534,7 +535,7 @@ export default function LabelConfigurator({ prod }) {
 
           {/* Trust */}
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 16 }}>
-            {[['✅','Free digital proof before printing'],['🇨🇦','Ships Canada-wide'],['⚡','Rush & Express available'],['🔒','Secure checkout'],['💬','(437) 997-9921']].map(([ico, t]) => (
+            {[[ICONS.check(14),'Free digital proof before printing'],[ICONS.truck(14),'Ships Canada-wide'],[ICONS.bolt(14),'Rush & Express available'],[ICONS.lock(14),'Secure checkout'],[ICONS.chat(14),'(437) 997-9921']].map(([ico, t]) => (
               <div key={t} style={{ display: 'flex', gap: 8, fontSize: 12, color: 'var(--mu)', marginBottom: 7, alignItems: 'center' }}>
                 <span>{ico}</span>{t}
               </div>

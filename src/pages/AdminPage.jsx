@@ -722,6 +722,10 @@ function AppearanceTab() {
                         <option value="palette">🎨 Palette</option>
                         <option value="truck">🚚 Truck</option>
                         <option value="star">⭐ Star</option>
+                        <option value="idcard">🪪 ID Card</option>
+                        <option value="signpost">🪧 Sign</option>
+                        <option value="car">🚗 Car</option>
+                        <option value="doc">📄 Document</option>
                       </select>
                     </div>
                     <div><label className="aflbl" style={{fontSize:10}}>Title</label><input className="ainp" value={sl.title||''} onChange={e => updSlide('title', e.target.value)} placeholder="Premium Business Cards" /></div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import ICONS from './Icons';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Background removal — flood-fill from image edges based on sampled
@@ -225,7 +226,7 @@ export default function BackgroundRemover({ file, onConfirm, onSkip }) {
 
   return (
     <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 20, marginBottom: 18 }}>
-      <div className="D" style={{ fontSize: 16, marginBottom: 4 }}>✂️ Sticker Tools</div>
+      <div className="D" style={{ fontSize: 16, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 8 }}>{ICONS.scissors(16)} Sticker Tools</div>
       <p style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 14, lineHeight: 1.6 }}>
         {file.name} — cut out the background and add a sticker-style border. Both optional — you can also just use the original file.
       </p>
@@ -244,12 +245,12 @@ export default function BackgroundRemover({ file, onConfirm, onSkip }) {
               onClick={handleRemove}
               disabled={!srcUrl || processing}
               className="btn btn-primary"
-              style={{ justifyContent: 'center', opacity: processing ? 0.7 : 1 }}
+              style={{ justifyContent: 'center', opacity: processing ? 0.7 : 1, display: 'flex', alignItems: 'center', gap: 8 }}
             >
-              {processing ? 'Removing background…' : '✂️ Remove Background'}
+              {processing ? 'Removing background…' : <>{ICONS.scissors(16)} Remove Background</>}
             </button>
           ) : (
-            <div style={{ fontSize: 12, color: 'var(--gr)', fontWeight: 600 }}>✅ Background removed</div>
+            <div style={{ fontSize: 12, color: 'var(--gr)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>{ICONS.check(14)} Background removed</div>
           )}
 
           {/* Step 2: outline, only offered once bg is removed */}

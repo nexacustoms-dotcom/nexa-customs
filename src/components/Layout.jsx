@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp, imgUrl } from '../context/AppContext';
+import ICONS from './Icons';
 
 // ── TOPBAR ────────────────────────────────────────────────────────────────────
 export function Topbar() {
@@ -13,7 +14,7 @@ export function Topbar() {
           Same-Day Pickup Available — Mississauga
         </div>
         <a href={`tel:+${store.phone_raw}`} style={{ fontSize: 11, color: 'var(--o)', fontWeight: 600 }}>
-          📞 {store.phone}
+          <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}>{ICONS.phone(11)}</span>{store.phone}
         </a>
       </div>
     </div>
@@ -83,7 +84,7 @@ export function Navbar() {
               onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--o)'}
               onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--bd)'}
             >
-              🛒
+              <span style={{ display: 'flex' }}>{ICONS.cart(18)}</span>
               {count > 0 && <div style={{ position: 'absolute', top: -7, right: -7, background: 'var(--o)', color: '#000', fontSize: 10, fontWeight: 800, width: 19, height: 19, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{count}</div>}
             </div>
             <button onClick={() => navGo('checkout')} className="btn btn-primary" style={{ fontSize: 12, padding: '9px 16px' }} id="ck-btn-desk">Order Now</button>
@@ -99,7 +100,7 @@ export function Navbar() {
 
       {/* Mobile overlay */}
       <div className={`mob-nav${open ? ' open' : ''}`}>
-        <span onClick={toggleHam} style={{ position: 'absolute', top: 20, right: 24, fontSize: 26, color: 'var(--mu)', cursor: 'pointer', padding: 10 }}>✕</span>
+        <span onClick={toggleHam} style={{ position: 'absolute', top: 20, right: 24, color: 'var(--mu)', cursor: 'pointer', padding: 10, display: 'flex' }}>{ICONS.close(24)}</span>
         {NAV.map(l => (
           <span key={l.id} onClick={() => navGo(l.id)} style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 'clamp(28px,8vw,48px)', textTransform: 'uppercase', color: 'var(--tx)', padding: '10px 40px', cursor: 'pointer' }}
             onMouseEnter={e => e.currentTarget.style.color = 'var(--o)'}
@@ -107,7 +108,7 @@ export function Navbar() {
           >{l.label}</span>
         ))}
         <button onClick={() => navGo('cart')} style={{ marginTop: 16, background: 'var(--o)', color: '#000', padding: '11px 28px', borderRadius: 8, fontWeight: 700, fontSize: 15, cursor: 'pointer', border: 'none', fontFamily: "'DM Sans',sans-serif" }}>
-          🛒 Cart {count > 0 && `(${count})`}
+          <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 6 }}>{ICONS.cart(16)}</span>Cart {count > 0 && `(${count})`}
         </button>
       </div>
 
@@ -152,7 +153,7 @@ export function Footer() {
               </div>
             </div>
             <p style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.78, maxWidth: 265, marginBottom: 6 }}>GTA trusted print partner since 2010. Quality, fast turnaround, unbeatable prices.</p>
-            <p style={{ fontSize: 11, color: 'var(--mu)', lineHeight: 1.7, maxWidth: 265, marginBottom: 16 }}>📍 Free pickup in Mississauga · 🇨🇦 Ships Canada-wide</p>
+            <p style={{ fontSize: 11, color: 'var(--mu)', lineHeight: 1.7, maxWidth: 265, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 5 }}>{ICONS.pin(12)} Free pickup in Mississauga · {ICONS.truck(12)} Ships Canada-wide</p>
             <div style={{ display: 'flex', gap: 7 }}>
               {[
                 ['ig', store.social_ig, <svg key="ig" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>],
@@ -195,9 +196,9 @@ export function Footer() {
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Contact</div>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <li style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9 }}><span style={{ color: 'var(--o)' }}>📍</span><span>{store.address}<br />{store.city}</span></li>
-              <li style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9 }}><span style={{ color: 'var(--o)' }}>📞</span><a href={'tel:+' + store.phone_raw} style={{ color: 'var(--mu)' }}>{store.phone}</a></li>
-              <li style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9 }}><span style={{ color: 'var(--o)' }}>✉️</span><span>{store.email}</span></li>
+              <li style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9 }}><span style={{ color: 'var(--o)', display: 'flex' }}>{ICONS.pin(14)}</span><span>{store.address}<br />{store.city}</span></li>
+              <li style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9 }}><span style={{ color: 'var(--o)', display: 'flex' }}>{ICONS.phone(14)}</span><a href={'tel:+' + store.phone_raw} style={{ color: 'var(--mu)' }}>{store.phone}</a></li>
+              <li style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9 }}><span style={{ color: 'var(--o)', display: 'flex' }}>{ICONS.mail(14)}</span><span>{store.email}</span></li>
             </ul>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--o)', marginTop: 14, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.1em' }}>Hours</div>
             <div style={{ fontSize: 11, color: 'var(--mu)', lineHeight: 1.9, whiteSpace: 'pre-line' }}>{store.hours}</div>

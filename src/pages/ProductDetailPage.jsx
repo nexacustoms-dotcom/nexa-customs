@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, imgUrl } from '../context/AppContext';
+import ICONS from '../components/Icons';
 import ProductCard from '../components/ProductCard';
 import { CAT_BG } from '../data/products';
 import LabelConfigurator from './LabelConfigurator';
@@ -44,7 +45,7 @@ export default function ProductDetailPage() {
 
   if (!prod) return (
     <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 14, textAlign: 'center', padding: 40 }}>
-      <div style={{ fontSize: 56 }}>🖨️</div>
+      <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--mu)' }}>{ICONS.printer(48)}</div>
       <div style={{ color: 'var(--mu)' }}>No product selected.</div>
       <button className="btn btn-primary" onClick={() => navigate('/products')}>Browse Products</button>
     </div>
@@ -83,7 +84,7 @@ export default function ProductDetailPage() {
     }).filter(Boolean);
     if (isCustomSize && custW && custH) optLabels.push(`${custW}′ × ${custH}′`);
     addToCart({ id: prod.id, name: prod.name, cat: prod.cat, qty: selQty, opts: optLabels, price, unitPrice, turnaround, imgs: prod.imgs?.filter(x=>x?.length) || [] });
-    showToast(`✅ Added to cart!`);
+    showToast(`Added to cart!`);
   }
 
   function buildShareUrl() {
@@ -99,7 +100,7 @@ export default function ProductDetailPage() {
   function handleShare() {
     const url = buildShareUrl();
     navigator.clipboard?.writeText(url).then(
-      () => showToast('🔗 Link copied — this exact configuration will load when opened'),
+      () => showToast('Link copied — this exact configuration will load when opened'),
       () => showToast(url)
     );
   }
@@ -167,7 +168,7 @@ export default function ProductDetailPage() {
               <div style={{ background: CAT_BG[prod.cat] || 'var(--s2)', borderRadius: 14, overflow: 'hidden', marginBottom: 8 }}>
                 {imgs.length > 0
                   ? <img src={imgUrl(imgs[imgIdx], 900)} alt={prod.name} width="900" height="360" style={{ width: '100%', height: 360, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
-                  : <div style={{ height: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 90 }}>{cat?.i || '🖨️'}</div>
+                  : <div style={{ height: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mu)' }}>{ICONS.printer(80)}</div>
                 }
               </div>
               {imgs.length > 1 && (
@@ -176,7 +177,7 @@ export default function ProductDetailPage() {
                 </div>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                {[['✅','Free Proof'],['⚡','Rush Avail.'],['🛡️','Guaranteed'],['🚚','ON Shipping']].map(([ico, l]) => (
+                {[[ICONS.check(14),'Free Proof'],[ICONS.bolt(14),'Rush Avail.'],[ICONS.shield(14),'Guaranteed'],[ICONS.truck(14),'ON Shipping']].map(([ico, l]) => (
                   <div key={l} style={{ background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: 7, padding: '7px 9px', fontSize: 10, color: 'var(--mu)', display: 'flex', alignItems: 'center', gap: 5 }}>{ico} {l}</div>
                 ))}
               </div>
@@ -278,7 +279,7 @@ export default function ProductDetailPage() {
                       </div>
                       {(wErr || hErr) && (
                         <div style={{ fontSize: 11, color: '#e55', background: 'rgba(238,85,85,0.08)', border: '1px solid rgba(238,85,85,0.25)', borderRadius: 6, padding: '7px 10px', marginTop: 4 }}>
-                          ⚠️ {wOver || hOver
+                          <span style={{display:'inline-flex',verticalAlign:'middle',marginRight:4,color:'#f59e0b'}}>{ICONS.warning(12)}</span>{wOver || hOver
                             ? (wOver && hOver ? 'Width and height exceed' : wOver ? 'Width exceeds' : 'Height exceeds') + ' our maximum print size. Please '
                             : (wUnder && hUnder ? 'Width and height are below' : wUnder ? 'Width is below' : 'Height is below') + ' our minimum print size. Please '}
                           <a href="/quote" style={{ color: 'var(--o)' }}>request a custom quote</a>.
@@ -307,7 +308,7 @@ export default function ProductDetailPage() {
                       const { discountPct } = calcPrice(prod, selQty, selOpts);
                       return discountPct > 0 ? (
                         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--o)', background: 'rgba(249,115,22,.12)', padding: '4px 10px', borderRadius: 20 }}>
-                          🎉 Save {discountPct}% per piece at this quantity
+                          <span style={{display:'inline-flex',verticalAlign:'middle',marginRight:3}}>{ICONS.celebrate(12)}</span>Save {discountPct}% per piece at this quantity
                         </span>
                       ) : null;
                     })()}
@@ -375,7 +376,7 @@ export default function ProductDetailPage() {
                       <span style={{ fontSize: 11, color: 'var(--mu)' }}>Between {minQ.toLocaleString()} and {maxQ.toLocaleString()}</span>
                       {savePct >= 5 && (
                         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--o)', background: 'rgba(249,115,22,.12)', padding: '4px 10px', borderRadius: 20 }}>
-                          🎉 Save {savePct}% at this quantity
+                          <span style={{display:'inline-flex',verticalAlign:'middle',marginRight:3}}>{ICONS.celebrate(12)}</span>Save {savePct}% at this quantity
                         </span>
                       )}
                     </div>
@@ -397,9 +398,9 @@ export default function ProductDetailPage() {
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--mu)', marginBottom: 7 }}>Turnaround Time</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
                 {[
-                  { id: 'standard', ico: '📦', label: 'Standard', sub: '5–7 business days', fee: 0, ok: true },
-                  { id: 'rush',     ico: '⚡', label: 'Rush',     sub: '2–3 business days', fee: rushMult, ok: rushAvail },
-                  { id: 'express',  ico: '🚀', label: 'Express',  sub: 'Same / next day',   fee: expressMult, ok: expressAvail },
+                  { id: 'standard', ico: ICONS.box(18), label: 'Standard', sub: '5–7 business days', fee: 0, ok: true },
+                  { id: 'rush',     ico: ICONS.bolt(18), label: 'Rush',     sub: '2–3 business days', fee: rushMult, ok: rushAvail },
+                  { id: 'express',  ico: ICONS.rocket(18), label: 'Express',  sub: 'Same / next day',   fee: expressMult, ok: expressAvail },
                 ].map(opt => {
                   const sel = turnaround === opt.id;
                   const feeAmt = +(basePrice * opt.fee).toFixed(2);
@@ -407,7 +408,7 @@ export default function ProductDetailPage() {
                     <div key={opt.id} onClick={() => opt.ok && setTurnaround(opt.id)}
                       style={{ border: `2px solid ${sel ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 10, padding: '11px 8px', textAlign: 'center', cursor: opt.ok ? 'pointer' : 'not-allowed', background: sel ? 'var(--ol)' : opt.ok ? 'var(--s2)' : 'var(--sf)', opacity: opt.ok ? 1 : 0.45, transition: 'all .15s', position: 'relative' }}>
                       {!opt.ok && <div style={{ position: 'absolute', top: 4, right: 6, fontSize: 9, color: 'var(--mu)', fontWeight: 700 }}>N/A</div>}
-                      <div style={{ fontSize: 18, marginBottom: 2 }}>{opt.ico}</div>
+                      <div style={{ marginBottom: 2, display: 'flex', justifyContent: 'center' }}>{opt.ico}</div>
                       <div style={{ fontWeight: 700, fontSize: 12 }}>{opt.label}</div>
                       <div style={{ fontSize: 10, color: 'var(--mu)', marginTop: 2 }}>{opt.sub}</div>
                       {opt.fee > 0 && opt.ok && (
@@ -453,7 +454,7 @@ export default function ProductDetailPage() {
                     <span style={{ color: 'var(--mu)' }}>Base</span><span>${basePrice.toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--o)', fontWeight: 700 }}>
-                    <span>{turnaround === 'rush' ? '⚡ Rush' : '🚀 Express'} ({Math.round(taMult * 100)}%)</span>
+                    <span style={{display:'inline-flex',alignItems:'center',gap:4}}>{turnaround === 'rush' ? ICONS.bolt(12) : ICONS.rocket(12)} {turnaround === 'rush' ? 'Rush' : 'Express'} ({Math.round(taMult * 100)}%)</span>
                     <span>+${taFee.toFixed(2)}</span>
                   </div>
                 </div>
@@ -483,14 +484,14 @@ export default function ProductDetailPage() {
 
             {/* Share / Email / Print actions */}
             <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, marginTop: 8 }}>
-              <button onClick={handleShare} style={{ fontSize: 11, padding: '9px 4px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--mu)', cursor: 'pointer', fontWeight: 600 }}>🔗 Share</button>
-              <button onClick={handleEmailQuote} style={{ fontSize: 11, padding: '9px 4px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--mu)', cursor: 'pointer', fontWeight: 600 }}>✉️ Email Quote</button>
-              <button onClick={handlePrint} style={{ fontSize: 11, padding: '9px 4px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--mu)', cursor: 'pointer', fontWeight: 600 }}>🖨️ Print / PDF</button>
+              <button onClick={handleShare} style={{ fontSize: 11, padding: '9px 4px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--mu)', cursor: 'pointer', fontWeight: 600 }}><span style={{display:'inline-flex',verticalAlign:'middle',marginRight:4}}>{ICONS.link(13)}</span>Share</button>
+              <button onClick={handleEmailQuote} style={{ fontSize: 11, padding: '9px 4px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--mu)', cursor: 'pointer', fontWeight: 600 }}><span style={{display:'inline-flex',verticalAlign:'middle',marginRight:4}}>{ICONS.mail(13)}</span>Email Quote</button>
+              <button onClick={handlePrint} style={{ fontSize: 11, padding: '9px 4px', borderRadius: 8, border: '1px solid var(--bd)', background: 'var(--s2)', color: 'var(--mu)', cursor: 'pointer', fontWeight: 600 }}><span style={{display:'inline-flex',verticalAlign:'middle',marginRight:4}}>{ICONS.printer(13)}</span>Print / PDF</button>
             </div>
 
             {/* Trust */}
             <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 14 }}>
-              {[['🔒','Secure checkout'],['✅','Free proof included'],['🛡️','Quality guaranteed'],['📞', store.phone || '(437) 997-9921']].map(([ico, l]) => (
+              {[[ICONS.lock(14),'Secure checkout'],[ICONS.check(14),'Free proof included'],[ICONS.shield(14),'Quality guaranteed'],[ICONS.phone(14), store.phone || '(437) 997-9921']].map(([ico, l]) => (
                 <div key={l} style={{ display: 'flex', gap: 7, fontSize: 11, color: 'var(--mu)', marginBottom: 6, alignItems: 'center' }}>{ico} {l}</div>
               ))}
             </div>
