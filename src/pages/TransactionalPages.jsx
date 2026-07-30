@@ -360,6 +360,47 @@ export function CheckoutPage() {
     } else {
       console.warn('EmailJS not configured — skipping order email');
     }
+
+    // Customer-facing invoice — this is the actual receipt with a full
+    // tax/price breakdown. Sent to the customer directly, separate from the
+    // internal new-order alert above (which only ever goes to the shop inbox).
+    const ejsStatusTpl = cfg.ejsStatusTpl();
+    if (ejsSvc && ejsStatusTpl && ejsKey && form.email) {
+      const custName = (form.fn + ' ' + form.ln).trim();
+      const lines = cart.map(i => {
+        const unit = i.unitPrice != null ? i.unitPrice : (i.price / (i.qty || 1));
+        return `  ${i.qty} x ${i.name} — $${unit.toFixed(2)} ea = $${(i.price).toFixed(2)}`;
+      }).join('\n');
+      const deliveryLine = delivery === 'pickup'
+        ? 'Free Pickup — 6033 Shawson Dr, Unit 40, Mississauga'
+        : `${delivery === 'post' ? 'Canada Post' : 'Courier'} — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}`;
+      const invoiceBody =
+        `Order ${no} — ${new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}\n\n` +
+        `ITEMS\n${lines}\n\n` +
+        `Subtotal: $${cartSubtotal.toFixed(2)}\n` +
+        (shipCost > 0 ? `Shipping: $${shipCost.toFixed(2)}\n` : '') +
+        (rushFee > 0 ? `Rush/Express fee: $${rushFee.toFixed(2)}\n` : '') +
+        `HST (${(pricing.hst * 100).toFixed(0)}%): $${hst.toFixed(2)}\n` +
+        `TOTAL: $${total.toFixed(2)}\n\n` +
+        `Delivery: ${deliveryLine}\n` +
+        `Payment method: ${payMethod}\n\n` +
+        `Keep this email as your receipt. Questions? Reply here or call (437) 997-9921.`;
+      sendEmailJS(ejsSvc, ejsStatusTpl, ejsKey, {
+        to_email: form.email,
+        from_name: 'Nexa Customs',
+        reply_to: 'info@nexacustoms.ca',
+        customer_name: custName || 'there',
+        order_number: no,
+        subject: `Your receipt — Order ${no}`,
+        status_headline: 'Order Confirmed ✅',
+        status_message: invoiceBody,
+        tracking_line: '',
+      })
+        .then(() => console.log('Invoice email sent to customer'))
+        .catch(err => console.error('Invoice email failed:', err.message));
+    } else if (!ejsStatusTpl) {
+      console.warn('VITE_EJS_STATUS_TPL not set — customer invoice email skipped');
+    }
   }
 
   async function handlePlace() {
