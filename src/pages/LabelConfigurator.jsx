@@ -152,6 +152,7 @@ export default function LabelConfigurator({ prod }) {
       price: totalPrice,
       unitPrice: +(totalPrice / qty).toFixed(4),
       turnaround,
+      imgs: prod.imgs?.filter(x=>x?.length) || [],
     });
     showToast(`${prod.name} added to cart!`);
   }

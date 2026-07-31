@@ -76,7 +76,7 @@ export function CartPage() {
 
 // ── CHECKOUT ──────────────────────────────────────────────────────────────────
 export function CheckoutPage() {
-  const { cart, cartSubtotal, pricing, clearCart, showToast, ls, cfg } = useApp();
+  const { cart, cartSubtotal, pricing, clearCart, showToast, ls, cfg, store } = useApp();
   const navigate = useNavigate();
 
   useEffect(() => { if (cart.length === 0) navigate('/products'); }, [cart.length]);
@@ -347,7 +347,7 @@ export function CheckoutPage() {
         company:        form.company || 'N/A',
         order_items:    cart.map(i => `${i.qty}x ${i.name}`).join(', '),
         total:          '$' + total.toFixed(2),
-        delivery:       delivery === 'pickup' ? 'Free Pickup — Mississauga' : delivery === 'post' ? `Canada Post — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : `Courier — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}`,
+        delivery:       delivery === 'pickup' ? 'Free Pickup — Mississauga' : delivery === 'post' ? `${store?.shipping_carrier || 'Canada Post'} — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : `Courier — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}`,
         turnaround:     cart.map(i => i.turnaround || 'standard').join(', '),
         payment_method: payMethod,
         notes:          (form.notes || '') + (delivery !== 'pickup' ? `\nShip To: ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : ''),
@@ -361,40 +361,89 @@ export function CheckoutPage() {
       console.warn('EmailJS not configured — skipping order email');
     }
 
-    // Customer-facing invoice — this is the actual receipt with a full
-    // tax/price breakdown. Sent to the customer directly, separate from the
-    // internal new-order alert above (which only ever goes to the shop inbox).
+    // Customer-facing invoice — real HTML rows with product images, sent to
+    // the customer directly, separate from the internal new-order alert
+    // above (which only ever goes to the shop inbox).
     const ejsStatusTpl = cfg.ejsStatusTpl();
     if (ejsSvc && ejsStatusTpl && ejsKey && form.email) {
       const custName = (form.fn + ' ' + form.ln).trim();
-      const lines = cart.map(i => {
+      const firstName = form.fn || 'there';
+      const orderDate = new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      // Rough delivery/ready estimate — adds N business days (Mon–Fri) to
+      // today based on turnaround + delivery method. Doesn't account for
+      // statutory holidays, so it's an estimate, not a guarantee.
+      function addBusinessDays(days) {
+        const d = new Date();
+        let added = 0;
+        while (added < days) {
+          d.setDate(d.getDate() + 1);
+          if (d.getDay() !== 0 && d.getDay() !== 6) added++;
+        }
+        return d.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' });
+      }
+      const prodDays = cart.some(i => i.turnaround === 'express') ? 1 : cart.some(i => i.turnaround === 'rush') ? 3 : 6;
+      const shipDays = delivery === 'pickup' ? 0 : delivery === 'courier' ? 2 : 5;
+      const estimateLabel = delivery === 'pickup' ? 'Ready for pickup by' : 'Estimated delivery by';
+      const estimateDate = addBusinessDays(prodDays + shipDays);
+
+      // One real <tr> per cart item — real product photo when available,
+      // a plain icon box when not (LabelConfigurator/sticker items always
+      // carry one now too, but this stays as a safety net either way).
+      const itemsHtml = cart.map(i => {
+        const thumb = i.imgs?.[0] ? imgUrl(i.imgs[0], 120) : '';
         const unit = i.unitPrice != null ? i.unitPrice : (i.price / (i.qty || 1));
-        return `  ${i.qty} x ${i.name} — $${unit.toFixed(2)} ea = $${(i.price).toFixed(2)}`;
-      }).join('\n');
-      const deliveryLine = delivery === 'pickup'
-        ? 'Free Pickup — 6033 Shawson Dr, Unit 40, Mississauga'
-        : `${delivery === 'post' ? 'Canada Post' : 'Courier'} — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}`;
-      const invoiceBody =
-        `Order ${no} — ${new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}\n\n` +
-        `ITEMS\n${lines}\n\n` +
-        `Subtotal: $${cartSubtotal.toFixed(2)}\n` +
-        (shipCost > 0 ? `Shipping: $${shipCost.toFixed(2)}\n` : '') +
-        (rushFee > 0 ? `Rush/Express fee: $${rushFee.toFixed(2)}\n` : '') +
-        `HST (${(pricing.hst * 100).toFixed(0)}%): $${hst.toFixed(2)}\n` +
-        `TOTAL: $${total.toFixed(2)}\n\n` +
-        `Delivery: ${deliveryLine}\n` +
-        `Payment method: ${payMethod}\n\n` +
-        `Keep this email as your receipt. Questions? Reply here or call (437) 997-9921.`;
+        const nameCell = i.cat
+          ? `<a href="https://nexacustoms.ca/products/${i.cat}" style="color:#0c0c0e; text-decoration:none; font-weight:700;">${i.name}</a>`
+          : `<span style="color:#0c0c0e; font-weight:700;">${i.name}</span>`;
+        const imgCell = thumb
+          ? `<img src="${thumb}" width="56" height="56" alt="${i.name}" style="display:block; border-radius:8px; object-fit:cover; width:56px; height:56px;" />`
+          : `<div style="width:56px; height:56px; border-radius:8px; background-color:#f4f4f5; border:1px solid #ececec;"></div>`;
+        return `<tr>
+          <td style="padding:10px 10px 10px 0; width:56px;">${imgCell}</td>
+          <td style="padding:10px; font-family:Arial, Helvetica, sans-serif; font-size:13px;">
+            ${nameCell}<br/>
+            <span style="color:#9a9aa5; font-size:12px;">Qty ${i.qty} &middot; $${unit.toFixed(2)} each</span>
+          </td>
+          <td style="padding:10px 0; text-align:right; font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:700; color:#0c0c0e; white-space:nowrap;">$${i.price.toFixed(2)}</td>
+        </tr>
+        <tr><td colspan="3" style="border-bottom:1px solid #ececec; padding:0;"></td></tr>`;
+      }).join('');
+
+      // Bottom price breakdown — only the rows that actually apply.
+      const breakdownRows = [
+        [`Subtotal (${cart.reduce((s,i)=>s+i.qty,0)} items)`, `$${cartSubtotal.toFixed(2)}`, false],
+        shipCost > 0 ? ['Shipping', `$${shipCost.toFixed(2)}`, false] : null,
+        rushFee > 0 ? ['Rush/Express fee', `$${rushFee.toFixed(2)}`, false] : null,
+        [`HST (${(pricing.hst * 100).toFixed(0)}%)`, `$${hst.toFixed(2)}`, false],
+        ['Order Total', `$${total.toFixed(2)}`, true],
+      ].filter(Boolean);
+      const breakdownHtml = breakdownRows.map(([label, val, bold]) => `<tr>
+        <td style="padding:4px 0; font-family:Arial, Helvetica, sans-serif; font-size:${bold ? 14 : 13}px; color:${bold ? '#0c0c0e' : '#6b6b76'}; font-weight:${bold ? 800 : 400};">${label}</td>
+        <td style="padding:4px 0; text-align:right; font-family:Arial, Helvetica, sans-serif; font-size:${bold ? 14 : 13}px; color:${bold ? '#f97316' : '#0c0c0e'}; font-weight:${bold ? 800 : 700};">${val}</td>
+      </tr>`).join('');
+
+      const deliveryValue = delivery === 'pickup'
+        ? 'Free Pickup<br/>6033 Shawson Dr, Unit 40<br/>Mississauga, ON'
+        : `${delivery === 'post' ? (store?.shipping_carrier || 'Canada Post') : 'Courier'}<br/>${shipping.address}<br/>${shipping.city}, ${shipping.province} ${shipping.postal}`;
+
       sendEmailJS(ejsSvc, ejsStatusTpl, ejsKey, {
         to_email: form.email,
         from_name: 'Nexa Customs',
         reply_to: 'info@nexacustoms.ca',
         customer_name: custName || 'there',
         order_number: no,
-        subject: `Your receipt — Order ${no}`,
-        status_headline: 'Order Confirmed ✅',
-        status_message: invoiceBody,
+        subject: `Thanks for your order, ${firstName}! (${no})`,
+        status_headline: `Thanks for your order, ${firstName}!`,
+        status_message: `We're already reviewing your artwork. ${estimateLabel.toLowerCase()} ${estimateDate}.`,
+        order_date: orderDate,
+        order_total: `$${total.toFixed(2)}`,
+        delivery_value: deliveryValue,
+        items_html: itemsHtml,
+        breakdown_html: breakdownHtml,
+        payment_method: payMethod,
         tracking_line: '',
+        logo_url: store?.logo_img || '',
       })
         .then(() => console.log('Invoice email sent to customer'))
         .catch(err => console.error('Invoice email failed:', err.message));
@@ -600,7 +649,7 @@ export function CheckoutPage() {
                   <p style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 20, lineHeight: 1.6 }}>Choose how you want to receive your order.</p>
                   {[
                     { id: 'pickup', ico: ICONS.store(18), label: 'Free Local Pickup', sub: '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM', price: 'Free', tag: 'Most Popular' },
-                    { id: 'post',   ico: ICONS.mailbox(18), label: 'Canada Post Standard', sub: '3–7 business days · Tracking included', price: `$${pricing.shipping_post.toFixed(2)}`, tag: '' },
+                    { id: 'post',   ico: ICONS.mailbox(18), label: `${store?.shipping_carrier || 'Canada Post'} Standard`, sub: '3–7 business days · Tracking included', price: `$${pricing.shipping_post.toFixed(2)}`, tag: '' },
                     { id: 'courier',ico: ICONS.rocket(18), label: 'Courier Express', sub: '1–2 business days · FedEx or UPS', price: `$${pricing.shipping_courier.toFixed(2)}`, tag: 'Fastest' },
                   ].map(opt => (
                     <div key={opt.id} onClick={() => setDelivery(opt.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, background: delivery === opt.id ? 'rgba(249,115,22,.08)' : 'var(--s2)', border: `2px solid ${delivery === opt.id ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all .18s', marginBottom: 10 }}>
@@ -803,7 +852,7 @@ export function CheckoutPage() {
                     <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{ICONS.pin(12)} Delivery</span>
                       <span style={{ color: 'var(--tx)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
-                        {delivery === 'pickup' ? <>{ICONS.store(12)} Free Pickup — Mississauga</> : delivery === 'post' ? <>{ICONS.mailbox(12)} Canada Post — ${shipCost.toFixed(2)}</> : <>{ICONS.rocket(12)} Courier — ${shipCost.toFixed(2)}</>}
+                        {delivery === 'pickup' ? <>{ICONS.store(12)} Free Pickup — Mississauga</> : delivery === 'post' ? <>{ICONS.mailbox(12)} {store?.shipping_carrier || 'Canada Post'} — ${shipCost.toFixed(2)}</> : <>{ICONS.rocket(12)} Courier — ${shipCost.toFixed(2)}</>}
                       </span>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
@@ -1029,7 +1078,7 @@ export function SuccessPage() {
             [ICONS.paperclip(14), 'Artwork', 'Email files to info@nexacustoms.ca with your order number'],
             deliveryType === 'pickup'
               ? [ICONS.pin(14), 'Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM']
-              : [ICONS.box(14), 'Shipping', shipAddr + ' · ' + (deliveryType === 'post' ? 'Canada Post 3–7 days' : 'Courier 1–2 days')],
+              : [ICONS.box(14), 'Shipping', shipAddr + ' · ' + (deliveryType === 'post' ? `${store?.shipping_carrier || 'Canada Post'} 3–7 days` : 'Courier 1–2 days')],
             [ICONS.phone(14), 'Questions?', 'Call or text (437) 997-9921'],
           ].map(([icon, k, v]) => (
             <div key={k} style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid var(--bd)' }}>
@@ -1050,7 +1099,7 @@ export function SuccessPage() {
 
 // ── QUOTE ─────────────────────────────────────────────────────────────────────
 export function QuotePage() {
-  const { showToast, cats, cfg } = useApp();
+  const { showToast, cats, cfg, store } = useApp();
   const navigate = useNavigate();
   const [form, setForm] = useState({ fname: '', lname: '', email: '', phone: '', company: '', cat: 'Business Cards', qty: '', deadline: '', desc: '' });
   const [sending, setSending] = useState(false);
@@ -1349,7 +1398,7 @@ export function ContactPage() {
 
 // ── ORDER STATUS PAGE ─────────────────────────────────────────────────────────
 export function OrderStatusPage() {
-  const { cfg } = useApp();
+  const { cfg, store } = useApp();
   const navigate = useNavigate();
   const [orderNo, setOrderNo] = useState('');
   const [email,   setEmail]   = useState('');
@@ -1470,7 +1519,7 @@ export function OrderStatusPage() {
                 ['Name',     order.customer_name || '—'],
                 ['Items',    order.items],
                 ['Total',    order.total ? '$'+parseFloat(order.total).toFixed(2) : '—'],
-                ['Delivery', order.delivery === 'pickup' ? 'Free Pickup — Mississauga' : order.delivery === 'post' ? 'Canada Post' : order.delivery === 'courier' ? 'Courier' : order.delivery || '—'],
+                ['Delivery', order.delivery === 'pickup' ? 'Free Pickup — Mississauga' : order.delivery === 'post' ? (store?.shipping_carrier || 'Canada Post') : order.delivery === 'courier' ? 'Courier' : order.delivery || '—'],
                 ['Placed',   order.created_at ? new Date(order.created_at).toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'}) : '—'],
               ].map(([k,v],i,arr) => (
                 <div key={k} style={{ display:'grid', gridTemplateColumns:'110px 1fr', gap:10, padding:'10px 0', borderBottom: i<arr.length-1?'1px solid var(--bd)':'none', fontSize:13 }}>

@@ -663,6 +663,7 @@ function AppearanceTab() {
           <div className="afg"><label className="aflbl">Address</label><input className="ainp" value={s.address} onChange={updE('address')} /></div>
           <div className="afg"><label className="aflbl">City / Province / Postal</label><input className="ainp" value={s.city} onChange={updE('city')} /></div>
           <div className="afg"><label className="aflbl">Business Hours</label><textarea className="ainp" rows="4" style={{ resize: 'vertical' }} value={s.hours} onChange={updE('hours')} /></div>
+          <div className="afg"><label className="aflbl">Shipping Carrier Name</label><input className="ainp" placeholder="Canada Post" value={s.shipping_carrier || ''} onChange={updE('shipping_carrier')} /><div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4 }}>Shown at checkout, in order summaries, and in confirmation emails — update this if you switch carriers.</div></div>
         </div>
 
         {/* Hero */}
@@ -1252,7 +1253,7 @@ function PricingHealthCheck({ prods, onFix }) {
 }
 
 function PricingTab() {
-  const { prods, setProds, pricing, setPricing, showToast } = useApp();
+  const { prods, setProds, pricing, setPricing, showToast, store } = useApp();
   const [cfg, setCfg] = useState({ ...pricing });
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState('');
@@ -1288,7 +1289,7 @@ function PricingTab() {
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           {[
             ['hst',             'HST Rate',          '0.13 = 13%'],
-            ['shipping_post',   'Canada Post ($)',    'flat rate'],
+            ['shipping_post',   `${store?.shipping_carrier || 'Standard Shipping'} ($)`, 'flat rate'],
             ['shipping_courier','Courier ($)',        'FedEx/UPS'],
             ['rush_pct',        'Rush Surcharge',    '0.25 = 25%'],
             ['express_pct',     'Express Surcharge', '0.50 = 50%'],
@@ -1819,7 +1820,7 @@ function printOrderSheet(o) {
 
 // ── ORDERS TAB ─────────────────────────────────────────────────────────────────
 function OrdersTab() {
-  const { ls, showToast, cfg } = useApp();
+  const { ls, showToast, cfg, store } = useApp();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -1953,6 +1954,15 @@ function OrdersTab() {
           status_headline: content.headline,
           status_message: content.body,
           tracking_line: trackingNumber ? `Tracking number: ${trackingNumber}` : '',
+          logo_url: store?.logo_img || '',
+          order_date: order.created_at ? new Date(order.created_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
+          order_total: order.total ? `$${parseFloat(order.total).toFixed(2)}` : '',
+          delivery_value: order.delivery === 'pickup'
+            ? 'Free Pickup<br/>6033 Shawson Dr, Unit 40<br/>Mississauga, ON'
+            : (order.delivery || ''),
+          items_html: '',
+          breakdown_html: '',
+          payment_method: order.payment_method || '',
         });
         showToast('📧 Status email sent to ' + order.customer_email);
       } catch (err) {

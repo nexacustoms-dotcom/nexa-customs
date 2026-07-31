@@ -6547,6 +6547,7 @@ export const DEFAULT_STORE = {
   tagline: 'Print · Signs · Graphics',
   logo_text: 'N',
   logo_img: '',
+  shipping_carrier: 'Canada Post',
   hero1: 'Print That Makes',
   hero_accent: 'Your Brand',
   hero2: 'Impossible To Ignore',

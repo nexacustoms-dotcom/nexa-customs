@@ -215,7 +215,7 @@ export default function LabelsStickersPage({ productId }) {
       `Shape: ${shape}`, `Size: ${sizeLabel}`,
       `Stock: ${stock}`, `Ink: ${inkColor}`, `Finish: ${finishing}`,
     ];
-    addToCart({ id: prod.id + '-' + Date.now(), name: prod.name, qty, opts, price: totalPrice, unitPrice: +(totalPrice / qty).toFixed(4), turnaround });
+    addToCart({ id: prod.id + '-' + Date.now(), name: prod.name, cat: prod.cat, qty, opts, price: totalPrice, unitPrice: +(totalPrice / qty).toFixed(4), turnaround, imgs: prod.imgs?.filter(x=>x?.length) || [] });
     showToast(`${prod.name} added to cart!`);
   }
 
