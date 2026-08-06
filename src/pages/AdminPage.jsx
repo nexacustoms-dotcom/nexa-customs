@@ -1253,12 +1253,17 @@ function PricingHealthCheck({ prods, onFix }) {
 }
 
 function PricingTab() {
-  const { prods, setProds, pricing, setPricing, showToast, store } = useApp();
+  const { prods, setProds, pricing, setPricing, showToast, store, setStore } = useApp();
   const [cfg, setCfg] = useState({ ...pricing });
+  const [carrierNames, setCarrierNames] = useState({ post: store?.shipping_carrier || 'Canada Post', courier: store?.courier_carrier_name || 'Courier' });
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState('');
 
-  function saveCfg() { setPricing(cfg); showToast('✅ Global config saved!'); }
+  function saveCfg() {
+    setPricing(cfg);
+    setStore({ ...store, shipping_carrier: carrierNames.post || 'Canada Post', courier_carrier_name: carrierNames.courier || 'Courier' });
+    showToast('✅ Global config saved!');
+  }
 
   const filtered = prods.filter(p =>
     !search.trim() || p.name.toLowerCase().includes(search.toLowerCase())
@@ -1286,11 +1291,23 @@ function PricingTab() {
 
       <div className="aform-section" style={{ maxWidth:560, marginBottom:28 }}>
         <div className="aform-title">⚙️ Global Settings</div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+          <div className="afg">
+            <label className="aflbl">Postal/Mail Carrier Name</label>
+            <input className="ainp" placeholder="Canada Post" value={carrierNames.post}
+              onChange={e => setCarrierNames(c => ({ ...c, post: e.target.value }))} />
+          </div>
+          <div className="afg">
+            <label className="aflbl">Courier Carrier Name</label>
+            <input className="ainp" placeholder="Courier" value={carrierNames.courier}
+              onChange={e => setCarrierNames(c => ({ ...c, courier: e.target.value }))} />
+          </div>
+        </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           {[
             ['hst',             'HST Rate',          '0.13 = 13%'],
-            ['shipping_post',   `${store?.shipping_carrier || 'Standard Shipping'} ($)`, 'flat rate'],
-            ['shipping_courier','Courier ($)',        'FedEx/UPS'],
+            ['shipping_post',   `${carrierNames.post || 'Standard Shipping'} ($)`, 'flat rate'],
+            ['shipping_courier',`${carrierNames.courier || 'Courier'} ($)`,        'flat rate'],
             ['rush_pct',        'Rush Surcharge',    '0.25 = 25%'],
             ['express_pct',     'Express Surcharge', '0.50 = 50%'],
           ].map(([k,l,n]) => (

@@ -8,6 +8,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import ProductCard from './components/ProductCard';
 import AdminPage from './pages/AdminPage';
 import BlogIndexPage from './pages/BlogIndexPage';
+import LocationServicePage, { getLocationPageSlugs } from './pages/LocationServicePage';
 import ICONS from './components/Icons';
 import { CartPage, CheckoutPage, SuccessPage, QuotePage, ContactPage, OrderStatusPage } from './pages/TransactionalPages';
 import { usePageSEO } from './hooks/usePageSEO';
@@ -283,6 +284,9 @@ function AppRoutes() {
         <Route path="/quote" element={<Layout><QuotePage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
         <Route path="/blog" element={<Layout><BlogIndexPage /></Layout>} />
+        {getLocationPageSlugs().map(slug => (
+          <Route key={slug} path={`/${slug}`} element={<Layout><LocationServicePage slug={slug} /></Layout>} />
+        ))}
 
         {/* Policy pages */}
         <Route path="/faq" element={<Layout><PolicyPage slug="faq" /></Layout>} />

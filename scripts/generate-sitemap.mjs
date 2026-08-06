@@ -81,6 +81,11 @@ prods.forEach(p => {
 if (customPages.length) {
   urls.push(`  <!-- ═══ Custom pages ═══ -->`);
   customPages.forEach(p => urls.push(url(`${DOMAIN}/blog/${p.slug}`, "0.5", "monthly")));
+
+  // Location + service landing pages — hand-maintained list, not
+  // Supabase-driven, since these are a small deliberately-curated set
+  ["window-graphics-toronto", "window-graphics-brampton", "wallpaper-murals-toronto", "wallpaper-murals-oakville"]
+    .forEach(slug => urls.push(url(`${DOMAIN}/${slug}`, "0.6", "monthly")));
 }
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>

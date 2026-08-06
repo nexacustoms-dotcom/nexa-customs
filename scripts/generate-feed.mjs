@@ -79,6 +79,22 @@ try {
   console.warn("⚠️  Could not fetch Supabase overrides — using local data only");
 }
 
+// Fetch store config for the actual carrier names — was hardcoded before,
+// now matches whatever's set in Admin → Pricing & Options
+let shippingCarrier = "Canada Post", courierCarrier = "Courier";
+try {
+  const res = await fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.main&select=data`, {
+    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
+  });
+  const data = await res.json();
+  const storeData = data[0]?.data || {};
+  if (storeData.shipping_carrier) shippingCarrier = storeData.shipping_carrier;
+  if (storeData.courier_carrier_name) courierCarrier = storeData.courier_carrier_name;
+  console.log(`✅ Carrier names: "${shippingCarrier}" / "${courierCarrier}"`);
+} catch (e) {
+  console.warn("⚠️  Could not fetch store config — using default carrier names");
+}
+
 const items = [];
 let withImg = 0, withFallback = 0;
 
@@ -132,8 +148,8 @@ for (const prod of prods) {
       <g:product_type>${esc(catName)}</g:product_type>
       <g:identifier_exists>no</g:identifier_exists>
       <g:shipping><g:country>CA</g:country><g:price>0 CAD</g:price><g:service>Free Pickup — Mississauga</g:service></g:shipping>
-      <g:shipping><g:country>CA</g:country><g:price>18.00 CAD</g:price><g:service>Canada Post</g:service></g:shipping>
-      <g:shipping><g:country>CA</g:country><g:price>45.00 CAD</g:price><g:service>Courier</g:service></g:shipping>
+      <g:shipping><g:country>CA</g:country><g:price>18.00 CAD</g:price><g:service>${esc(shippingCarrier)}</g:service></g:shipping>
+      <g:shipping><g:country>CA</g:country><g:price>45.00 CAD</g:price><g:service>${esc(courierCarrier)}</g:service></g:shipping>
     </item>`);
 }
 

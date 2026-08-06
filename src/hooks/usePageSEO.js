@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { getLocationPageMeta } from '../pages/LocationServicePage';
 
 const DOMAIN = 'https://nexacustoms.ca';
 const BASE   = 'Nexa Customs — GTA Print Shop · Mississauga';
@@ -94,7 +95,12 @@ export function usePageSEO() {
     let canonical = DOMAIN + path;
     let matched = false; // becomes true only for a real, recognized route
 
-    if (TITLES[path]) {
+    const locPage = getLocationPageMeta(path.slice(1));
+    if (locPage) {
+      title = locPage.metaTitle;
+      desc = locPage.metaDesc;
+      matched = true;
+    } else if (TITLES[path]) {
       title = TITLES[path];
       desc  = DESCRIPTIONS[path] || desc;
       matched = true;

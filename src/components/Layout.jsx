@@ -25,7 +25,6 @@ export function Topbar() {
 const NAV = [
   { id: 'home', label: 'Home' },
   { id: 'products', label: 'Products' },
-  { id: 'blog', label: 'Blog' },
   { id: 'quote', label: 'Get a Quote' },
   { id: 'contact', label: 'Contact' },
 ];

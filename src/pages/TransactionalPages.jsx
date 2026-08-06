@@ -347,7 +347,7 @@ export function CheckoutPage() {
         company:        form.company || 'N/A',
         order_items:    cart.map(i => `${i.qty}x ${i.name}`).join(', '),
         total:          '$' + total.toFixed(2),
-        delivery:       delivery === 'pickup' ? 'Free Pickup — Mississauga' : delivery === 'post' ? `${store?.shipping_carrier || 'Canada Post'} — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : `Courier — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}`,
+        delivery:       delivery === 'pickup' ? 'Free Pickup — Mississauga' : delivery === 'post' ? `${store?.shipping_carrier || 'Canada Post'} — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : `${store?.courier_carrier_name || 'Courier'} — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}`,
         turnaround:     cart.map(i => i.turnaround || 'standard').join(', '),
         payment_method: payMethod,
         notes:          (form.notes || '') + (delivery !== 'pickup' ? `\nShip To: ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : ''),
@@ -425,7 +425,7 @@ export function CheckoutPage() {
 
       const deliveryValue = delivery === 'pickup'
         ? 'Free Pickup<br/>6033 Shawson Dr, Unit 40<br/>Mississauga, ON'
-        : `${delivery === 'post' ? (store?.shipping_carrier || 'Canada Post') : 'Courier'}<br/>${shipping.address}<br/>${shipping.city}, ${shipping.province} ${shipping.postal}`;
+        : `${delivery === 'post' ? (store?.shipping_carrier || 'Canada Post') : (store?.courier_carrier_name || 'Courier')}<br/>${shipping.address}<br/>${shipping.city}, ${shipping.province} ${shipping.postal}`;
 
       sendEmailJS(ejsSvc, ejsStatusTpl, ejsKey, {
         to_email: form.email,
@@ -650,7 +650,7 @@ export function CheckoutPage() {
                   {[
                     { id: 'pickup', ico: ICONS.store(18), label: 'Free Local Pickup', sub: '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM', price: 'Free', tag: 'Most Popular' },
                     { id: 'post',   ico: ICONS.mailbox(18), label: `${store?.shipping_carrier || 'Canada Post'} Standard`, sub: '3–7 business days · Tracking included', price: `$${pricing.shipping_post.toFixed(2)}`, tag: '' },
-                    { id: 'courier',ico: ICONS.rocket(18), label: 'Courier Express', sub: '1–2 business days · FedEx or UPS', price: `$${pricing.shipping_courier.toFixed(2)}`, tag: 'Fastest' },
+                    { id: 'courier',ico: ICONS.rocket(18), label: `${store?.courier_carrier_name || 'Courier'} Express`, sub: '1–2 business days · Fastest option', price: `$${pricing.shipping_courier.toFixed(2)}`, tag: 'Fastest' },
                   ].map(opt => (
                     <div key={opt.id} onClick={() => setDelivery(opt.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, background: delivery === opt.id ? 'rgba(249,115,22,.08)' : 'var(--s2)', border: `2px solid ${delivery === opt.id ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all .18s', marginBottom: 10 }}>
                       {/* Radio */}
@@ -852,7 +852,7 @@ export function CheckoutPage() {
                     <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{ICONS.pin(12)} Delivery</span>
                       <span style={{ color: 'var(--tx)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
-                        {delivery === 'pickup' ? <>{ICONS.store(12)} Free Pickup — Mississauga</> : delivery === 'post' ? <>{ICONS.mailbox(12)} {store?.shipping_carrier || 'Canada Post'} — ${shipCost.toFixed(2)}</> : <>{ICONS.rocket(12)} Courier — ${shipCost.toFixed(2)}</>}
+                        {delivery === 'pickup' ? <>{ICONS.store(12)} Free Pickup — Mississauga</> : delivery === 'post' ? <>{ICONS.mailbox(12)} {store?.shipping_carrier || 'Canada Post'} — ${shipCost.toFixed(2)}</> : <>{ICONS.rocket(12)} {store?.courier_carrier_name || 'Courier'} — ${shipCost.toFixed(2)}</>}
                       </span>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', justifyContent: 'space-between' }}>
@@ -1078,7 +1078,7 @@ export function SuccessPage() {
             [ICONS.paperclip(14), 'Artwork', 'Email files to info@nexacustoms.ca with your order number'],
             deliveryType === 'pickup'
               ? [ICONS.pin(14), 'Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM']
-              : [ICONS.box(14), 'Shipping', shipAddr + ' · ' + (deliveryType === 'post' ? `${store?.shipping_carrier || 'Canada Post'} 3–7 days` : 'Courier 1–2 days')],
+              : [ICONS.box(14), 'Shipping', shipAddr + ' · ' + (deliveryType === 'post' ? `${store?.shipping_carrier || 'Canada Post'} 3–7 days` : `${store?.courier_carrier_name || 'Courier'} 1–2 days`)],
             [ICONS.phone(14), 'Questions?', 'Call or text (437) 997-9921'],
           ].map(([icon, k, v]) => (
             <div key={k} style={{ display: 'flex', gap: 12, fontSize: 13, marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid var(--bd)' }}>
@@ -1519,7 +1519,7 @@ export function OrderStatusPage() {
                 ['Name',     order.customer_name || '—'],
                 ['Items',    order.items],
                 ['Total',    order.total ? '$'+parseFloat(order.total).toFixed(2) : '—'],
-                ['Delivery', order.delivery === 'pickup' ? 'Free Pickup — Mississauga' : order.delivery === 'post' ? (store?.shipping_carrier || 'Canada Post') : order.delivery === 'courier' ? 'Courier' : order.delivery || '—'],
+                ['Delivery', order.delivery === 'pickup' ? 'Free Pickup — Mississauga' : order.delivery === 'post' ? (store?.shipping_carrier || 'Canada Post') : order.delivery === 'courier' ? (store?.courier_carrier_name || 'Courier') : order.delivery || '—'],
                 ['Placed',   order.created_at ? new Date(order.created_at).toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'}) : '—'],
               ].map(([k,v],i,arr) => (
                 <div key={k} style={{ display:'grid', gridTemplateColumns:'110px 1fr', gap:10, padding:'10px 0', borderBottom: i<arr.length-1?'1px solid var(--bd)':'none', fontSize:13 }}>

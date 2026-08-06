@@ -6548,6 +6548,7 @@ export const DEFAULT_STORE = {
   logo_text: 'N',
   logo_img: '',
   shipping_carrier: 'Canada Post',
+  courier_carrier_name: 'Courier',
   hero1: 'Print That Makes',
   hero_accent: 'Your Brand',
   hero2: 'Impossible To Ignore',

@@ -4,6 +4,7 @@ import { useApp, imgUrl } from '../context/AppContext';
 import ICONS from '../components/Icons';
 import ProductCard from '../components/ProductCard';
 import { CAT_BG } from '../data/products';
+import { getLocationPageSlugs, getLocationPageMeta } from './LocationServicePage';
 import LabelConfigurator from './LabelConfigurator';
 
 export default function ProductDetailPage() {
@@ -129,6 +130,9 @@ export default function ProductDetailPage() {
 
   const related = prods.filter(p => !p.disabled && p.cat === prod.cat && p.id !== prod.id).slice(0, 4);
   const relatedPosts = (pages || []).filter(pg => pg.relatedCat === prod.cat).slice(0, 3);
+  const relatedLocPages = getLocationPageSlugs()
+    .map(slug => ({ slug, ...getLocationPageMeta(slug) }))
+    .filter(p => p.productId === prod.id);
 
   // Build config summary for right panel
   const configSummary = [
@@ -518,6 +522,19 @@ export default function ProductDetailPage() {
                   onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--o)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--bd)'}>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 6 }}>Read More</div>
                   <div style={{ fontWeight: 700, fontSize: 14 }}>{post.title} →</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {relatedLocPages.length > 0 && (
+          <div style={{ paddingBottom: 60 }}>
+            <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, marginBottom: 16 }}>Serving Your City</h2>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {relatedLocPages.map(p => (
+                <div key={p.slug} onClick={() => navigate(`/${p.slug}`)} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 600, transition: 'border-color .15s' }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--o)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--bd)'}>
+                  {p.service} in {p.city} →
                 </div>
               ))}
             </div>
