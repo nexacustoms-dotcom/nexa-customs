@@ -19,7 +19,7 @@ const SUPA_URL = "https://eogypbrsjfgurrobjomn.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvZ3lwYnJzamZndXJyb2Jqb21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjYyODMsImV4cCI6MjA5MjgwMjI4M30.ajlCEo-TKn6qyi4GCfYNOeEpLpp5-MoJoFCKkGuRAzg";
 
 // Your store code from Google Business Profile / Merchant Center linking
-const STORE_CODE = "l5899834319943270243";
+const STORE_CODE = "NCI";
 
 // Print-on-demand — there's no fixed shelf stock, production capacity is
 // effectively the limit. A high placeholder quantity signals "always
