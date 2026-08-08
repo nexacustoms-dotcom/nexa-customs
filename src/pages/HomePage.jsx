@@ -63,27 +63,27 @@ export default function HomePage() {
 
           {/* Big full-width slide showcase */}
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 20, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,.55)', minHeight: 480, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', cursor: slides[slide]?.link ? 'pointer' : 'default' }}
+            <div className="hero-slide-box" style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 20, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,.55)', minHeight: 480, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', cursor: slides[slide]?.link ? 'pointer' : 'default' }}
               onClick={() => slides[slide]?.link && navigate(slides[slide].link)}>
               {slides[slide]?.link && (
                 <div style={{ position: 'absolute', top: 18, right: 18, background: 'var(--o)', color: '#000', fontSize: 12, fontWeight: 800, padding: '7px 16px', borderRadius: 20, zIndex: 2, letterSpacing: '.05em', textTransform: 'uppercase' }}>Shop Now →</div>
               )}
               {slides[slide]?.img
                 ? (
-                  <div style={{ position: 'relative', width: '100%' }}>
-                    <img src={imgUrl(slides[slide].img, 1800)} alt={slides[slide].title} width="1800" height="480" style={{ width: '100%', height: 480, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
+                  <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                    <img src={imgUrl(slides[slide].img, 1800)} alt={slides[slide].title} width="1800" height="480" className="hero-slide-img" style={{ width: '100%', height: 480, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
                     {(slides[slide]?.title || slides[slide]?.sub) && (
-                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.8))', padding: '80px 40px 32px', textAlign: 'left' }}>
-                        {slides[slide]?.title && <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 'clamp(26px,3.4vw,40px)', textTransform: 'uppercase', color: '#fff', marginBottom: 6 }}>{slides[slide].title}</div>}
-                        {slides[slide]?.sub && <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, maxWidth: 520 }}>{slides[slide].sub}</div>}
+                      <div className="hero-slide-caption" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.8))', padding: '80px 40px 32px', textAlign: 'left' }}>
+                        {slides[slide]?.title && <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 'clamp(22px,3.4vw,40px)', textTransform: 'uppercase', color: '#fff', marginBottom: 6 }}>{slides[slide].title}</div>}
+                        {slides[slide]?.sub && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 1.6, maxWidth: 520 }}>{slides[slide].sub}</div>}
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div style={{ padding: 48, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                    <div style={{ marginBottom: 22, color: 'var(--mu)', display: 'flex' }}>{(ICONS[slides[slide]?.ico] || ICONS.printer)(96)}</div>
-                    <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 'clamp(28px,3.6vw,44px)', textTransform: 'uppercase', marginBottom: 10 }}>{slides[slide]?.title}</div>
-                    <div style={{ fontSize: 14, color: 'var(--mu)', lineHeight: 1.6, maxWidth: 480 }}>{slides[slide]?.sub}</div>
+                  <div className="hero-slide-fallback" style={{ padding: 48, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                    <div className="hero-slide-fallback-icon" style={{ marginBottom: 22, color: 'var(--mu)', display: 'flex' }}>{(ICONS[slides[slide]?.ico] || ICONS.printer)(96)}</div>
+                    <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 'clamp(24px,3.6vw,44px)', textTransform: 'uppercase', marginBottom: 10 }}>{slides[slide]?.title}</div>
+                    <div style={{ fontSize: 13, color: 'var(--mu)', lineHeight: 1.6, maxWidth: 480 }}>{slides[slide]?.sub}</div>
                   </div>
                 )
               }
@@ -215,6 +215,18 @@ export default function HomePage() {
       </section>
 
       <style>{`
+        @media(max-width:768px) {
+          .hero-slide-box, .hero-slide-img { height:340px !important; min-height:340px !important; }
+          .hero-slide-caption { padding:50px 22px 20px !important; }
+          .hero-slide-fallback { padding:28px !important; }
+          .hero-slide-fallback-icon svg { width:64px !important; height:64px !important; }
+        }
+        @media(max-width:480px) {
+          .hero-slide-box, .hero-slide-img { height:260px !important; min-height:260px !important; }
+          .hero-slide-caption { padding:36px 16px 16px !important; }
+          .hero-slide-fallback { padding:20px !important; }
+          .hero-slide-fallback-icon svg { width:52px !important; height:52px !important; }
+        }
         @media(max-width:640px) { .hero-trust-grid { grid-template-columns:repeat(2,1fr) !important; } }
         @media(max-width:1060px) { .cat-grid { grid-template-columns:repeat(4,1fr) !important; } }
         @media(max-width:640px) { .cat-grid { grid-template-columns:repeat(3,1fr) !important; } }

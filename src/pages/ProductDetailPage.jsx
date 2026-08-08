@@ -171,8 +171,8 @@ export default function ProductDetailPage() {
             <div style={{ position: 'sticky', top: 82 }} className="det-img-sticky">
               <div style={{ background: CAT_BG[prod.cat] || 'var(--s2)', borderRadius: 14, overflow: 'hidden', marginBottom: 8 }}>
                 {imgs.length > 0
-                  ? <img src={imgUrl(imgs[imgIdx], 900)} alt={prod.name} width="900" height="360" style={{ width: '100%', height: 360, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
-                  : <div style={{ height: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mu)' }}>{ICONS.printer(80)}</div>
+                  ? <img src={imgUrl(imgs[imgIdx], 900)} alt={prod.name} width="900" height="360" className="det-main-img" style={{ width: '100%', height: 360, objectFit: 'cover', display: 'block' }} fetchpriority="high" />
+                  : <div className="det-main-img" style={{ height: 360, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mu)' }}>{ICONS.printer(80)}</div>
                 }
               </div>
               {imgs.length > 1 && (
@@ -546,11 +546,16 @@ export default function ProductDetailPage() {
           .det-layout{grid-template-columns:1fr 260px !important}
           .det-img{grid-column:1/-1}
           .det-img-sticky{position:static !important; display:grid; grid-template-columns:200px 1fr; gap:16px; align-items:start}
+          .det-main-img{height:200px !important}
         }
         @media(max-width:700px){
           .det-layout{grid-template-columns:1fr !important}
           .det-img-sticky{grid-template-columns:1fr !important; margin-bottom:8px}
           .det-sum{position:static !important}
+          .det-main-img{height:280px !important}
+        }
+        @media(max-width:480px){
+          .det-main-img{height:220px !important}
         }
         @media(max-width:640px){.related-grid{grid-template-columns:repeat(2,1fr) !important}}
       `}</style>

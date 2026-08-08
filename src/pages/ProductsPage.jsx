@@ -84,8 +84,10 @@ export default function ProductsPage() {
       </div>
 
       <style>{`
-        .pl-layout { @media(max-width:1060px) { grid-template-columns:1fr !important; } }
-        .pl-sidebar { @media(max-width:1060px) { position:static !important; } }
+        @media(max-width:1060px) {
+          .pl-layout { grid-template-columns:1fr !important; }
+          .pl-sidebar { position:static !important; }
+        }
       `}</style>
     </div>
   );
