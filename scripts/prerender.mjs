@@ -28,8 +28,8 @@
 import { readFileSync, existsSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { preview } from 'vite';
 import puppeteer from 'puppeteer';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -106,49 +106,56 @@ async function main() {
   const routes = await buildRoutes();
   console.log(`[prerender] ${routes.length} routes to render`);
 
-  const preview = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
-    cwd: ROOT, stdio: 'pipe',
+  const previewServer = await preview({
+    root: ROOT,
+    preview: { port: PORT, strictPort: true },
+    logLevel: 'warn',
   });
-  await new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('vite preview did not start in time')), 20000);
-    preview.stdout.on('data', d => {
-      if (d.toString().includes('Local:')) { clearTimeout(timeout); resolve(); }
-    });
-    preview.stderr.on('data', d => process.stderr.write(d));
-  });
+  console.log(`[prerender] preview server listening on ${BASE_URL}`);
 
-  const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
+  let browser;
   let ok = 0, failed = [];
+  try {
+    browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
 
-  for (const route of routes) {
-    const page = await browser.newPage();
-    try {
-      await page.goto(BASE_URL + route, { waitUntil: 'networkidle0', timeout: 30000 });
-      // Give the Supabase override fetch a moment even if networkidle0 fired early
-      await page.waitForFunction(
-        () => document.querySelector('h1, h2') && document.body.innerText.trim().length > 80,
-        { timeout: 8000 }
-      ).catch(() => {}); // best-effort — still write whatever rendered
-      const html = await page.content();
+    for (const route of routes) {
+      const page = await browser.newPage();
+      try {
+        await page.goto(BASE_URL + route, { waitUntil: 'networkidle0', timeout: 30000 });
+        // Give the Supabase override fetch a moment even if networkidle0 fired early
+        await page.waitForFunction(
+          () => document.querySelector('h1, h2') && document.body.innerText.trim().length > 80,
+          { timeout: 8000 }
+        ).catch(() => {}); // best-effort — still write whatever rendered
+        const html = await page.content();
 
-      const outDir = route === '/' ? DIST : join(DIST, route.slice(1));
-      if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
-      writeFileSync(join(outDir, 'index.html'), html);
-      ok++;
-    } catch (e) {
-      failed.push(`${route}: ${e.message}`);
-    } finally {
-      await page.close();
+        const outDir = route === '/' ? DIST : join(DIST, route.slice(1));
+        if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
+        writeFileSync(join(outDir, 'index.html'), html);
+        ok++;
+      } catch (e) {
+        failed.push(`${route}: ${e.message}`);
+      } finally {
+        await page.close();
+      }
     }
+  } finally {
+    if (browser) await browser.close();
+    await previewServer.close();
   }
-
-  await browser.close();
-  preview.kill();
 
   console.log(`[prerender] done — ${ok}/${routes.length} routes written`);
   if (failed.length) {
     console.warn('[prerender] failed routes:\n' + failed.map(f => '  ' + f).join('\n'));
   }
+  // Never fail the whole Vercel build over prerendering — worst case, those
+  // routes just fall back to the normal client-rendered SPA shell as before.
+  if (ok === 0 && routes.length > 0) {
+    console.error('[prerender] 0 routes succeeded — check the failures above');
+  }
 }
 
-main().catch(e => { console.error('[prerender] fatal:', e); process.exit(1); });
+main().catch(e => {
+  console.error('[prerender] non-fatal error, continuing build without prerendered pages:', e);
+  process.exit(0);
+});
