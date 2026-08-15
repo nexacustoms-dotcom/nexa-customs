@@ -147,6 +147,56 @@
       "permanent": true
     },
     {
+      "source": "/legal-notice",
+      "destination": "/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/contact-us",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/contact-us/:path*",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/all-products",
+      "destination": "/products",
+      "permanent": true
+    },
+    {
+      "source": "/refund_returns",
+      "destination": "/returns",
+      "permanent": true
+    },
+    {
+      "source": "/partners",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/need-a-designer",
+      "destination": "/quote",
+      "permanent": true
+    },
+    {
+      "source": "/wishlist-2",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/subpage",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/:slug/feed",
+      "destination": "/products/:slug",
+      "permanent": true
+    },
+    {
       "source": "/product-category/:slug",
       "destination": "/products",
       "permanent": true
