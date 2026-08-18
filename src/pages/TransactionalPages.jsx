@@ -577,18 +577,18 @@ export function CheckoutPage() {
         {/* Header + step bar */}
         <div style={{ marginBottom: 28 }}>
           <h1 className="D" style={{ fontSize: 'clamp(26px,4vw,42px)', marginBottom: 18 }}>Checkout</h1>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }} className="ck-steps">
             {STEPS.map((s, i) => {
               const n = i + 1; const done = step > n; const active = step === n;
               return (
                 <div key={s} style={{ display: 'flex', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : 'none' }}>
                   <div onClick={() => done && setStep(n)} style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: done ? 'pointer' : 'default', flexShrink: 0 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, transition: 'all .2s', background: done ? 'var(--gr)' : active ? 'var(--o)' : 'var(--s2)', color: done || active ? '#000' : 'var(--mu)', border: `2px solid ${done ? 'var(--gr)' : active ? 'var(--o)' : 'var(--bd)'}` }}>
+                    <div className="ck-step-dot" style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, transition: 'all .2s', background: done ? 'var(--gr)' : active ? 'var(--o)' : 'var(--s2)', color: done || active ? '#000' : 'var(--mu)', border: `2px solid ${done ? 'var(--gr)' : active ? 'var(--o)' : 'var(--bd)'}` }}>
                       {done ? '✓' : n}
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: active ? 'var(--tx)' : done ? 'var(--gr)' : 'var(--mu)', whiteSpace: 'nowrap' }}>{s}</span>
+                    <span className={active ? 'ck-step-lbl ck-step-lbl-active' : 'ck-step-lbl'} style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: active ? 'var(--tx)' : done ? 'var(--gr)' : 'var(--mu)', whiteSpace: 'nowrap' }}>{s}</span>
                   </div>
-                  {i < STEPS.length - 1 && <div style={{ flex: 1, height: 2, background: done ? 'var(--gr)' : 'var(--bd)', margin: '0 10px', transition: 'background .3s', minWidth: 20 }} />}
+                  {i < STEPS.length - 1 && <div className="ck-step-line" style={{ flex: 1, height: 2, background: done ? 'var(--gr)' : 'var(--bd)', margin: '0 10px', transition: 'background .3s', minWidth: 20 }} />}
                 </div>
               );
             })}
@@ -607,23 +607,23 @@ export function CheckoutPage() {
                 <div className="frow">
                   <div className="fgrp">
                     <label className="flbl" htmlFor="fn">First Name *</label>
-                    <input className="finp" placeholder="Ravi" value={form.fn} id="fn" onChange={upd('fn')} style={{ borderColor: errors.fn ? '#ef4444' : '' }} />
+                    <input className="finp" placeholder="John" value={form.fn} id="fn" onChange={upd('fn')} style={{ borderColor: errors.fn ? '#ef4444' : '' }} />
                     {errors.fn && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }} role="alert">* {errors.fn}</div>}
                   </div>
                   <div className="fgrp">
                     <label className="flbl" htmlFor="ln">Last Name</label>
-                    <input className="finp" placeholder="Sharma" value={form.ln} id="ln" onChange={upd('ln')} />
+                    <input className="finp" placeholder="Doe" value={form.ln} id="ln" onChange={upd('ln')} />
                   </div>
                 </div>
                 <div className="frow">
                   <div className="fgrp">
                     <label className="flbl" htmlFor="email">Email Address *</label>
-                    <input className="finp" type="email" placeholder="ravi@company.com" value={form.email} id="email" onChange={upd('email')} style={{ borderColor: errors.email ? '#ef4444' : '' }} />
+                    <input className="finp" type="email" placeholder="you@email.com" value={form.email} id="email" onChange={upd('email')} style={{ borderColor: errors.email ? '#ef4444' : '' }} />
                     {errors.email && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }} role="alert">* {errors.email}</div>}
                   </div>
                   <div className="fgrp">
                     <label className="flbl" htmlFor="phone">Phone Number *</label>
-                    <input className="finp" type="tel" placeholder="(437) 997-9921" value={form.phone} id="phone" onChange={upd('phone')} style={{ borderColor: errors.phone ? '#ef4444' : '' }} />
+                    <input className="finp" type="tel" placeholder="(555) 123-4567" value={form.phone} id="phone" onChange={upd('phone')} style={{ borderColor: errors.phone ? '#ef4444' : '' }} />
                     {errors.phone && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }} role="alert">* {errors.phone}</div>}
                   </div>
                 </div>
@@ -1220,12 +1220,12 @@ export function QuotePage() {
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, marginBottom: 14 }}>
             <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Your Information</div>
             <div className="frow">
-              <div className="fgrp"><label className="flbl" htmlFor="fname">First Name *</label><input className="finp" placeholder="Ravi" value={form.fname} id="fname" onChange={upd('fname')} /></div>
-              <div className="fgrp"><label className="flbl" htmlFor="lname">Last Name</label><input className="finp" placeholder="Sharma" value={form.lname} id="lname" onChange={upd('lname')} /></div>
+              <div className="fgrp"><label className="flbl" htmlFor="fname">First Name *</label><input className="finp" placeholder="John" value={form.fname} id="fname" onChange={upd('fname')} /></div>
+              <div className="fgrp"><label className="flbl" htmlFor="lname">Last Name</label><input className="finp" placeholder="Doe" value={form.lname} id="lname" onChange={upd('lname')} /></div>
             </div>
             <div className="frow">
               <div className="fgrp"><label className="flbl" htmlFor="email">Email *</label><input className="finp" type="email" placeholder="ravi@nexacustoms.ca" value={form.email} id="email" onChange={upd('email')} /></div>
-              <div className="fgrp"><label className="flbl" htmlFor="phone">Phone</label><input className="finp" type="tel" placeholder="(437) 997-9921" value={form.phone} id="phone" onChange={upd('phone')} /></div>
+              <div className="fgrp"><label className="flbl" htmlFor="phone">Phone</label><input className="finp" type="tel" placeholder="(555) 123-4567" value={form.phone} id="phone" onChange={upd('phone')} /></div>
             </div>
             <div className="fgrp"><label className="flbl" htmlFor="company">Company Name</label><input className="finp" placeholder="Your Company Inc." value={form.company} id="company" onChange={upd('company')} /></div>
           </div>
