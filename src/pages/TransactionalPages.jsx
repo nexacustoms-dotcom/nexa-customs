@@ -555,6 +555,14 @@ export function CheckoutPage() {
           value: total,
           items: cart.map(i => ({ item_id: i.id, item_name: i.name, quantity: i.qty || 1, price: i.unitPrice || 0 })),
         });
+        // Google Ads purchase conversion — fired here (payment already confirmed),
+        // not on button click, so failed/declined payments never get counted.
+        window.gtag('event', 'conversion', {
+          send_to: 'AW-166288554686/2K6HCFLq1MYbEJ7foPk9',
+          transaction_id: no,
+          currency: 'CAD',
+          value: total,
+        });
       }
       sessionStorage.setItem('last_order_no', no);
       sessionStorage.setItem('last_delivery', delivery);
