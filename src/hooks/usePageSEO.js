@@ -7,7 +7,7 @@ const DOMAIN = 'https://nexacustoms.ca';
 const BASE   = 'Nexa Customs — GTA Print Shop · Mississauga';
 
 const TITLES = {
-  '/':               'Nexa Customs — Print Shop · Signs · Vehicle Wraps · GTA & Canada',
+  '/':               'Nexa Customs — Print Shop · Signs · Wraps · Mississauga',
   '/products':       'All Print Products — Nexa Customs · GTA Print Shop',
   '/blog':           'Blog — Nexa Customs GTA Print Shop',
   '/quote':          'Get a Free Print Quote — Nexa Customs GTA',
@@ -89,7 +89,11 @@ export function usePageSEO() {
   const { curProd, pages, cats } = useApp();
 
   useEffect(() => {
-    const path = location.pathname;
+    const rawPath = location.pathname;
+    // Normalize away a trailing slash (e.g. '/products/' -> '/products') so a
+    // stray slash never causes a real page to fall through to the "unmatched
+    // route" noindex safety net below. '/' itself is left alone.
+    const path = rawPath.length > 1 && rawPath.endsWith('/') ? rawPath.slice(0, -1) : rawPath;
     let title  = BASE;
     let desc   = DESCRIPTIONS['/'];
     let canonical = DOMAIN + path;
@@ -143,7 +147,7 @@ export function usePageSEO() {
     // path that didn't match any real route (soft-404: Vercel's SPA rewrite
     // returns 200 for any unknown URL, so this is the only way to keep
     // genuinely broken/fake URLs out of the index).
-    const noIndexPaths = ['/cart', '/checkout', '/order-confirmed', '/admin'];
+    const noIndexPaths = ['/cart', '/checkout', '/order-confirmed', '/order-status', '/admin'];
     const isDisabledProduct = path.startsWith('/products/') && curProd?.disabled;
     const dataStillLoading = (cats || []).length === 0 && (pages || []).length === 0;
     const shouldIndex = !noIndexPaths.some(p => path.startsWith(p)) && !isDisabledProduct && (matched || dataStillLoading);

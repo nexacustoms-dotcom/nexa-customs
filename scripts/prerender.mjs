@@ -94,7 +94,7 @@ async function buildRoutes() {
     '/faq', '/shipping', '/returns', '/terms', '/privacy', '/turnaround',
   ];
   for (const cat of DEFAULT_CATS) routes.push(`/products/${cat.id}`);
-  for (const prod of DEFAULT_PRODS) routes.push(`/products/${prod.cat}/${prod.id}`);
+  for (const prod of DEFAULT_PRODS.filter(p => !p.disabled)) routes.push(`/products/${prod.cat}/${prod.id}`);
   for (const slug of locationSlugs) routes.push(`/${slug}`);
   for (const slug of blogSlugs) routes.push(`/blog/${slug}`);
 

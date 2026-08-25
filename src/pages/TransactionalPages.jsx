@@ -329,7 +329,9 @@ export function CheckoutPage() {
     }
     const tok = cfg.tgToken(); const cid = cfg.tgChat();
     if (tok && cid) {
-      const artInfo = artworkFiles.length > 0 ? ' | FILES: ' + artworkFiles.map(f => f.name).join(', ') : '';
+      const artInfo = artworkFiles.length > 0
+        ? '\n\nFILES:\n' + artworkFiles.map(f => f.url ? `${f.name}: ${f.url}` : `${f.name} (upload failed — customer may email this separately)`).join('\n')
+        : '';
       const itemsStr2 = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
       fetch(`https://api.telegram.org/bot${tok}/sendMessage?chat_id=${cid}&text=${encodeURIComponent(`NEW ORDER ${no} | ${(form.fn + ' ' + form.ln).trim()} | ${form.email} | ${form.phone} | ${itemsStr2} | $${total.toFixed(2)} | ${payMethod}${artInfo}`)}`).catch(() => {});
     }

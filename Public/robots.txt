@@ -10,6 +10,7 @@ Allow: /
 Disallow: /cart
 Disallow: /checkout
 Disallow: /order-confirmed
+Disallow: /order-status
 Disallow: /admin
 
 # ─── Google ──────────────────────────────────────────────────────────────────
@@ -18,6 +19,7 @@ Allow: /
 Disallow: /cart
 Disallow: /checkout
 Disallow: /order-confirmed
+Disallow: /order-status
 Disallow: /admin
 
 # ─── Bing ────────────────────────────────────────────────────────────────────
@@ -26,6 +28,7 @@ Allow: /
 Disallow: /cart
 Disallow: /checkout
 Disallow: /order-confirmed
+Disallow: /order-status
 Disallow: /admin
 
 # ─── AI assistants — allow (these refer customers to you) ────────────────────
