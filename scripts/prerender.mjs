@@ -12,12 +12,22 @@
 // /products, and /products/stationery/notepads in Search Console.
 //
 // After this script runs, each of those routes has a real static HTML file
-// on disk. Vercel serves a matching static file before falling back to the
-// SPA rewrite (see vercel.json), so crawlers get full content immediately,
-// while real visitors still get the same file and then React quietly
-// takes over the page exactly as it does today (main.jsx uses
-// createRoot().render(), not hydrateRoot(), so there's no hydration
-// mismatch risk — React just re-renders over the prerendered markup).
+// on disk. vercel.json has an explicit rewrite for every one of these routes
+// pointing straight at its own index.html (see the "rewrites" array there) —
+// this is deterministic and doesn't depend on Vercel's automatic clean-URL
+// file resolution, which caused a live 404 in production for some nested
+// product pages (e.g. /products/signs-banners/vinyl-banners) when it was
+// tried via `cleanUrls: true` instead. Real visitors still get the same
+// file and then React quietly takes over the page exactly as it does today
+// (main.jsx uses createRoot().render(), not hydrateRoot(), so there's no
+// hydration mismatch risk — React just re-renders over the prerendered
+// markup).
+//
+// IMPORTANT: adding a new product, category, location page, or blog post
+// means vercel.json's rewrites list needs a matching new entry, or that
+// route will 404 in production even though it prerenders fine locally.
+// This script's checkVercelJsonSync() warns (but doesn't fail the build)
+// when it detects that drift.
 //
 // Blog post slugs are fetched live from Supabase (same source the site
 // itself reads from) so newly published posts get prerendered automatically
@@ -101,10 +111,40 @@ async function buildRoutes() {
   return [...new Set(routes)];
 }
 
-// ── 5. Serve the build, prerender each route, write it to disk ──────────
+// ── 5. Keep vercel.json's explicit per-route rewrites in sync ───────────
+// vercel.json lists every real route as its own explicit rewrite
+// (source -> its prerendered index.html). This replaced an earlier
+// cleanUrls-based approach that caused a live 404 on some nested product
+// pages in production — explicit rewrites are deterministic and don't
+// depend on Vercel's automatic clean-URL resolution heuristics.
+// This check only WARNS (never fails the build) when the live route list
+// has drifted from what's committed in vercel.json, so a new product,
+// category, or blog post doesn't silently 404 in production the way
+// vinyl-banners did — someone still has to regenerate vercel.json by hand.
+function checkVercelJsonSync(routes) {
+  try {
+    const vercelJson = JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf8'));
+    const rewriteSources = new Set(
+      (vercelJson.rewrites || []).filter(r => r.destination?.endsWith('/index.html')).map(r => r.source)
+    );
+    const missing = routes.filter(r => r !== '/' && !rewriteSources.has(r));
+    if (missing.length) {
+      console.warn(
+        `[prerender] WARNING: ${missing.length} route(s) are prerendered but NOT in vercel.json's rewrites — ` +
+        `they will 404 in production until vercel.json is regenerated:\n` +
+        missing.map(r => '  ' + r).join('\n')
+      );
+    }
+  } catch (e) {
+    console.warn('[prerender] could not check vercel.json sync:', e.message);
+  }
+}
+
+// ── 6. Serve the build, prerender each route, write it to disk ──────────
 async function main() {
   const routes = await buildRoutes();
   console.log(`[prerender] ${routes.length} routes to render`);
+  checkVercelJsonSync(routes);
 
   const previewServer = await preview({
     root: ROOT,

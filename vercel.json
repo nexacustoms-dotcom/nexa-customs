@@ -1,5 +1,4 @@
 {
-  "cleanUrls": true,
   "redirects": [
     {
       "source": "/(.*)",
@@ -264,6 +263,466 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/about",
+      "destination": "/about/index.html"
+    },
+    {
+      "source": "/products",
+      "destination": "/products/index.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/contact/index.html"
+    },
+    {
+      "source": "/quote",
+      "destination": "/quote/index.html"
+    },
+    {
+      "source": "/blog",
+      "destination": "/blog/index.html"
+    },
+    {
+      "source": "/faq",
+      "destination": "/faq/index.html"
+    },
+    {
+      "source": "/shipping",
+      "destination": "/shipping/index.html"
+    },
+    {
+      "source": "/returns",
+      "destination": "/returns/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms/index.html"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy/index.html"
+    },
+    {
+      "source": "/turnaround",
+      "destination": "/turnaround/index.html"
+    },
+    {
+      "source": "/products/business-cards",
+      "destination": "/products/business-cards/index.html"
+    },
+    {
+      "source": "/products/flyers-postcards",
+      "destination": "/products/flyers-postcards/index.html"
+    },
+    {
+      "source": "/products/signs-banners",
+      "destination": "/products/signs-banners/index.html"
+    },
+    {
+      "source": "/products/vehicle-graphics",
+      "destination": "/products/vehicle-graphics/index.html"
+    },
+    {
+      "source": "/products/marketing",
+      "destination": "/products/marketing/index.html"
+    },
+    {
+      "source": "/products/stationery",
+      "destination": "/products/stationery/index.html"
+    },
+    {
+      "source": "/products/restaurant",
+      "destination": "/products/restaurant/index.html"
+    },
+    {
+      "source": "/products/foam-boards",
+      "destination": "/products/foam-boards/index.html"
+    },
+    {
+      "source": "/products/labels-stickers",
+      "destination": "/products/labels-stickers/index.html"
+    },
+    {
+      "source": "/products/real-estate",
+      "destination": "/products/real-estate/index.html"
+    },
+    {
+      "source": "/products/calendars",
+      "destination": "/products/calendars/index.html"
+    },
+    {
+      "source": "/products/posters-canvas",
+      "destination": "/products/posters-canvas/index.html"
+    },
+    {
+      "source": "/products/business-cards/best-value-business-cards",
+      "destination": "/products/business-cards/best-value-business-cards/index.html"
+    },
+    {
+      "source": "/products/business-cards/most-popular-business-cards",
+      "destination": "/products/business-cards/most-popular-business-cards/index.html"
+    },
+    {
+      "source": "/products/business-cards/matte-business-cards",
+      "destination": "/products/business-cards/matte-business-cards/index.html"
+    },
+    {
+      "source": "/products/business-cards/glossy-business-cards",
+      "destination": "/products/business-cards/glossy-business-cards/index.html"
+    },
+    {
+      "source": "/products/business-cards/uncoated-business-cards",
+      "destination": "/products/business-cards/uncoated-business-cards/index.html"
+    },
+    {
+      "source": "/products/business-cards/thicker-business-cards-18pt",
+      "destination": "/products/business-cards/thicker-business-cards-18pt/index.html"
+    },
+    {
+      "source": "/products/business-cards/folded-business-cards",
+      "destination": "/products/business-cards/folded-business-cards/index.html"
+    },
+    {
+      "source": "/products/business-cards/matte-laminated-business-cards",
+      "destination": "/products/business-cards/matte-laminated-business-cards/index.html"
+    },
+    {
+      "source": "/products/business-cards/suede-soft-touch-business-cards",
+      "destination": "/products/business-cards/suede-soft-touch-business-cards/index.html"
+    },
+    {
+      "source": "/products/business-cards/embossed-spot-uv-19pt",
+      "destination": "/products/business-cards/embossed-spot-uv-19pt/index.html"
+    },
+    {
+      "source": "/products/business-cards/embossed-spot-uv-27pt",
+      "destination": "/products/business-cards/embossed-spot-uv-27pt/index.html"
+    },
+    {
+      "source": "/products/business-cards/metallic-foil-business-cards",
+      "destination": "/products/business-cards/metallic-foil-business-cards/index.html"
+    },
+    {
+      "source": "/products/business-cards/painted-edge-32pt",
+      "destination": "/products/business-cards/painted-edge-32pt/index.html"
+    },
+    {
+      "source": "/products/business-cards/magnetic-business-cards",
+      "destination": "/products/business-cards/magnetic-business-cards/index.html"
+    },
+    {
+      "source": "/products/business-cards/coupon-card",
+      "destination": "/products/business-cards/coupon-card/index.html"
+    },
+    {
+      "source": "/products/business-cards/scratch-cards",
+      "destination": "/products/business-cards/scratch-cards/index.html"
+    },
+    {
+      "source": "/products/flyers-postcards/flyers",
+      "destination": "/products/flyers-postcards/flyers/index.html"
+    },
+    {
+      "source": "/products/flyers-postcards/postcards",
+      "destination": "/products/flyers-postcards/postcards/index.html"
+    },
+    {
+      "source": "/products/flyers-postcards/brochures",
+      "destination": "/products/flyers-postcards/brochures/index.html"
+    },
+    {
+      "source": "/products/flyers-postcards/door-hangers",
+      "destination": "/products/flyers-postcards/door-hangers/index.html"
+    },
+    {
+      "source": "/products/signs-banners/retractable-banners",
+      "destination": "/products/signs-banners/retractable-banners/index.html"
+    },
+    {
+      "source": "/products/signs-banners/x-frame-signs",
+      "destination": "/products/signs-banners/x-frame-signs/index.html"
+    },
+    {
+      "source": "/products/signs-banners/hanging-banners",
+      "destination": "/products/signs-banners/hanging-banners/index.html"
+    },
+    {
+      "source": "/products/signs-banners/feather-flags",
+      "destination": "/products/signs-banners/feather-flags/index.html"
+    },
+    {
+      "source": "/products/signs-banners/vinyl-banners",
+      "destination": "/products/signs-banners/vinyl-banners/index.html"
+    },
+    {
+      "source": "/products/signs-banners/lawn-signs",
+      "destination": "/products/signs-banners/lawn-signs/index.html"
+    },
+    {
+      "source": "/products/signs-banners/custom-coroplast-sign",
+      "destination": "/products/signs-banners/custom-coroplast-sign/index.html"
+    },
+    {
+      "source": "/products/signs-banners/adhesive-vinyl-sign",
+      "destination": "/products/signs-banners/adhesive-vinyl-sign/index.html"
+    },
+    {
+      "source": "/products/signs-banners/vinyl-window-graphics",
+      "destination": "/products/signs-banners/vinyl-window-graphics/index.html"
+    },
+    {
+      "source": "/products/signs-banners/see-through-perforated-sign",
+      "destination": "/products/signs-banners/see-through-perforated-sign/index.html"
+    },
+    {
+      "source": "/products/signs-banners/backlit-translucent-vinyl",
+      "destination": "/products/signs-banners/backlit-translucent-vinyl/index.html"
+    },
+    {
+      "source": "/products/signs-banners/full-colour-vinyl-decals",
+      "destination": "/products/signs-banners/full-colour-vinyl-decals/index.html"
+    },
+    {
+      "source": "/products/signs-banners/indoor-wallpaper",
+      "destination": "/products/signs-banners/indoor-wallpaper/index.html"
+    },
+    {
+      "source": "/products/signs-banners/polybag-signs",
+      "destination": "/products/signs-banners/polybag-signs/index.html"
+    },
+    {
+      "source": "/products/signs-banners/pole-rigid-sign",
+      "destination": "/products/signs-banners/pole-rigid-sign/index.html"
+    },
+    {
+      "source": "/products/signs-banners/pole-vinyl-sticker",
+      "destination": "/products/signs-banners/pole-vinyl-sticker/index.html"
+    },
+    {
+      "source": "/products/signs-banners/20pt-styrene",
+      "destination": "/products/signs-banners/20pt-styrene/index.html"
+    },
+    {
+      "source": "/products/vehicle-graphics/vehicle-full-wrap",
+      "destination": "/products/vehicle-graphics/vehicle-full-wrap/index.html"
+    },
+    {
+      "source": "/products/vehicle-graphics/vehicle-partial-wrap",
+      "destination": "/products/vehicle-graphics/vehicle-partial-wrap/index.html"
+    },
+    {
+      "source": "/products/vehicle-graphics/vehicle-lettering",
+      "destination": "/products/vehicle-graphics/vehicle-lettering/index.html"
+    },
+    {
+      "source": "/products/vehicle-graphics/vinyl-window-graphics-vehicle",
+      "destination": "/products/vehicle-graphics/vinyl-window-graphics-vehicle/index.html"
+    },
+    {
+      "source": "/products/vehicle-graphics/magnetic-vehicle-signs",
+      "destination": "/products/vehicle-graphics/magnetic-vehicle-signs/index.html"
+    },
+    {
+      "source": "/products/vehicle-graphics/fleet-graphics",
+      "destination": "/products/vehicle-graphics/fleet-graphics/index.html"
+    },
+    {
+      "source": "/products/marketing/booklets",
+      "destination": "/products/marketing/booklets/index.html"
+    },
+    {
+      "source": "/products/marketing/presentation-folders",
+      "destination": "/products/marketing/presentation-folders/index.html"
+    },
+    {
+      "source": "/products/marketing/event-posters",
+      "destination": "/products/marketing/event-posters/index.html"
+    },
+    {
+      "source": "/products/marketing/bookmarks",
+      "destination": "/products/marketing/bookmarks/index.html"
+    },
+    {
+      "source": "/products/marketing/thank-you-card",
+      "destination": "/products/marketing/thank-you-card/index.html"
+    },
+    {
+      "source": "/products/marketing/plastic-cards",
+      "destination": "/products/marketing/plastic-cards/index.html"
+    },
+    {
+      "source": "/products/marketing/digital-sheets",
+      "destination": "/products/marketing/digital-sheets/index.html"
+    },
+    {
+      "source": "/products/stationery/letterheads",
+      "destination": "/products/stationery/letterheads/index.html"
+    },
+    {
+      "source": "/products/stationery/envelopes",
+      "destination": "/products/stationery/envelopes/index.html"
+    },
+    {
+      "source": "/products/stationery/notepads",
+      "destination": "/products/stationery/notepads/index.html"
+    },
+    {
+      "source": "/products/stationery/ncr-forms",
+      "destination": "/products/stationery/ncr-forms/index.html"
+    },
+    {
+      "source": "/products/restaurant/tent-cards",
+      "destination": "/products/restaurant/tent-cards/index.html"
+    },
+    {
+      "source": "/products/restaurant/restaurant-laminated-menu",
+      "destination": "/products/restaurant/restaurant-laminated-menu/index.html"
+    },
+    {
+      "source": "/products/restaurant/restaurant-table-tent-menu",
+      "destination": "/products/restaurant/restaurant-table-tent-menu/index.html"
+    },
+    {
+      "source": "/products/restaurant/leather-booklet-menu",
+      "destination": "/products/restaurant/leather-booklet-menu/index.html"
+    },
+    {
+      "source": "/products/restaurant/restaurant-check-holder",
+      "destination": "/products/restaurant/restaurant-check-holder/index.html"
+    },
+    {
+      "source": "/products/foam-boards/wedding-signs",
+      "destination": "/products/foam-boards/wedding-signs/index.html"
+    },
+    {
+      "source": "/products/foam-boards/baby-shower-signs",
+      "destination": "/products/foam-boards/baby-shower-signs/index.html"
+    },
+    {
+      "source": "/products/foam-boards/seating-chart-signs",
+      "destination": "/products/foam-boards/seating-chart-signs/index.html"
+    },
+    {
+      "source": "/products/foam-boards/event-directional-signs",
+      "destination": "/products/foam-boards/event-directional-signs/index.html"
+    },
+    {
+      "source": "/products/foam-boards/custom-foam-board",
+      "destination": "/products/foam-boards/custom-foam-board/index.html"
+    },
+    {
+      "source": "/products/foam-boards/giant-cheques",
+      "destination": "/products/foam-boards/giant-cheques/index.html"
+    },
+    {
+      "source": "/products/labels-stickers/google-review-sticker",
+      "destination": "/products/labels-stickers/google-review-sticker/index.html"
+    },
+    {
+      "source": "/products/labels-stickers/sheet-stickers",
+      "destination": "/products/labels-stickers/sheet-stickers/index.html"
+    },
+    {
+      "source": "/products/labels-stickers/roll-labels",
+      "destination": "/products/labels-stickers/roll-labels/index.html"
+    },
+    {
+      "source": "/products/labels-stickers/vinyl-roll-labels",
+      "destination": "/products/labels-stickers/vinyl-roll-labels/index.html"
+    },
+    {
+      "source": "/products/labels-stickers/clear-labels",
+      "destination": "/products/labels-stickers/clear-labels/index.html"
+    },
+    {
+      "source": "/products/real-estate/feature-sheets",
+      "destination": "/products/real-estate/feature-sheets/index.html"
+    },
+    {
+      "source": "/products/real-estate/for-sale-sold-signs",
+      "destination": "/products/real-estate/for-sale-sold-signs/index.html"
+    },
+    {
+      "source": "/products/real-estate/realtor-riders",
+      "destination": "/products/real-estate/realtor-riders/index.html"
+    },
+    {
+      "source": "/products/real-estate/open-house-boards",
+      "destination": "/products/real-estate/open-house-boards/index.html"
+    },
+    {
+      "source": "/products/calendars/poster-calendars",
+      "destination": "/products/calendars/poster-calendars/index.html"
+    },
+    {
+      "source": "/products/calendars/tent-calendar",
+      "destination": "/products/calendars/tent-calendar/index.html"
+    },
+    {
+      "source": "/products/calendars/magnetic-calendars",
+      "destination": "/products/calendars/magnetic-calendars/index.html"
+    },
+    {
+      "source": "/products/posters-canvas/paper-posters",
+      "destination": "/products/posters-canvas/paper-posters/index.html"
+    },
+    {
+      "source": "/products/posters-canvas/window-clings",
+      "destination": "/products/posters-canvas/window-clings/index.html"
+    },
+    {
+      "source": "/products/posters-canvas/canvas-roll",
+      "destination": "/products/posters-canvas/canvas-roll/index.html"
+    },
+    {
+      "source": "/window-graphics-toronto",
+      "destination": "/window-graphics-toronto/index.html"
+    },
+    {
+      "source": "/window-graphics-brampton",
+      "destination": "/window-graphics-brampton/index.html"
+    },
+    {
+      "source": "/wallpaper-murals-toronto",
+      "destination": "/wallpaper-murals-toronto/index.html"
+    },
+    {
+      "source": "/wallpaper-murals-oakville",
+      "destination": "/wallpaper-murals-oakville/index.html"
+    },
+    {
+      "source": "/blog/real-estate-sign-regulations-gta",
+      "destination": "/blog/real-estate-sign-regulations-gta/index.html"
+    },
+    {
+      "source": "/blog/vehicle-wrap-winter-durability",
+      "destination": "/blog/vehicle-wrap-winter-durability/index.html"
+    },
+    {
+      "source": "/blog/banner-material-guide",
+      "destination": "/blog/banner-material-guide/index.html"
+    },
+    {
+      "source": "/blog/flyer-distribution-rules-canada",
+      "destination": "/blog/flyer-distribution-rules-canada/index.html"
+    },
+    {
+      "source": "/blog/restaurant-menu-redesign-guide",
+      "destination": "/blog/restaurant-menu-redesign-guide/index.html"
+    },
+    {
+      "source": "/blog/business-card-finishes-guide",
+      "destination": "/blog/business-card-finishes-guide/index.html"
+    },
+    {
+      "source": "/blog/custom-labels-101",
+      "destination": "/blog/custom-labels-101/index.html"
+    },
+    {
+      "source": "/blog/trade-show-display-guide",
+      "destination": "/blog/trade-show-display-guide/index.html"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
