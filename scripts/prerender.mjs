@@ -23,6 +23,15 @@
 // hydration mismatch risk — React just re-renders over the prerendered
 // markup).
 //
+// IMPORTANT: this uses puppeteer-core + @sparticuz/chromium, NOT plain
+// puppeteer. Plain puppeteer's downloaded Chrome binary crashes on Vercel's
+// build image with "libnss3.so: cannot open shared object file" — Vercel's
+// build container is missing several system libraries Chrome needs, and
+// there's no way to apt-get install them during a Vercel build.
+// @sparticuz/chromium ships a self-contained, statically-linked Chromium
+// build made specifically for restricted/serverless environments like this
+// one, so it works without any missing-library issues.
+//
 // IMPORTANT: adding a new product, category, location page, or blog post
 // means vercel.json's rewrites list needs a matching new entry, or that
 // route will 404 in production even though it prerenders fine locally.
@@ -40,7 +49,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { preview } from 'vite';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -156,7 +166,11 @@ async function main() {
   let browser;
   let ok = 0, failed = [];
   try {
-    browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    });
 
     for (const route of routes) {
       const page = await browser.newPage();
