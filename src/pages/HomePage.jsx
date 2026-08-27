@@ -99,9 +99,9 @@ export default function HomePage() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginTop: 18 }} className="hero-trust-grid">
-              {[[ICONS.star(18), '4.9/5', 'Google'], [ICONS.bolt(18), 'Same Day', 'Pickup'], [ICONS.check(18), 'Free Proof', 'Included'], [ICONS.map(18), 'Ontario', 'Wide']].map(([ico, v, l]) => (
+              {[[ICONS.star(18), '4.9/5', 'Google'], [ICONS.bolt(18), 'Same Day', 'Pickup'], [ICONS.check(18), 'Free Proof', 'Included'], ['🍁', 'Proudly', 'Canadian']].map(([ico, v, l]) => (
                 <div key={l} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 10, padding: '14px 8px', textAlign: 'center' }}>
-                  <span style={{ color: 'var(--o)', display: 'flex' }}>{ico}</span>
+                  <span style={{ color: 'var(--o)', display: 'flex', fontSize: typeof ico === 'string' ? 18 : undefined, lineHeight: 1 }}>{ico}</span>
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{v}</div>
                   <div style={{ fontSize: 10, color: 'var(--mu)' }}>{l}</div>
                 </div>
