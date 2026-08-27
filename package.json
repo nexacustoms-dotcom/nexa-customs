@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "chmod +x ./node_modules/.bin/vite || true",
+    "postinstall": "npx puppeteer browsers install chrome || true",
     "build": "vite build",
     "postbuild": "node scripts/prerender.mjs",
     "preview": "vite preview"
