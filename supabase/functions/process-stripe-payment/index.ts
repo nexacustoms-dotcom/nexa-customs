@@ -52,6 +52,8 @@ serve(async (req) => {
       order_number,
       description,
       billing_details,
+      subtotal,        // in cents — pre-tax amount, for record-keeping/metadata
+      tax_amount,      // in cents — tax portion, for record-keeping/metadata
     } = await req.json();
 
     if (!payment_method_id || !amount || amount <= 0) {
@@ -71,9 +73,15 @@ serve(async (req) => {
       'automatic_payment_methods[enabled]': 'true',
       'automatic_payment_methods[allow_redirects]': 'never',
       description: description || `Order ${order_number}`,
+      // Guarantees Stripe always emails a receipt for this payment, regardless
+      // of Dashboard "email customers" settings or billing_details inheritance
+      // quirks — previously this was inconsistent because it wasn't set at all.
+      ...(customer_email ? { receipt_email: customer_email } : {}),
       'metadata[order_number]': order_number || '',
       'metadata[customer_name]': customer_name || '',
       'metadata[customer_email]': customer_email || '',
+      ...(subtotal != null ? { 'metadata[subtotal_cents]': String(subtotal) } : {}),
+      ...(tax_amount != null ? { 'metadata[tax_cents]': String(tax_amount) } : {}),
     });
     // Note: billing_details are already attached to the PaymentMethod when created
     // on the frontend via createPaymentMethod(). Do NOT use payment_method_data here

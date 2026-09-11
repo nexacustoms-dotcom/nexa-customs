@@ -62,7 +62,7 @@ const require = createRequire(import.meta.url);
 // ── 1. Load categories + products straight from the same file the app uses ──
 function loadProductData() {
   let src = readFileSync(join(ROOT, 'src/data/products.js'), 'utf8');
-  src = src.replace(/export const/g, 'const') + ';module.exports = { DEFAULT_CATS, DEFAULT_PRODS };';
+  src = src.replace(/export const/g, 'const').replace(/export function/g, 'function') + ';module.exports = { DEFAULT_CATS, DEFAULT_PRODS };';
   const tmp = join(ROOT, '.prerender-products.cjs');
   writeFileSync(tmp, src);
   const mod = require(tmp);

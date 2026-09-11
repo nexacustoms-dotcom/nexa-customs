@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, sendEmailJS, imgUrl } from '../context/AppContext';
+import { getTaxInfo, DEFAULT_TAX } from '../data/products';
 import ICONS from '../components/Icons';
 
 // Loaded only when a customer actually uploads an image in the artwork step —
@@ -11,7 +12,10 @@ const BackgroundRemover = lazy(() => import('../components/BackgroundRemover'));
 export function CartPage() {
   const { cart, removeFromCart, pricing, cartSubtotal } = useApp();
   const navigate = useNavigate();
-  const hst = +(cartSubtotal * pricing.hst).toFixed(2);
+  // Province isn't known yet at this step (chosen during checkout) — show
+  // GST-only as a conservative estimate; the real, correct rate is applied
+  // once the customer enters their shipping province at checkout.
+  const hst = +(cartSubtotal * DEFAULT_TAX.rate).toFixed(2);
   const total = +(cartSubtotal + hst).toFixed(2);
 
   if (cart.length === 0) return (
@@ -58,7 +62,7 @@ export function CartPage() {
             <div className="D" style={{ fontSize: 20, marginBottom: 16 }}>Order Summary</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--mu)', marginBottom: 7 }}><span>Subtotal</span><span>${cartSubtotal.toFixed(2)}</span></div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--mu)', marginBottom: 7 }}><span>Shipping</span><span style={{ color: 'var(--gr)' }}>Calculated at checkout</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--mu)', marginBottom: 7 }}><span>HST (13%)</span><span>${hst.toFixed(2)}</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--mu)', marginBottom: 7 }}><span>Tax (est.)</span><span>${hst.toFixed(2)}</span></div>
             <div style={{ height: 1, background: 'var(--bd)', margin: '12px 0' }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 700, fontSize: 14 }}>Est. Total</span>
@@ -76,10 +80,20 @@ export function CartPage() {
 
 // ── CHECKOUT ──────────────────────────────────────────────────────────────────
 export function CheckoutPage() {
-  const { cart, cartSubtotal, pricing, clearCart, showToast, ls, cfg, store } = useApp();
+  const { cart, cartSubtotal, pricing, clearCart, showToast, ls, cfg, store, prods } = useApp();
   const navigate = useNavigate();
 
   useEffect(() => { if (cart.length === 0) navigate('/products'); }, [cart.length]);
+
+  // Builds an order-summary string that includes each item's selected options
+  // (finish, size, grommets, hemming, etc.) — not just quantity and name.
+  // Used everywhere an order gets saved or a notification gets sent, so those
+  // selections are never silently dropped. Options within one item are
+  // joined with ' + ' (not ', ') since Admin's print view does a naive
+  // split(',') on this field to separate different cart items.
+  function buildItemsStr() {
+    return cart.map(i => `${i.qty}x ${i.name}${i.opts?.length ? ' (' + i.opts.join(' + ') + ')' : ''}`).join(', ');
+  }
 
   useEffect(() => {
     if (cart.length > 0 && typeof window.gtag === 'function') {
@@ -113,11 +127,36 @@ export function CheckoutPage() {
   const stripeRef = useRef(null);
   const cardRef = useRef(null);
 
-  const shipCost = delivery === 'post' ? pricing.shipping_post : delivery === 'courier' ? pricing.shipping_courier : 0;
+  // Cart items don't carry the full product record (just id/name/price/qty),
+  // so look each one up to check its shipping rules. LabelsStickers items
+  // have a timestamp appended to their id ('prodid-1234567'), so fall back
+  // to a prefix match for those.
+  function findProductFor(item) {
+    return prods.find(p => p.id === item.id) || prods.find(p => p.cat === item.cat && item.id.startsWith(p.id + '-'));
+  }
+  const cartHasPickupOnlyItem = cart.some(item => findProductFor(item)?.pickupOnly);
+  const pickupOnlyItemNames = cart.filter(item => findProductFor(item)?.pickupOnly).map(item => item.name);
+  const shipSurcharge = cart.reduce((sum, item) => {
+    const prod = findProductFor(item);
+    if (!prod) return sum;
+    return sum + (prod.shipSurcharge || 0) + (prod.shipSurchargePerUnit || 0) * (item.qty || 1);
+  }, 0);
+
+  // Pickup-only items force the whole order to pickup — can't split shipping
+  // methods across items in a single order with this checkout flow.
+  useEffect(() => {
+    if (cartHasPickupOnlyItem && delivery !== 'pickup') setDelivery('pickup');
+  }, [cartHasPickupOnlyItem]);
+
+  const shipCost = delivery === 'pickup' ? 0 : (delivery === 'post' ? pricing.shipping_post : pricing.shipping_courier) + shipSurcharge;
   // Rush/express fee is now baked into item prices at the product configurator — no global surcharge
   const rushFee = 0;
   const subtotal = +(cartSubtotal + shipCost).toFixed(2);
-  const hst = +(subtotal * pricing.hst).toFixed(2);
+  // Pickup orders are always taxed at Ontario's rate (goods supplied/picked up
+  // in Mississauga regardless of the customer's home province). Shipped orders
+  // are taxed based on the destination province the customer enters below.
+  const taxInfo = getTaxInfo(delivery === 'pickup' ? 'ON' : shipping.province);
+  const hst = +(subtotal * taxInfo.rate).toFixed(2);
   const total = +(subtotal + hst).toFixed(2);
 
   useEffect(() => {
@@ -274,7 +313,7 @@ export function CheckoutPage() {
 
   async function saveOrder(no, pmId = '') {
     const supaUrl = cfg.supaUrl(); const supaKey = cfg.supaKey();
-    const itemsStr = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
+    const itemsStr = buildItemsStr();
     if (supaUrl && supaKey && supaKey.length > 10) {
       const orderData = {
         id: no,
@@ -332,7 +371,7 @@ export function CheckoutPage() {
       const artInfo = artworkFiles.length > 0
         ? '\n\nFILES:\n' + artworkFiles.map(f => f.url ? `${f.name}: ${f.url}` : `${f.name} (upload failed — customer may email this separately)`).join('\n')
         : '';
-      const itemsStr2 = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
+      const itemsStr2 = buildItemsStr();
       fetch(`https://api.telegram.org/bot${tok}/sendMessage?chat_id=${cid}&text=${encodeURIComponent(`NEW ORDER ${no} | ${(form.fn + ' ' + form.ln).trim()} | ${form.email} | ${form.phone} | ${itemsStr2} | $${total.toFixed(2)} | ${payMethod}${artInfo}`)}`).catch(() => {});
     }
     const ejsSvc = cfg.ejsSvc(); const ejsTpl = cfg.ejsTpl(); const ejsKey = cfg.ejsKey(); const ejsTo = cfg.ejsTo();
@@ -347,14 +386,14 @@ export function CheckoutPage() {
         customer_email: form.email,
         customer_phone: form.phone || 'N/A',
         company:        form.company || 'N/A',
-        order_items:    cart.map(i => `${i.qty}x ${i.name}`).join(', '),
+        order_items:    buildItemsStr(),
         total:          '$' + total.toFixed(2),
         delivery:       delivery === 'pickup' ? 'Free Pickup — Mississauga' : delivery === 'post' ? `${store?.shipping_carrier || 'Canada Post'} — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : `${store?.courier_carrier_name || 'Courier'} — ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}`,
         turnaround:     cart.map(i => i.turnaround || 'standard').join(', '),
         payment_method: payMethod,
         notes:          (form.notes || '') + (delivery !== 'pickup' ? `\nShip To: ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : ''),
         subject:        `New Order ${no} — ${(form.fn + ' ' + form.ln).trim()}`,
-        message:        `New order!\n\nOrder: ${no}\nCustomer: ${(form.fn + ' ' + form.ln).trim()}\nEmail: ${form.email}\nPhone: ${form.phone}\nItems: ${cart.map(i => `${i.qty}x ${i.name}`).join(', ')}\nTotal: $${total.toFixed(2)}\nDelivery: ${delivery}${delivery !== 'pickup' ? `\nShip To: ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : ' (Pickup at 6033 Shawson Dr)'}\nPayment: ${payMethod}`,
+        message:        `New order!\n\nOrder: ${no}\nCustomer: ${(form.fn + ' ' + form.ln).trim()}\nEmail: ${form.email}\nPhone: ${form.phone}\nItems: ${buildItemsStr()}\nTotal: $${total.toFixed(2)}\nDelivery: ${delivery}${delivery !== 'pickup' ? `\nShip To: ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : ' (Pickup at 6033 Shawson Dr)'}\nPayment: ${payMethod}`,
       };
       sendEmailJS(ejsSvc, ejsTpl, ejsKey, p)
         .then(() => console.log('Order email sent'))
@@ -417,7 +456,7 @@ export function CheckoutPage() {
         [`Subtotal (${cart.reduce((s,i)=>s+i.qty,0)} items)`, `$${cartSubtotal.toFixed(2)}`, false],
         shipCost > 0 ? ['Shipping', `$${shipCost.toFixed(2)}`, false] : null,
         rushFee > 0 ? ['Rush/Express fee', `$${rushFee.toFixed(2)}`, false] : null,
-        [`HST (${(pricing.hst * 100).toFixed(0)}%)`, `$${hst.toFixed(2)}`, false],
+        [taxInfo.label, `$${hst.toFixed(2)}`, false],
         ['Order Total', `$${total.toFixed(2)}`, true],
       ].filter(Boolean);
       const breakdownHtml = breakdownRows.map(([label, val, bold]) => `<tr>
@@ -456,6 +495,7 @@ export function CheckoutPage() {
 
   async function handlePlace() {
     if (cart.length === 0) { showToast('Your cart is empty'); return; }
+    if (cartHasPickupOnlyItem && delivery !== 'pickup') { showToast('This order contains a pickup-only item — please select pickup'); return; }
     const no = 'NCX-' + Math.floor(10000 + Math.random() * 90000);
     setPlacing(true);
     setStripeErr('');
@@ -488,7 +528,7 @@ export function CheckoutPage() {
 
           // Step 2 — actually charge via Edge Function
           const amountInCents = Math.round(total * 100);
-          const itemsStr = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
+          const itemsStr = buildItemsStr();
           const edgeUrl = `${cfg.supaUrl()}/functions/v1/process-stripe-payment`;
           let chargeData = {};
           try {
@@ -506,7 +546,9 @@ export function CheckoutPage() {
                 customer_name: (form.fn + ' ' + form.ln).trim(),
                 customer_email: form.email,
                 order_number: no,
-                description: `Nexa Customs ${no} — ${itemsStr.slice(0, 100)}`,
+                description: `Nexa Customs ${no} — ${itemsStr.slice(0, 100)} | Subtotal: $${subtotal.toFixed(2)} + ${taxInfo.label}: $${hst.toFixed(2)} = $${total.toFixed(2)} CAD`,
+                subtotal: Math.round(subtotal * 100),
+                tax_amount: Math.round(hst * 100),
                 billing_details: {
                   name: billingName,
                   email: form.email,
@@ -657,11 +699,17 @@ export function CheckoutPage() {
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 26, marginBottom: 14 }}>
                   <div className="D" style={{ fontSize: 22, marginBottom: 4 }}>Delivery Method</div>
                   <p style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 20, lineHeight: 1.6 }}>Choose how you want to receive your order.</p>
+                  {cartHasPickupOnlyItem && (
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(249,115,22,.08)', border: '1px solid var(--o)', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontSize: 12, color: 'var(--tx)' }}>
+                      {ICONS.store ? ICONS.store(14) : null}
+                      <span><strong>{pickupOnlyItemNames.join(', ')}</strong> can only be picked up in-store, so this order is pickup-only. Remove that item from your cart if you need shipping.</span>
+                    </div>
+                  )}
                   {[
                     { id: 'pickup', ico: ICONS.store(18), label: 'Free Local Pickup', sub: '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM', price: 'Free', tag: 'Most Popular' },
-                    { id: 'post',   ico: ICONS.mailbox(18), label: `${store?.shipping_carrier || 'Canada Post'} Standard`, sub: '3–7 business days · Tracking included', price: `$${pricing.shipping_post.toFixed(2)}`, tag: '' },
-                    { id: 'courier',ico: ICONS.rocket(18), label: `${store?.courier_carrier_name || 'Courier'} Express`, sub: '1–2 business days · Fastest option', price: `$${pricing.shipping_courier.toFixed(2)}`, tag: 'Fastest' },
-                  ].map(opt => (
+                    { id: 'post',   ico: ICONS.mailbox(18), label: `${store?.shipping_carrier || 'Canada Post'} Standard`, sub: '3–7 business days · Tracking included', price: `$${(pricing.shipping_post + shipSurcharge).toFixed(2)}`, tag: '' },
+                    { id: 'courier',ico: ICONS.rocket(18), label: `${store?.courier_carrier_name || 'Courier'} Express`, sub: '1–2 business days · Fastest option', price: `$${(pricing.shipping_courier + shipSurcharge).toFixed(2)}`, tag: 'Fastest' },
+                  ].filter(opt => opt.id === 'pickup' || !cartHasPickupOnlyItem).map(opt => (
                     <div key={opt.id} onClick={() => setDelivery(opt.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, background: delivery === opt.id ? 'rgba(249,115,22,.08)' : 'var(--s2)', border: `2px solid ${delivery === opt.id ? 'var(--o)' : 'var(--bd)'}`, borderRadius: 12, padding: '14px 16px', cursor: 'pointer', transition: 'all .18s', marginBottom: 10 }}>
                       {/* Radio */}
                       <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${delivery === opt.id ? 'var(--o)' : 'var(--bd)'}`, background: delivery === opt.id ? 'var(--o)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all .15s' }}>
@@ -1020,7 +1068,7 @@ export function CheckoutPage() {
                 ))}
               </div>
               <div style={{ height: 1, background: 'var(--bd)', marginBottom: 10 }} />
-              {[[`Subtotal`, `$${cartSubtotal.toFixed(2)}`], shipCost > 0 ? [`Shipping`, `$${shipCost.toFixed(2)}`] : null, rushFee > 0 ? [`${turnaround} fee`, `$${rushFee.toFixed(2)}`] : null, [`HST (13%)`, `$${hst.toFixed(2)}`]].filter(Boolean).map(([l, v]) => (
+              {[[`Subtotal`, `$${cartSubtotal.toFixed(2)}`], shipCost > 0 ? [`Shipping`, `$${shipCost.toFixed(2)}`] : null, rushFee > 0 ? [`${turnaround} fee`, `$${rushFee.toFixed(2)}`] : null, [taxInfo.label, `$${hst.toFixed(2)}`]].filter(Boolean).map(([l, v]) => (
                 <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--mu)', marginBottom: 6 }}><span>{l}</span><span>{v}</span></div>
               ))}
               <div style={{ height: 1, background: 'var(--bd)', margin: '10px 0' }} />

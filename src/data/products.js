@@ -6583,3 +6583,23 @@ export const DEFAULT_PRICING = {
   rush_pct: 0.25,
   express_pct: 0.50,
 };
+
+// Canadian sales tax by destination province. Ontario and the other HST
+// provinces are billed at their harmonized rate (GST+PST combined under one
+// federal registration). Every other province defaults to GST-only (5%) —
+// PST/QST collection for provinces like BC, SK, MB, QC requires separate
+// provincial registration, which should be confirmed with an accountant
+// before enabling here. Pickup orders always use Ontario's rate since the
+// goods are supplied/delivered in Ontario regardless of the customer's
+// home province.
+export const TAX_RATES = {
+  ON: { rate: 0.13, label: 'HST (13%)' },
+  NS: { rate: 0.15, label: 'HST (15%)' },
+  NB: { rate: 0.15, label: 'HST (15%)' },
+  NL: { rate: 0.15, label: 'HST (15%)' },
+  PE: { rate: 0.15, label: 'HST (15%)' },
+};
+export const DEFAULT_TAX = { rate: 0.05, label: 'GST (5%)' };
+export function getTaxInfo(province) {
+  return TAX_RATES[province] || DEFAULT_TAX;
+}

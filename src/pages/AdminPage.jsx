@@ -1491,6 +1491,45 @@ function FullProductEditor({ prod, onSave, onCancel }) {
         </div>
       </div>
 
+      {/* ── Shipping ── */}
+      <div className="aform-section" style={{ marginBottom:18 }}>
+        <div className="aform-title">📦 Shipping</div>
+        <div onClick={() => upd('pickupOnly')(!p.pickupOnly)}
+          style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px', borderRadius:10,
+            border:'2px solid '+(p.pickupOnly?'var(--o)':'var(--bd)'),
+            background:p.pickupOnly?'rgba(249,115,22,.08)':'var(--s2)',
+            cursor:'pointer', userSelect:'none', width:'fit-content', marginBottom:14 }}>
+          <span style={{ fontWeight:700, fontSize:13 }}>Pickup Only</span>
+          <span style={{ fontSize:11, color:'var(--mu)' }}>can't be shipped — Post/Courier hidden at checkout if in cart</span>
+          <span style={{ width:22, height:22, borderRadius:6,
+            background:p.pickupOnly?'var(--o)':'var(--bd)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            fontSize:12, color:p.pickupOnly?'#000':'var(--mu)', fontWeight:800 }}>
+            {p.pickupOnly ? '✓' : '✗'}
+          </span>
+        </div>
+
+        {!p.pickupOnly && (
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            <div className="aform-grp">
+              <label className="aform-lbl">Extra Shipping — Flat ($ once per order if item is in cart)</label>
+              <input type="number" className="ainp" min="0" step="0.01" placeholder="e.g. 15.00"
+                value={p.shipSurcharge || ''}
+                onChange={e => upd('shipSurcharge')(parseFloat(e.target.value) || 0)} />
+            </div>
+            <div className="aform-grp">
+              <label className="aform-lbl">Extra Shipping — Per Unit ($ × quantity ordered)</label>
+              <input type="number" className="ainp" min="0" step="0.01" placeholder="e.g. 2.50"
+                value={p.shipSurchargePerUnit || ''}
+                onChange={e => upd('shipSurchargePerUnit')(parseFloat(e.target.value) || 0)} />
+            </div>
+            <div style={{ gridColumn:'1 / -1', fontSize:10, color:'var(--mu)' }}>
+              Use one or the other, not both. Leave at 0 for normal flat-rate shipping.
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* ── Label configurator ── */}
       {p.label_configurator && (
         <div className="aform-section" style={{ marginBottom:18 }}>
