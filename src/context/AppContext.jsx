@@ -114,6 +114,10 @@ function mergeOverrides(prods, overrides) {
       // Specs & extended description
       specs:          o.specs           !== undefined ? o.specs           : p.specs,
       long_desc:      o.long_desc       !== undefined ? o.long_desc       : p.long_desc,
+      // Shipping
+      pickupOnly:            o.pickupOnly           !== undefined ? o.pickupOnly           : p.pickupOnly,
+      shipSurcharge:          o.shipSurcharge         !== undefined ? o.shipSurcharge         : p.shipSurcharge,
+      shipSurchargePerUnit:   o.shipSurchargePerUnit  !== undefined ? o.shipSurchargePerUnit  : p.shipSurchargePerUnit,
     };
   });
   // Brand-new products created in Admin won't exist in the base default list —
@@ -269,6 +273,10 @@ export function AppProvider({ children }) {
         lbl_stocks:         p.lbl_stocks,
         lbl_ink:            p.lbl_ink,
         lbl_finishing:      p.lbl_finishing,
+        // Shipping
+        pickupOnly:            p.pickupOnly || false,
+        shipSurcharge:         p.shipSurcharge || 0,
+        shipSurchargePerUnit:  p.shipSurchargePerUnit || 0,
       }));
       ls.set('nxt_pricing', overrides);
       supaUpsert('site_config', { id: 'products', data: overrides, updated_at: new Date().toISOString() });
