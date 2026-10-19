@@ -1103,9 +1103,16 @@ function EmailsTab() {
 
   function testTelegram() {
     if (!v.tgToken||!v.tgChat) { showToast('Enter Bot Token and Chat ID first'); return; }
-    fetch(`https://api.telegram.org/bot${v.tgToken}/sendMessage?chat_id=${v.tgChat}&text=${encodeURIComponent('✅ Test from Nexa Customs! Notifications working.')}`)
-      .then(r=>r.json()).then(d => d.ok ? showToast('✅ Test sent to Telegram!') : showToast('❌ '+(d.description||'check token/chat ID')))
-      .catch(() => showToast('❌ Network error'));
+    const ids = v.tgChat.split(',').map(s => s.trim()).filter(Boolean);
+    Promise.all(ids.map(id =>
+      fetch(`https://api.telegram.org/bot${v.tgToken}/sendMessage?chat_id=${id}&text=${encodeURIComponent('✅ Test from Nexa Customs! Notifications working.')}`)
+        .then(r => r.json()).then(d => ({ id, ok: d.ok, err: d.description }))
+        .catch(() => ({ id, ok: false, err: 'Network error' }))
+    )).then(results => {
+      const failed = results.filter(r => !r.ok);
+      if (failed.length === 0) showToast(`✅ Test sent to all ${results.length} number(s)!`);
+      else showToast(`❌ Failed for ${failed.map(f => f.id).join(', ')} — check those chat ID(s)`);
+    });
   }
 
   async function testEmail() {
@@ -1140,12 +1147,12 @@ function EmailsTab() {
         <div className="acard-body">
           <div className="acard-steps">
             <div className="astep"><span className="astep-n">1</span><span>Open Telegram → search <code>@BotFather</code> → send <code>/newbot</code> → copy the <strong>Bot Token</strong></span></div>
-            <div className="astep"><span className="astep-n">2</span><span>Search <code>@userinfobot</code> → send any message → copy your <strong>Chat ID</strong></span></div>
+            <div className="astep"><span className="astep-n">2</span><span>Search <code>@userinfobot</code> → send any message → copy your <strong>Chat ID</strong>. For a second phone/person, have them do the same with their own Telegram and add both IDs separated by a comma.</span></div>
             <div className="astep"><span className="astep-n">3</span><span>Paste below → Save → click Send Test to verify it works</span></div>
           </div>
           <div className="aform-row">
             <div className="aform-grp"><label className="aform-lbl">Bot Token</label><input className="ainp" value={v.tgToken} onChange={upd('tgToken')} placeholder="123456789:ABCdef…" /></div>
-            <div className="aform-grp"><label className="aform-lbl">Your Chat ID</label><input className="ainp" value={v.tgChat} onChange={upd('tgChat')} placeholder="123456789" /></div>
+            <div className="aform-grp"><label className="aform-lbl">Chat ID(s) — separate multiple with a comma</label><input className="ainp" value={v.tgChat} onChange={upd('tgChat')} placeholder="123456789, 987654321" /></div>
           </div>
           <div style={{ display:'flex', gap:10, marginTop:14 }}>
             <button className="abtn abtn-add" onClick={save} style={{ flex:1 }}>💾 Save</button>

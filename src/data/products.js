@@ -6594,7 +6594,7 @@ export const DEFAULT_PRICING = {
 // home province.
 export const TAX_RATES = {
   ON: { rate: 0.13, label: 'HST (13%)' },
-  NS: { rate: 0.15, label: 'HST (15%)' },
+  NS: { rate: 0.14, label: 'HST (14%)' },
   NB: { rate: 0.15, label: 'HST (15%)' },
   NL: { rate: 0.15, label: 'HST (15%)' },
   PE: { rate: 0.15, label: 'HST (15%)' },

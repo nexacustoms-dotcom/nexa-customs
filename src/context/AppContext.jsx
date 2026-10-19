@@ -49,6 +49,18 @@ export async function sendEmailJS(svc, tpl, key, params) {
   return true;
 }
 
+// Sends a Telegram message to every chat ID configured (comma-separated in
+// Admin's Chat ID field), so multiple phones/people can get order alerts.
+// Fires all sends in parallel and never throws — a bad chat ID shouldn't
+// block placing the order, same as the previous single-recipient behaviour.
+export function sendTelegram(token, chatIdsStr, text) {
+  if (!token || !chatIdsStr) return;
+  const ids = chatIdsStr.split(',').map(s => s.trim()).filter(Boolean);
+  ids.forEach(id => {
+    fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${id}&text=${encodeURIComponent(text)}`).catch(() => {});
+  });
+}
+
 function isSupaReady() {
   return cfg.supaUrl().length > 10 && cfg.supaKey().length > 10;
 }

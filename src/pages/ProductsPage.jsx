@@ -52,9 +52,9 @@ export default function ProductsPage() {
             </div>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 10 }}>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--mu)', padding: '4px 8px 10px', borderBottom: '1px solid var(--bd)', marginBottom: 4 }}>Categories</div>
-              <SidebarItem label="All Products" count={prods.length} active={activeCat === 'all'} onClick={() => handleCatClick('all')} />
+              <SidebarItem label="All Products" count={prods.filter(p => !p.disabled).length} active={activeCat === 'all'} onClick={() => handleCatClick('all')} />
               {cats.map(c => (
-                <SidebarItem key={c.id} label={c.l} img={c.img} count={prods.filter(p => p.cat === c.id).length} active={activeCat === c.id} onClick={() => handleCatClick(c.id)} />
+                <SidebarItem key={c.id} label={c.l} img={c.img} count={prods.filter(p => p.cat === c.id && !p.disabled).length} active={activeCat === c.id} onClick={() => handleCatClick(c.id)} />
               ))}
             </div>
           </div>

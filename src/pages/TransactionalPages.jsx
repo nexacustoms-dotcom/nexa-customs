@@ -1,12 +1,41 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp, sendEmailJS, imgUrl } from '../context/AppContext';
+import { useApp, sendEmailJS, sendTelegram, imgUrl } from '../context/AppContext';
 import { getTaxInfo, DEFAULT_TAX } from '../data/products';
 import ICONS from '../components/Icons';
 
 // Loaded only when a customer actually uploads an image in the artwork step —
 // keeps this off the initial bundle for every other page on the site.
 const BackgroundRemover = lazy(() => import('../components/BackgroundRemover'));
+
+// Turns a customer's own filename into a storage-safe name. Keeps what they
+// called it ("front", "back", "logo-final") but strips characters that break
+// URLs (spaces, brackets, accents, slashes).
+function safeFileName(name) {
+  const dot = name.lastIndexOf('.');
+  const ext = ((dot > 0 ? name.slice(dot + 1) : '') || 'pdf').toLowerCase().replace(/[^a-z0-9]/g, '') || 'pdf';
+  const base = (dot > 0 ? name.slice(0, dot) : name)
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9._-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^[_.-]+|[_.-]+$/g, '')
+    .slice(0, 80) || 'artwork';
+  return { base, ext };
+}
+// Unique name within one order's folder, so two files both called "front.png"
+// don't overwrite each other.
+function uniqueFileName(originalName, used) {
+  const { base, ext } = safeFileName(originalName);
+  let name = `${base}.${ext}`, i = 2;
+  while (used.has(name.toLowerCase())) name = `${base}-${i++}.${ext}`;
+  used.add(name.toLowerCase());
+  return name;
+}
+// Today's date in Toronto (YYYY-MM-DD) — uploads are grouped by day so they
+// sort chronologically in Supabase.
+function torontoDate() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+}
 
 // ── CART ──────────────────────────────────────────────────────────────────────
 export function CartPage() {
@@ -123,6 +152,10 @@ export function CheckoutPage() {
     address: '', city: 'Mississauga',
     province: 'ON', postal: '', country: 'Canada',
   });
+  // Order number is created as soon as checkout opens (not when the order is
+  // placed) so uploaded artwork can be filed under it right away.
+  const [orderNo] = useState(() => 'NCX-' + Math.floor(10000 + Math.random() * 90000));
+  const artworkNamesRef = useRef(new Set());
   const artworkRef = useRef(null);
   const stripeRef = useRef(null);
   const cardRef = useRef(null);
@@ -241,11 +274,11 @@ export function CheckoutPage() {
   }
   function goBack() { setStep(s => Math.max(s - 1, 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
-  async function uploadArtwork(file, orderNo) {
+  async function uploadArtwork(file) {
     const supaUrl = cfg.supaUrl(); const supaKey = cfg.supaKey();
     if (!supaUrl || !supaKey || supaKey.length < 10) return null;
-    const ext = file.name.split('.').pop().toLowerCase() || 'pdf';
-    const safeName = `artwork/${orderNo}-${Date.now()}.${ext}`;
+    // artwork/<date>/<order number>/<customer's own filename>
+    const safeName = `artwork/${torontoDate()}/${orderNo}/${uniqueFileName(file.name, artworkNamesRef.current)}`;
     try {
       const res = await fetch(`${supaUrl}/storage/v1/object/nexa-media/${safeName}`, {
         method: 'POST', headers: { apikey: supaKey, Authorization: `Bearer ${supaKey}`, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' }, body: file,
@@ -277,10 +310,9 @@ export function CheckoutPage() {
 
     if (others.length) {
       setArtworkUploading(true);
-      const tempNo = 'TEMP-' + Date.now();
       const uploaded = [];
       for (const file of others) {
-        const url = await uploadArtwork(file, tempNo);
+        const url = await uploadArtwork(file);
         uploaded.push({ name: file.name, size: file.size, url, file });
       }
       setArtworkUploading(false);
@@ -304,8 +336,7 @@ export function CheckoutPage() {
   async function finishImageUpload(finalFile) {
     setActiveImage(null);
     setArtworkUploading(true);
-    const tempNo = 'TEMP-' + Date.now();
-    const url = await uploadArtwork(finalFile, tempNo);
+    const url = await uploadArtwork(finalFile);
     setArtworkUploading(false);
     setArtworkFiles(prev => [...prev, { name: finalFile.name, size: finalFile.size, url, file: finalFile }]);
     showToast(url ? `${finalFile.name} uploaded!` : 'Upload failed — email files after ordering');
@@ -372,7 +403,7 @@ export function CheckoutPage() {
         ? '\n\nFILES:\n' + artworkFiles.map(f => f.url ? `${f.name}: ${f.url}` : `${f.name} (upload failed — customer may email this separately)`).join('\n')
         : '';
       const itemsStr2 = buildItemsStr();
-      fetch(`https://api.telegram.org/bot${tok}/sendMessage?chat_id=${cid}&text=${encodeURIComponent(`NEW ORDER ${no} | ${(form.fn + ' ' + form.ln).trim()} | ${form.email} | ${form.phone} | ${itemsStr2} | $${total.toFixed(2)} | ${payMethod}${artInfo}`)}`).catch(() => {});
+      sendTelegram(tok, cid, `NEW ORDER ${no} | ${(form.fn + ' ' + form.ln).trim()} | ${form.email} | ${form.phone} | ${itemsStr2} | $${total.toFixed(2)} | ${payMethod}${artInfo}`);
     }
     const ejsSvc = cfg.ejsSvc(); const ejsTpl = cfg.ejsTpl(); const ejsKey = cfg.ejsKey(); const ejsTo = cfg.ejsTo();
     if (ejsSvc && ejsTpl && ejsKey) {
@@ -496,7 +527,7 @@ export function CheckoutPage() {
   async function handlePlace() {
     if (cart.length === 0) { showToast('Your cart is empty'); return; }
     if (cartHasPickupOnlyItem && delivery !== 'pickup') { showToast('This order contains a pickup-only item — please select pickup'); return; }
-    const no = 'NCX-' + Math.floor(10000 + Math.random() * 90000);
+    const no = orderNo;
     setPlacing(true);
     setStripeErr('');
     try {
@@ -1166,13 +1197,14 @@ export function QuotePage() {
   const [uploading, setUploading] = useState(false);
   const upd = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
-  async function uploadQuoteFile(file) {
+  async function uploadQuoteFile(file, quoteId) {
     if (!file) return null;
     const supaUrl = cfg.supaUrl(); const supaKey = cfg.supaKey();
     if (!supaUrl || !supaKey) return null;
     setUploading(true);
-    const ext = file.name.split('.').pop().toLowerCase();
-    const fname = 'quotes/' + Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+    const { base, ext } = safeFileName(file.name);
+    // quotes/<date>/<quote number>/<customer's own filename>
+    const fname = `quotes/${torontoDate()}/${quoteId}/${base}.${ext}`;
     try {
       const res = await fetch(supaUrl + '/storage/v1/object/nexa-media/' + fname, {
         method: 'POST',
@@ -1190,7 +1222,7 @@ export function QuotePage() {
     if (!form.fname || !form.email || !form.desc) { showToast('Please fill in required fields'); return; }
     setSending(true);
     const id = 'QUO-' + Math.floor(10000 + Math.random() * 90000);
-    const fileUrl = quoteFile ? await uploadQuoteFile(quoteFile) : null;
+    const fileUrl = quoteFile ? await uploadQuoteFile(quoteFile, id) : null;
 
     // Save to Supabase
     const supaUrl = cfg.supaUrl(); const supaKey = cfg.supaKey();
@@ -1205,7 +1237,7 @@ export function QuotePage() {
     // Telegram
     const tok = cfg.tgToken(); const cid = cfg.tgChat();
     if (tok && cid) {
-      fetch(`https://api.telegram.org/bot${tok}/sendMessage?chat_id=${cid}&text=${encodeURIComponent(`📋 QUOTE REQUEST\n\nName: ${form.fname} ${form.lname}\nCompany: ${form.company || 'N/A'}\nEmail: ${form.email}\nPhone: ${form.phone || 'N/A'}\nCategory: ${form.cat}\nQty: ${form.qty || 'N/A'}\nDeadline: ${form.deadline || 'N/A'}\nFile: ${fileUrl || 'None'}\n\n${form.desc.slice(0, 200)}`)}`).catch(() => {});
+      sendTelegram(tok, cid, `📋 QUOTE REQUEST\n\nName: ${form.fname} ${form.lname}\nCompany: ${form.company || 'N/A'}\nEmail: ${form.email}\nPhone: ${form.phone || 'N/A'}\nCategory: ${form.cat}\nQty: ${form.qty || 'N/A'}\nDeadline: ${form.deadline || 'N/A'}\nFile: ${fileUrl || 'None'}\n\n${form.desc.slice(0, 200)}`);
     }
 
     // EmailJS
