@@ -204,6 +204,25 @@ export function Footer() {
           </div>
         </div>
 
+        {/* Same-day printing — real links so search engines can follow them */}
+        <div style={{ borderTop: '1px solid var(--bd)', padding: '16px 0' }}>
+          <div style={{ fontSize: 10, color: 'var(--o)', marginBottom: 8, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase' }}>Same-Day Printing in Mississauga & the GTA</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 18px', fontSize: 12 }}>
+            {[['Same-Day Business Cards','/same-day-business-cards-mississauga'],['Same-Day Flyers','/same-day-flyers-mississauga'],['Same-Day Postcards','/same-day-postcards-mississauga'],['Same-Day Door Hangers','/same-day-door-hangers-mississauga'],['Next-Day Brochures','/next-day-brochures-mississauga']].map(([l, h]) => (
+              <a key={h} href={h} onClick={e => { if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); navigate(h); window.scrollTo(0, 0); } }} style={{ color: 'var(--mu)', textDecoration: 'none' }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--tx)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--mu)'}
+              >{l}</a>
+            ))}
+            {[['Brampton','/same-day-printing-brampton'],['Oakville','/same-day-printing-oakville'],['Vaughan','/same-day-printing-vaughan'],['Etobicoke','/same-day-printing-etobicoke'],['Toronto','/same-day-printing-toronto']].map(([l, h]) => (
+              <a key={h} href={h} onClick={e => { if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); navigate(h); window.scrollTo(0, 0); } }} style={{ color: 'var(--mu)', textDecoration: 'none' }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--tx)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--mu)'}
+              >Printing {l}</a>
+            ))}
+          </div>
+        </div>
+
         {/* GTA Cities — SEO row (single text node = minimal DOM) */}
         <div style={{ borderTop: '1px solid var(--bd)', padding: '16px 0' }}>
           <div style={{ fontSize: 10, color: 'var(--mu)', marginBottom: 7, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>Serving GTA — Free Pickup · Canada-Wide Shipping</div>

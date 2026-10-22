@@ -35,7 +35,7 @@ export default function ProductsPage() {
           <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,58px)', marginBottom: 8 }}>
             {activeCat === 'all' ? 'All Products' : (cats.find(c => c.id === activeCat)?.l || 'Products')}
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--mu)' }}>Professional print, signs & graphics for businesses across Ontario.</p>
+          <p style={{ fontSize: 13, color: 'var(--mu)' }}>Professional print, signs & graphics for businesses across Canada.</p>
         </div>
       </div>
 

@@ -27,14 +27,14 @@ const TITLES = {
 
 // All descriptions trimmed to 120–158 chars (sweet spot for Google & Bing)
 const DESCRIPTIONS = {
-  '/':          "GTA's trusted print shop near you in Mississauga. Business cards, banners, wraps & stickers. Same-day pickup, ships across Ontario. (437) 997-9921.",
+  '/':          "GTA's trusted print shop near you in Mississauga. Business cards, banners, wraps & stickers. Same-day pickup in Mississauga, ships across Canada. (437) 997-9921.",
   '/products':  'Browse 80+ print products near you — business cards, banners, vehicle wraps, stickers & signs. Serving Toronto, Mississauga, Brampton, GTA & Ontario.',
   '/blog':      'Practical guides on print materials, sign regulations, and getting the most out of your order — from the GTA print shop that prints it. Nexa Customs, Mississauga.',
   '/quote':     'Get a free custom print quote from Nexa Customs. Serving Toronto, Mississauga, Brampton, Oakville GTA. Ships Canada-wide. Reply within 1 business day.',
   '/contact':   'Contact Nexa Customs at (437) 997-9921. Located in Mississauga, GTA. Free pickup or Canada-wide shipping. Mon–Fri 10AM–8PM, Sat by appointment.',
   '/about':     "Nexa Customs Inc. — GTA print shop serving Toronto, Mississauga, Brampton & Oakville. Business cards, signs, vehicle wraps & more. Quality guaranteed.",
   '/faq':       'FAQ for Nexa Customs print shop. File formats, turnaround times, GTA pickup, Canada shipping, free proofs and order tracking explained.',
-  '/shipping':  'Free pickup in Mississauga. Canada-wide shipping via Canada Post & FedEx. Flat-rate delivery to all provinces. Fast, reliable, trackable.',
+  '/shipping':  'Free pickup in Mississauga. Canada-wide shipping via Canada Post or courier at flat rates. Fast, reliable, trackable.',
   '/returns':   'Nexa Customs quality guarantee — not satisfied, we reprint at no charge. Learn about our return and reprint policy for custom print orders.',
   '/terms':     'Terms & Conditions for Nexa Customs Inc. Custom print orders, artwork, payment terms, turnaround times, liability and cancellation policy.',
   '/privacy':   'Privacy Policy for Nexa Customs Inc. How we collect, use and protect your personal information. PIPEDA compliant. Contact info@nexacustoms.ca.',

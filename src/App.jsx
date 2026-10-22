@@ -22,7 +22,7 @@ function renderInlineLinks(text) {
   let last = 0, m, i = 0;
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) parts.push(text.slice(last, m.index));
-    parts.push(<a key={i++} href={m[2]} target={m[2].startsWith('mailto:') || m[2].startsWith('tel:') ? undefined : '_blank'} rel="noopener noreferrer" style={{ color: 'var(--o)', textDecoration: 'underline' }}>{m[1]}</a>);
+    parts.push(<a key={i++} href={m[2]} target={m[2].startsWith('mailto:') || m[2].startsWith('tel:') || m[2].startsWith('/') ? undefined : '_blank'} rel="noopener noreferrer" style={{ color: 'var(--o)', textDecoration: 'underline' }}>{m[1]}</a>);
     last = m.index + m[0].length;
   }
   if (last < text.length) parts.push(text.slice(last));
@@ -77,7 +77,7 @@ function PolicyPage({ slug }) {
         }
         // Info box: lines starting with >>>
         if (para.startsWith('>>> ')) {
-          return <div key={i} style={{ padding: '14px 18px', background: 'rgba(249,115,22,.06)', borderLeft: '3px solid var(--o)', borderRadius: '0 8px 8px 0', marginBottom: 16, fontSize: 13, color: 'var(--mu)', lineHeight: 1.8 }}>{para.slice(4)}</div>;
+          return <div key={i} style={{ padding: '14px 18px', background: 'rgba(249,115,22,.06)', borderLeft: '3px solid var(--o)', borderRadius: '0 8px 8px 0', marginBottom: 16, fontSize: 13, color: 'var(--mu)', lineHeight: 1.8 }}>{renderInlineLinks(para.slice(4))}</div>;
         }
         // Table rows: lines starting with |
         if (para.includes('\n') && para.split('\n').every(l => l.trim().startsWith('|'))) {

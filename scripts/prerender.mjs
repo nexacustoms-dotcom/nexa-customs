@@ -44,7 +44,7 @@
 // back to the known slugs from scripts/seed-blog-posts.mjs so the build
 // never breaks.
 
-import { readFileSync, existsSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync, unlinkSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
@@ -99,8 +99,8 @@ async function loadBlogSlugs() {
   } else {
     console.warn('[prerender] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set, using seed list for blog slugs');
   }
-  const seedSrc = readFileSync(join(ROOT, 'scripts/seed-blog-posts.mjs'), 'utf8');
-  return [...seedSrc.matchAll(/slug:\s*'([a-z0-9-]+)'/g)].map(m => m[1]);
+  const seedFiles = readdirSync(join(ROOT, 'scripts')).filter(f => /^seed-blog-posts.*\.mjs$/.test(f));
+  return seedFiles.flatMap(f => [...readFileSync(join(ROOT, 'scripts', f), 'utf8').matchAll(/slug:\s*'([a-z0-9-]+)'/g)].map(m => m[1]));
 }
 
 // ── 4. Build the full route list ─────────────────────────────────────────
