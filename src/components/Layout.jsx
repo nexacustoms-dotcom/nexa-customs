@@ -151,7 +151,7 @@ export function Footer() {
                 <div style={{ fontSize: 10, color: 'var(--mu)', letterSpacing: '.1em' }}>{store.tagline}</div>
               </div>
             </div>
-            <p style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.78, maxWidth: 265, marginBottom: 6 }}>GTA trusted print partner since 2010. Quality, fast turnaround, unbeatable prices.</p>
+            <p style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.78, maxWidth: 265, marginBottom: 6 }}>GTA trusted print partner. Quality, fast turnaround, unbeatable prices.</p>
             <p style={{ fontSize: 11, color: 'var(--mu)', lineHeight: 1.7, maxWidth: 265, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 5 }}>{ICONS.pin(12)} Free pickup in Mississauga · {ICONS.truck(12)} Ships Canada-wide</p>
             <div style={{ display: 'flex', gap: 7 }}>
               {[

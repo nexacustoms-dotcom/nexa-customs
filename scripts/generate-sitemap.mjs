@@ -81,11 +81,15 @@ prods.forEach(p => {
 if (customPages.length) {
   urls.push(`  <!-- ═══ Custom pages ═══ -->`);
   customPages.forEach(p => urls.push(url(`${DOMAIN}/blog/${p.slug}`, "0.5", "monthly")));
+}
 
-  // Location + service landing pages — hand-maintained list, not
-  // Supabase-driven, since these are a small deliberately-curated set
-  ["window-graphics-toronto", "window-graphics-brampton", "wallpaper-murals-toronto", "wallpaper-murals-oakville"]
-    .forEach(slug => urls.push(url(`${DOMAIN}/${slug}`, "0.6", "monthly")));
+// Location + service landing pages — read straight from the page file so a
+// new page is never missed, and listed even when there are no blog pages.
+{
+  const locSrc = readFileSync(new URL("../src/pages/LocationServicePage.jsx", import.meta.url), "utf8");
+  const locSlugs = [...locSrc.matchAll(/^\s{2}'([a-z0-9-]+)':/gm)].map(m => m[1]);
+  urls.push(`  <!-- ═══ Location & service pages ═══ -->`);
+  locSlugs.forEach(slug => urls.push(url(`${DOMAIN}/${slug}`, "0.6", "monthly")));
 }
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>

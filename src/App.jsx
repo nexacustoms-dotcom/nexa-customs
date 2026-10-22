@@ -120,7 +120,7 @@ function PolicyPage({ slug }) {
       <div style={{ marginTop: 24, padding: '20px 24px', background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
         <div>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Have a question?</div>
-          <div style={{ fontSize: 12, color: 'var(--mu)' }}>Our team is here to help Mon–Fri 9AM–6PM</div>
+          <div style={{ fontSize: 12, color: 'var(--mu)' }}>Our team is here to help Mon–Fri 10AM–8PM</div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <a href="tel:+14379979921" style={{ padding: '9px 18px', borderRadius: 8, background: 'var(--o)', color: '#000', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}><span style={{ display: "inline-flex", verticalAlign: "middle", marginRight: 6 }}>{ICONS.phone(14)}</span>(437) 997-9921</a>

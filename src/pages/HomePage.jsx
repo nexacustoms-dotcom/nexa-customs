@@ -37,7 +37,7 @@ export default function HomePage() {
         </div>
         <div className="W">
           <div style={{ marginBottom: 40, position: 'relative', zIndex: 1 }}>
-            <div className="badge-orange" style={{ marginBottom: 18 }}>{store.hero_badge || "Mississauga's Print Experts Since 2010"}</div>
+            <div className="badge-orange" style={{ marginBottom: 18 }}>{store.hero_badge || "Mississauga's Print Experts"}</div>
             <h1 className="D" style={{ fontSize: 'clamp(44px,6vw,76px)', marginBottom: 20, lineHeight: 1.03, maxWidth: 780 }}>
               {store.hero1}<br />
               <span style={{ color: 'var(--o)' }}>{store.hero_accent}</span><br />
@@ -156,7 +156,7 @@ export default function HomePage() {
         <div className="W">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 13 }} className="feat-grid">
             {[
-              { ico: ICONS.bolt(20), t: 'Same-Day Pickup', d: 'Order before 10:30 AM for same-day pickup at our Mississauga location.' },
+              { ico: ICONS.bolt(20), t: 'Same-Day Pickup', d: 'Order by 12 PM (noon) for same-day pickup at our Mississauga location.' },
               { ico: ICONS.shield(20), t: 'Quality Guaranteed', d: 'Not satisfied? We reprint at no charge. Every order checked before delivery.' },
               { ico: ICONS.palette(20), t: 'Free Design Proof', d: "See your print before it goes to press. Revisions until you're 100% happy." },
               { ico: ICONS.truck(20), t: 'Ontario-Wide Shipping', d: 'Fast courier delivery across Ontario. Flat rate, no surprises.' },

@@ -12,7 +12,7 @@ const TITLES = {
   '/blog':           'Blog — Nexa Customs GTA Print Shop',
   '/quote':          'Get a Free Print Quote — Nexa Customs GTA',
   '/contact':        'Contact Nexa Customs — (437) 997-9921 · Mississauga GTA',
-  '/about':          'About Nexa Customs Inc. — GTA Print Shop Since 2010',
+  '/about':          'About Nexa Customs Inc. — GTA Print Shop in Mississauga',
   '/faq':            'FAQ — Nexa Customs Print Shop GTA',
   '/shipping':       'Shipping Policy — Canada-Wide Shipping — Nexa Customs',
   '/returns':        'Return Policy — Nexa Customs',
@@ -31,7 +31,7 @@ const DESCRIPTIONS = {
   '/products':  'Browse 80+ print products near you — business cards, banners, vehicle wraps, stickers & signs. Serving Toronto, Mississauga, Brampton, GTA & Ontario.',
   '/blog':      'Practical guides on print materials, sign regulations, and getting the most out of your order — from the GTA print shop that prints it. Nexa Customs, Mississauga.',
   '/quote':     'Get a free custom print quote from Nexa Customs. Serving Toronto, Mississauga, Brampton, Oakville GTA. Ships Canada-wide. Reply within 1 business day.',
-  '/contact':   'Contact Nexa Customs at (437) 997-9921. Located in Mississauga, GTA. Free pickup or Canada-wide shipping. Mon–Fri 9AM–6PM, Sat by appointment.',
+  '/contact':   'Contact Nexa Customs at (437) 997-9921. Located in Mississauga, GTA. Free pickup or Canada-wide shipping. Mon–Fri 10AM–8PM, Sat by appointment.',
   '/about':     "Nexa Customs Inc. — GTA print shop serving Toronto, Mississauga, Brampton & Oakville. Business cards, signs, vehicle wraps & more. Quality guaranteed.",
   '/faq':       'FAQ for Nexa Customs print shop. File formats, turnaround times, GTA pickup, Canada shipping, free proofs and order tracking explained.',
   '/shipping':  'Free pickup in Mississauga. Canada-wide shipping via Canada Post & FedEx. Flat-rate delivery to all provinces. Fast, reliable, trackable.',
@@ -43,11 +43,11 @@ const DESCRIPTIONS = {
 };
 
 const CAT_TITLES = {
-  'business-cards':   'Business Cards Printing GTA — Nexa Customs',
+  'business-cards':   'Same-Day Business Cards Mississauga & GTA — Nexa Customs',
   'signs-banners':    'Vinyl Banners & Signs GTA — Nexa Customs',
   'vehicle-graphics': 'Vehicle Wraps GTA — Toronto & Mississauga — Nexa Customs',
   'labels-stickers':  'Custom Labels & Stickers GTA — Nexa Customs',
-  'flyers-postcards': 'Flyers & Postcards Printing GTA — Nexa Customs',
+  'flyers-postcards': 'Same-Day Flyers & Postcards Printing GTA — Nexa Customs',
   'marketing':        'Marketing Print Materials GTA — Nexa Customs',
   'stationery':       'Business Stationery Printing GTA — Nexa Customs',
   'restaurant':       'Restaurant Printing GTA — Menus & Table Tents',
@@ -59,11 +59,11 @@ const CAT_TITLES = {
 
 // All 12 categories — all within 120–158 chars
 const CAT_DESCS = {
-  'business-cards':   'Affordable business cards near you in Mississauga & GTA. 14pt, 16pt, soft-touch, spot UV & more. Free proof, same-day pickup, ships Canada-wide.',
+  'business-cards':   'Same-day business cards in Mississauga & GTA — 50 to 1,000 cards, pickup at our shop. 14pt, 16pt, soft-touch, spot UV & more. Free proof.',
   'signs-banners':    'Custom vinyl banners & signs near you — GTA sign company for indoor/outdoor signage, retractable stands, custom sizes. Rush available, ships Canada-wide.',
   'vehicle-graphics': 'Vehicle & car wraps near you in Toronto, Mississauga, Brampton & Vaughan. Full/partial wraps, van wraps, window decals, truck lettering. Free quote.',
   'labels-stickers':  'Custom labels & stickers near you in GTA. Die-cut, roll labels, BOPP waterproof, clear & holographic. Serving Toronto, Mississauga, Markham.',
-  'flyers-postcards': 'Flyer & postcard printing in GTA. 1,000 flyers from $99. Single & double-sided, gloss or matte. Ships Canada-wide. Rush available.',
+  'flyers-postcards': 'Same-day flyer & postcard printing in the GTA, 50 to 1,000 pieces. 1,000 flyers from $99. Single & double-sided, gloss or matte. Rush available.',
   'marketing':        'Marketing materials printing in GTA. Brochures, door hangers, rack cards, table tents. Serving Toronto, Mississauga, Brampton.',
   'stationery':       'Business stationery printing in GTA. Letterhead, envelopes, notepads & NCR forms. Professional quality, fast turnaround, ships Canada-wide.',
   'restaurant':       'Restaurant printing in GTA. Menus, table tents, placemats, coasters & more. Waterproof options available. Rush printing available.',

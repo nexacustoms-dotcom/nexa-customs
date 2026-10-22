@@ -737,7 +737,7 @@ export function CheckoutPage() {
                     </div>
                   )}
                   {[
-                    { id: 'pickup', ico: ICONS.store(18), label: 'Free Local Pickup', sub: '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM', price: 'Free', tag: 'Most Popular' },
+                    { id: 'pickup', ico: ICONS.store(18), label: 'Free Local Pickup', sub: '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 10AM–8PM', price: 'Free', tag: 'Most Popular' },
                     { id: 'post',   ico: ICONS.mailbox(18), label: `${store?.shipping_carrier || 'Canada Post'} Standard`, sub: '3–7 business days · Tracking included', price: `$${(pricing.shipping_post + shipSurcharge).toFixed(2)}`, tag: '' },
                     { id: 'courier',ico: ICONS.rocket(18), label: `${store?.courier_carrier_name || 'Courier'} Express`, sub: '1–2 business days · Fastest option', price: `$${(pricing.shipping_courier + shipSurcharge).toFixed(2)}`, tag: 'Fastest' },
                   ].filter(opt => opt.id === 'pickup' || !cartHasPickupOnlyItem).map(opt => (
@@ -1166,7 +1166,7 @@ export function SuccessPage() {
           {[
             [ICONS.paperclip(14), 'Artwork', 'Email files to info@nexacustoms.ca with your order number'],
             deliveryType === 'pickup'
-              ? [ICONS.pin(14), 'Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 9AM–6PM']
+              ? [ICONS.pin(14), 'Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 10AM–8PM']
               : [ICONS.box(14), 'Shipping', shipAddr + ' · ' + (deliveryType === 'post' ? `${store?.shipping_carrier || 'Canada Post'} 3–7 days` : `${store?.courier_carrier_name || 'Courier'} 1–2 days`)],
             [ICONS.phone(14), 'Questions?', 'Call or text (437) 997-9921'],
           ].map(([icon, k, v]) => (
@@ -1358,7 +1358,7 @@ export function QuotePage() {
         <div>
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 20, marginBottom: 12 }}>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Why Nexa Customs?</div>
-            {['Response within 1 business day','Free digital proof before printing','Same-day pickup in Mississauga','Quality guaranteed — reprint if not satisfied','13+ years in business'].map(t => (
+            {['Response within 1 business day','Free digital proof before printing','Same-day pickup in Mississauga','Quality guaranteed — reprint if not satisfied','Locally owned in Mississauga'].map(t => (
               <div key={t} style={{ display: 'flex', gap: 8, fontSize: 12, marginBottom: 8, color: 'var(--mu)' }}><span style={{ color: 'var(--o)' }}>✓</span>{t}</div>
             ))}
           </div>
@@ -1441,7 +1441,7 @@ export function ContactPage() {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 24 }} className="ct-grid">
         {[
-          { ico: ICONS.phone(28), t: 'Call Us', val: store.phone, href: `tel:+${store.phone_raw}`, sub: 'Mon–Fri 9AM–6PM · Sat By Appt' },
+          { ico: ICONS.phone(28), t: 'Call Us', val: store.phone, href: `tel:+${store.phone_raw}`, sub: 'Mon–Fri 10AM–8PM · Sat By Appt' },
           { ico: ICONS.mail(28), t: 'Email Us', val: store.email, href: `mailto:${store.email}`, sub: 'Response within 1 business day' },
           { ico: ICONS.pin(28), t: 'Visit Us', val: `${store.address}\n${store.city}`, href: null, sub: null },
           { ico: ICONS.chat(28), t: 'WhatsApp', val: store.phone, href: `https://wa.me/${store.phone_raw}`, sub: 'Send photos of your project' },
