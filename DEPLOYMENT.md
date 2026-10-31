@@ -210,7 +210,7 @@ This is automatic and free via Let's Encrypt. Takes about 5 minutes.
 
 Go to: **https://nexacustoms.ca/admin**
 
-Default password: **`nexa2024`**
+Sign in with the admin email and password you created in Supabase (Authentication → Users). See **SECURITY-SETUP.md**. The old default password no longer exists.
 
 **Change your password immediately:**
 Admin → Settings tab → scroll to "Admin Password" → enter new password → Save
@@ -359,7 +359,7 @@ Admin → **Appearance tab:**
 | What | Where |
 |---|---|
 | Admin panel | yourdomain.ca/admin |
-| Default password | `nexa2024` |
+| Admin login | Email + password from Supabase Authentication → Users (see SECURITY-SETUP.md) |
 | Artwork email | info@nexacustoms.ca |
 | Supabase dashboard | app.supabase.com |
 | Stripe dashboard | dashboard.stripe.com |
@@ -376,7 +376,7 @@ Make sure `netlify.toml` file is in the root folder and was pushed to GitHub.
 Check that Build command is `npm run build` and Publish directory is `dist`.
 
 **Admin password not working:**
-Default is `nexa2024` — all lowercase, no spaces.
+The admin password is managed in Supabase (Authentication → Users). To reset it, use "Send password recovery" there.
 
 **Supabase orders not saving:**
 Double-check the URL (must start with `https://`) and the anon key. Make sure you created the orders table using the SQL above.

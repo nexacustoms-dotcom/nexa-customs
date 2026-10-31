@@ -1,6 +1,7 @@
 // Nexa Customs Admin Panel v2
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useApp, sendEmailJS } from '../context/AppContext';
+import { signIn, signOut, getAccessToken, authHeaders, sessionEmail } from '../lib/adminSession';
 
 const TABS = [
   { id: 'orders',     label: '📦 Orders' },
@@ -25,15 +26,10 @@ async function uploadToSupabase(file, folder, ls) {
   const safeName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   try {
-    // Try with auth header first
+    // Uploads need the admin sign-in
     const res = await fetch(`${supaUrl}/storage/v1/object/nexa-media/${safeName}`, {
       method: 'POST',
-      headers: {
-        apikey: supaKey,
-        Authorization: `Bearer ${supaKey}`,
-        'Content-Type': file.type || 'image/jpeg',
-        'x-upsert': 'true',
-      },
+      headers: await authHeaders(supaUrl, supaKey, { 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' }),
       body: file,
     });
 
@@ -151,13 +147,27 @@ export default function AdminPage() {
   const { go, adminAuthed, setAdminAuthed, showToast, ls } = useApp();
   const [tab, setTab] = useState('products');
   const [pw, setPw] = useState('');
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const supaUrlA = import.meta.env.VITE_SUPA_URL || ls.raw('nxt_supa_url', '');
+  const supaKeyA = import.meta.env.VITE_SUPA_KEY || ls.raw('nxt_supa_key', '');
 
-  function checkPw() {
-    const saved = ls.raw('nxt_admin_pw', 'nexa2024');
-    if (pw === saved) { setAdminAuthed(true); ls.setRaw('nxt_admin_auth', 'true'); }
-    else showToast('❌ Incorrect password');
+  // If a saved sign-in has expired or was revoked, send the visitor back to the login screen
+  useEffect(() => {
+    if (!adminAuthed) return;
+    getAccessToken(supaUrlA, supaKeyA).then(tok => { if (!tok) setAdminAuthed(false); });
+  }, [adminAuthed]);
+
+  async function checkPw() {
+    if (busy) return;
+    if (!supaUrlA || !supaKeyA) { showToast('Supabase is not configured for this site'); return; }
+    setBusy(true);
+    const r = await signIn(supaUrlA, supaKeyA, email, pw);
+    setBusy(false);
+    if (r.ok) { setPw(''); setAdminAuthed(true); }
+    else showToast('❌ ' + r.error);
   }
-  function logout() { setAdminAuthed(false); ls.setRaw('nxt_admin_auth', ''); go('home'); showToast('Signed out'); }
+  function logout() { signOut(); setAdminAuthed(false); go('home'); showToast('Signed out'); }
 
   if (!adminAuthed) return (
     <div style={{ minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -165,10 +175,14 @@ export default function AdminPage() {
         <div style={{ fontSize: 40, marginBottom: 16 }}>⚙️</div>
         <h2 className="D" style={{ fontSize: 28, marginBottom: 20 }}>Admin Access</h2>
         <div className="fgrp">
-          <label className="flbl">Password</label>
-          <input className="finp" type="password" placeholder="Enter admin password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === 'Enter' && checkPw()} />
+          <label className="flbl">Email</label>
+          <input className="finp" type="email" autoComplete="username" placeholder="Admin email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && checkPw()} />
         </div>
-        <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 8 }} onClick={checkPw}>Sign In →</button>
+        <div className="fgrp">
+          <label className="flbl">Password</label>
+          <input className="finp" type="password" autoComplete="current-password" placeholder="Enter admin password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === 'Enter' && checkPw()} />
+        </div>
+        <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 8 }} disabled={busy} onClick={checkPw}>{busy ? 'Signing in…' : 'Sign In →'}</button>
         <div style={{ marginTop: 16 }}><span onClick={() => go('home')} style={{ fontSize: 12, color: 'var(--mu)', cursor: 'pointer' }}>← Back to Store</span></div>
       </div>
     </div>
@@ -796,8 +810,7 @@ function SettingsTab() {
   const [v, setV] = useState({
     supaUrl: ls.raw('nxt_supa_url',''),
     supaKey: ls.raw('nxt_supa_key',''),
-    stripePk: ls.raw('nxt_stripe_pk',''),
-    adminPw: ''
+    stripePk: ls.raw('nxt_stripe_pk','')
   });
   const envSupaUrl = import.meta.env.VITE_SUPA_URL;
   const envSupaKey = import.meta.env.VITE_SUPA_KEY;
@@ -808,7 +821,6 @@ function SettingsTab() {
     if (v.supaUrl) ls.setRaw('nxt_supa_url', v.supaUrl);
     if (v.supaKey) ls.setRaw('nxt_supa_key', v.supaKey);
     if (v.stripePk) ls.setRaw('nxt_stripe_pk', v.stripePk);
-    if (v.adminPw.trim()) ls.setRaw('nxt_admin_pw', v.adminPw.trim());
     showToast('✅ Settings saved!');
   }
 
@@ -816,7 +828,7 @@ function SettingsTab() {
     const url = import.meta.env.VITE_SUPA_URL || ls.raw('nxt_supa_url','');
     const key = import.meta.env.VITE_SUPA_KEY || ls.raw('nxt_supa_key','');
     if (!url || !key) { showToast('Enter URL and key first, then Save'); return; }
-    const res = await fetch(`${url}/rest/v1/orders?limit=1`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+    const res = await fetch(`${url}/rest/v1/orders?limit=1`, { headers: await authHeaders(url, key) });
     if (res.ok) showToast('✅ Supabase connected! orders table found.');
     else if (res.status === 404) showToast('⚠️ Connected but orders table missing — run the SQL setup');
     else showToast('❌ Error ' + res.status + ' — check URL and key');
@@ -829,7 +841,7 @@ function SettingsTab() {
     // Test by listing objects in bucket (correct endpoint)
     const res = await fetch(`${url}/storage/v1/object/list/nexa-media`, {
       method: 'POST',
-      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      headers: await authHeaders(url, key, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({ limit: 1, offset: 0 }),
     });
     if (res.ok) showToast('✅ Storage bucket "nexa-media" is working! Image upload ready.');
@@ -879,10 +891,8 @@ function SettingsTab() {
           <button className="abtn abtn-add" onClick={save}>💾 Save</button>
         </div>
         <div className="aform-section">
-          <div className="aform-title">🔐 Admin Password</div>
-          <div className="afg"><label className="aflbl">New Password</label><input className="ainp" type="password" placeholder="Leave blank to keep current" value={v.adminPw} onChange={upd('adminPw')} /></div>
-          <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 10 }}>Default: <code style={{ background: 'var(--s2)', padding: '1px 4px', borderRadius: 3 }}>nexa2024</code></div>
-          <button className="abtn abtn-add" onClick={save}>💾 Save</button>
+          <div className="aform-title">🔐 Admin Sign-In</div>
+          <div style={{ fontSize: 12, color: 'var(--mu)', lineHeight: 1.7, marginBottom: 10 }}>Signed in as <strong style={{ color: 'var(--tx)' }}>{sessionEmail() || 'admin'}</strong>. Your admin password is managed in Supabase (Authentication → Users), not on this page. To change it, use <em>Send password recovery</em> there.</div>
         </div>
         <div className="aform-section">
           <div className="aform-title">🗃️ Data Reset</div>
@@ -1751,7 +1761,8 @@ function FullProductEditor({ prod, onSave, onCancel }) {
                 const optFirst = oi===0;
                 const optLast  = oi===(g.opts||[]).length-1;
                 return (
-                  <div key={oi} style={{ display:'grid', gridTemplateColumns:'auto 1.4fr 120px 110px 76px auto', gap:8, alignItems:'center', marginBottom:8 }}>
+                  <div key={oi}>
+                  <div style={{ display:'grid', gridTemplateColumns:'auto 1.4fr 120px 110px 76px auto', gap:8, alignItems:'center', marginBottom:8 }}>
                     {/* Up/Down for option */}
                     <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
                       <button style={ARRW} disabled={optFirst} onClick={() => moveOption(gi,oi,-1)} title="Move up">↑</button>
@@ -1772,7 +1783,7 @@ function FullProductEditor({ prod, onSave, onCancel }) {
                       <select style={SL} value={pt}
                         onChange={e => {
                           const ng=[...(p.opts||[])]; const no=[...ng[gi].opts];
-                          const defs={multiplier:1.0,percent:10,fixed:5,linear_ft:2.5};
+                          const defs={multiplier:1.0,percent:10,fixed:5,linear_ft:2.5,per_unit:1.5};
                           no[oi]={...no[oi],price_type:e.target.value,price_val:defs[e.target.value],m:e.target.value==='multiplier'?(no[oi].price_val||1):1};
                           ng[gi]={...ng[gi],opts:no}; upd('opts')(ng);
                         }}>
@@ -1780,6 +1791,7 @@ function FullProductEditor({ prod, onSave, onCancel }) {
                         <option value="percent">% Add %</option>
                         <option value="fixed">$ Flat add</option>
                         <option value="linear_ft">ft Linear ft</option>
+                        <option value="per_unit">$ Per piece (× qty)</option>
                       </select>
                     </div>
                     <div>
@@ -1795,6 +1807,14 @@ function FullProductEditor({ prod, onSave, onCancel }) {
                     <button onClick={() => removeOption(gi,oi)}
                       style={{ padding:'7px 10px', borderRadius:6, border:'1px solid rgba(239,68,68,.3)',
                         background:'rgba(239,68,68,.08)', color:'#f87171', cursor:'pointer', fontSize:12 }}>✕</button>
+                  </div>
+                  {pt==='per_unit' && (
+                    <div style={{ display:'flex', alignItems:'center', gap:8, margin:'-2px 0 10px 36px', flexWrap:'wrap' }}>
+                      <span style={{ fontSize:11, color:'var(--mu)' }}>Price per piece × quantity. Optional price breaks (qty:price):</span>
+                      <input style={{ ...INP, maxWidth:260 }} placeholder="e.g. 1:2.00, 25:1.50, 100:1.20" value={o.unit_tiers||''}
+                        onChange={e => updOption(gi,oi,'unit_tiers',e.target.value)} />
+                    </div>
+                  )}
                   </div>
                 );
               })}
@@ -1899,11 +1919,11 @@ function OrdersTab() {
     setLoading(true);
     try {
       const res = await fetch(`${url}/rest/v1/orders?order=created_at.desc&limit=200`, {
-        headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }
+        headers: await authHeaders(url, key, { 'Content-Type': 'application/json' })
       });
       if (!res.ok) {
         const err = await res.text();
-        showToast('❌ Error loading orders: ' + res.status);
+        showToast(res.status === 401 || res.status === 403 ? '❌ Please sign in again (admin session expired)' : '❌ Error loading orders: ' + res.status);
         console.error(err);
         setLoading(false);
         return;
@@ -1990,7 +2010,7 @@ function OrdersTab() {
 
     await fetch(`${url}/rest/v1/orders?id=eq.${encodeURIComponent(id)}`, {
       method: 'PATCH',
-      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      headers: await authHeaders(url, key, { 'Content-Type': 'application/json', Prefer: 'return=minimal' }),
       body: JSON.stringify(patchBody),
     });
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status, ...(trackingNumber ? { tracking_number: trackingNumber } : {}) } : o));

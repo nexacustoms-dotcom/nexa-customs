@@ -52,6 +52,7 @@ serve(async (req) => {
       order_number,
       description,
       billing_details,
+      idempotency_key, // same key + same payment = Stripe returns the first result instead of charging twice
       subtotal,        // in cents — pre-tax amount, for record-keeping/metadata
       tax_amount,      // in cents — tax portion, for record-keeping/metadata
     } = await req.json();
@@ -92,6 +93,7 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${stripeSecret}`,
         'Content-Type': 'application/x-www-form-urlencoded',
+        ...(idempotency_key ? { 'Idempotency-Key': String(idempotency_key).slice(0, 250) } : {}),
       },
       body: params.toString(),
     });

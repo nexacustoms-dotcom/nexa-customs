@@ -8,7 +8,8 @@
     "prebuild": "chmod +x ./node_modules/.bin/vite || true",
     "build": "vite build",
     "postbuild": "node scripts/prerender.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync:vercel": "node scripts/prerender.mjs --sync-vercel"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

@@ -12,6 +12,101 @@
       "permanent": true
     },
     {
+      "source": "/product/remax-sandwich-boards",
+      "destination": "/products/real-estate/open-house-boards",
+      "permanent": true
+    },
+    {
+      "source": "/product/windows-graphics",
+      "destination": "/products/signs-banners/vinyl-window-graphics",
+      "permanent": true
+    },
+    {
+      "source": "/product/notepads",
+      "destination": "/products/stationery/notepads",
+      "permanent": true
+    },
+    {
+      "source": "/product/custom-letterhead",
+      "destination": "/products/stationery/letterheads",
+      "permanent": true
+    },
+    {
+      "source": "/product/custom-lawn-signs",
+      "destination": "/products/signs-banners/lawn-signs",
+      "permanent": true
+    },
+    {
+      "source": "/product/mesh-banner",
+      "destination": "/products/signs-banners/vinyl-banners",
+      "permanent": true
+    },
+    {
+      "source": "/product/flyers",
+      "destination": "/products/flyers-postcards/flyers",
+      "permanent": true
+    },
+    {
+      "source": "/product/brochures",
+      "destination": "/products/flyers-postcards/brochures",
+      "permanent": true
+    },
+    {
+      "source": "/product/postcards",
+      "destination": "/products/flyers-postcards/postcards",
+      "permanent": true
+    },
+    {
+      "source": "/product/door-hangers",
+      "destination": "/products/flyers-postcards/door-hangers",
+      "permanent": true
+    },
+    {
+      "source": "/product/aluminum-signs",
+      "destination": "/products/signs-banners",
+      "permanent": true
+    },
+    {
+      "source": "/product/metal-a-frame-sign-print-included",
+      "destination": "/products/signs-banners",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/stationary",
+      "destination": "/products/stationery",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/yard-sign",
+      "destination": "/products/signs-banners/lawn-signs",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/large-format",
+      "destination": "/products/signs-banners",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/print-products",
+      "destination": "/products",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/apparel",
+      "destination": "/products",
+      "permanent": true
+    },
+    {
+      "source": "/shipping-policy",
+      "destination": "/shipping",
+      "permanent": true
+    },
+    {
+      "source": "/evercompare",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/p/:slug",
       "destination": "/blog/:slug",
       "permanent": true
@@ -722,6 +817,78 @@
     {
       "source": "/blog/trade-show-display-guide",
       "destination": "/blog/trade-show-display-guide/index.html"
+    },
+    {
+      "source": "/same-day-business-cards-mississauga",
+      "destination": "/same-day-business-cards-mississauga/index.html"
+    },
+    {
+      "source": "/same-day-flyers-mississauga",
+      "destination": "/same-day-flyers-mississauga/index.html"
+    },
+    {
+      "source": "/same-day-postcards-mississauga",
+      "destination": "/same-day-postcards-mississauga/index.html"
+    },
+    {
+      "source": "/same-day-door-hangers-mississauga",
+      "destination": "/same-day-door-hangers-mississauga/index.html"
+    },
+    {
+      "source": "/next-day-brochures-mississauga",
+      "destination": "/next-day-brochures-mississauga/index.html"
+    },
+    {
+      "source": "/same-day-printing-brampton",
+      "destination": "/same-day-printing-brampton/index.html"
+    },
+    {
+      "source": "/same-day-printing-oakville",
+      "destination": "/same-day-printing-oakville/index.html"
+    },
+    {
+      "source": "/same-day-printing-vaughan",
+      "destination": "/same-day-printing-vaughan/index.html"
+    },
+    {
+      "source": "/same-day-printing-etobicoke",
+      "destination": "/same-day-printing-etobicoke/index.html"
+    },
+    {
+      "source": "/same-day-printing-toronto",
+      "destination": "/same-day-printing-toronto/index.html"
+    },
+    {
+      "source": "/blog/how-many-flyers-or-door-hangers-do-i-need",
+      "destination": "/blog/how-many-flyers-or-door-hangers-do-i-need/index.html"
+    },
+    {
+      "source": "/blog/door-hangers-vs-flyers-vs-postcards",
+      "destination": "/blog/door-hangers-vs-flyers-vs-postcards/index.html"
+    },
+    {
+      "source": "/blog/brochure-fold-types-explained",
+      "destination": "/blog/brochure-fold-types-explained/index.html"
+    },
+    {
+      "source": "/blog/print-file-setup-guide-bleed-cmyk",
+      "destination": "/blog/print-file-setup-guide-bleed-cmyk/index.html"
+    },
+    {
+      "source": "/blog/same-day-printing-checklist-mississauga",
+      "destination": "/blog/same-day-printing-checklist-mississauga/index.html"
+    },
+    {
+      "source": "/blog/open-house-printing-checklist-real-estate-agents",
+      "destination": "/blog/open-house-printing-checklist-real-estate-agents/index.html"
+    },
+    {
+      "source": "/blog/remove-vehicle-decals-without-damaging-paint",
+      "destination": "/blog/remove-vehicle-decals-without-damaging-paint/index.html"
+    },
+    {
+      "source": "/blog/business-cards-for-contractors-and-trades",
+      "destination": "/blog/business-cards-for-contractors-and-trades/index.html"
     },
     {
       "source": "/(.*)",

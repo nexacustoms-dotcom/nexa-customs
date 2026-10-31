@@ -156,7 +156,7 @@ export default function HomePage() {
         <div className="W">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 13 }} className="feat-grid">
             {[
-              { ico: ICONS.bolt(20), t: 'Same-Day Pickup', d: 'Order by 12 PM (noon) for same-day pickup at our Mississauga location.' },
+              { ico: ICONS.bolt(20), t: 'Same-Day Pickup', d: 'Order by 12 PM (noon), pick up by 6 PM at our Mississauga location.' },
               { ico: ICONS.shield(20), t: 'Quality Guaranteed', d: 'Not satisfied? We reprint at no charge. Every order checked before delivery.' },
               { ico: ICONS.palette(20), t: 'Free Design Proof', d: "See your print before it goes to press. Revisions until you're 100% happy." },
               { ico: ICONS.truck(20), t: 'Canada-Wide Shipping', d: 'Canada Post or courier across Canada at flat rates, or free pickup in Mississauga.' },
@@ -207,7 +207,7 @@ export default function HomePage() {
         <div className="W" style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 10 }}>Need It Today?</div>
           <h2 className="D" style={{ fontSize: 'clamp(26px,3.6vw,40px)', marginBottom: 10 }}>Same-Day Printing in Mississauga</h2>
-          <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 560, margin: '0 auto 22px', lineHeight: 1.7 }}>Order by 12 PM for same-day pickup, 50 to 1,000 pieces, free digital proof before anything prints.</p>
+          <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 560, margin: '0 auto 22px', lineHeight: 1.7 }}>Order by 12 PM, pick up by 6 PM, 50 to 1,000 pieces, free digital proof before anything prints.</p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
             {[['Same-Day Business Cards','/same-day-business-cards-mississauga'],['Same-Day Flyers','/same-day-flyers-mississauga'],['Same-Day Postcards','/same-day-postcards-mississauga'],['Same-Day Door Hangers','/same-day-door-hangers-mississauga']].map(([l, h]) => (
               <a key={h} href={h} onClick={e => { if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); navigate(h); window.scrollTo(0, 0); } }} className="btn btn-ghost" style={{ textDecoration: 'none', fontSize: 13 }}>{l}</a>

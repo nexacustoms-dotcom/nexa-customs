@@ -11,7 +11,7 @@ export function Topbar() {
       <div className="W" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11, color: 'var(--mu)' }}>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--gr)', animation: 'pls 2s infinite' }} />
-          Same-Day Pickup Available — Mississauga
+          Same-Day Pickup: order by 12 PM, ready by 6 PM — Mississauga
         </div>
         <a href={`tel:+${store.phone_raw}`} style={{ fontSize: 11, color: 'var(--o)', fontWeight: 600 }}>
           <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}>{ICONS.phone(11)}</span>{store.phone}

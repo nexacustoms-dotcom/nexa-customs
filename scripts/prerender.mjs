@@ -79,8 +79,8 @@ function loadLocationSlugs() {
 
 // ── 3. Blog slugs — try Supabase first, fall back to the seed script ────
 async function loadBlogSlugs() {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_ANON_KEY;
+  const url = process.env.VITE_SUPA_URL || process.env.VITE_SUPABASE_URL;
+  const key = process.env.VITE_SUPA_KEY || process.env.VITE_SUPABASE_ANON_KEY;
   if (url && key) {
     try {
       const res = await fetch(`${url}/rest/v1/site_config?id=eq.custom_pages&select=data`, {
@@ -150,9 +150,27 @@ function checkVercelJsonSync(routes) {
   }
 }
 
+// ── 5b. `node scripts/prerender.mjs --sync-vercel` ───────────────────────
+// Adds a rewrite to vercel.json for every prerendered route that is missing one
+// (new product, location page, blog post). Run it on your computer BEFORE pushing,
+// because Vercel reads vercel.json before the build starts.
+function syncVercelJson(routes) {
+  const file = join(ROOT, 'vercel.json');
+  const vj = JSON.parse(readFileSync(file, 'utf8'));
+  vj.rewrites = vj.rewrites || [];
+  const have = new Set(vj.rewrites.map(r => r.source));
+  const add = routes.filter(r => r !== '/' && !have.has(r)).map(r => ({ source: r, destination: `${r}/index.html` }));
+  if (!add.length) { console.log('[sync-vercel] vercel.json already has a rewrite for every route.'); return; }
+  const catchAll = vj.rewrites.findIndex(r => r.source === '/(.*)');
+  if (catchAll === -1) vj.rewrites.push(...add); else vj.rewrites.splice(catchAll, 0, ...add);
+  writeFileSync(file, JSON.stringify(vj, null, 2) + '\n');
+  console.log(`[sync-vercel] added ${add.length} rewrite(s) to vercel.json:\n` + add.map(a => '  ' + a.source).join('\n'));
+}
+
 // ── 6. Serve the build, prerender each route, write it to disk ──────────
 async function main() {
   const routes = await buildRoutes();
+  if (process.argv.includes('--sync-vercel')) { syncVercelJson(routes); return; }
   console.log(`[prerender] ${routes.length} routes to render`);
   checkVercelJsonSync(routes);
 

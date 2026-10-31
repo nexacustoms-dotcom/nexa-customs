@@ -72,6 +72,12 @@ export default function ProductDetailPage() {
   const taFee  = +(basePrice * taMult).toFixed(2);
   const price  = +(basePrice + taFee).toFixed(2);
 
+  // Arrived from a same-day page (?ta=express): preselect Express when this product offers it
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (new URLSearchParams(window.location.search).get('ta') === 'express' && expressAvail) setTurnaround('express');
+  }, [prod?.id]);
+
   // If quantity climbs above the same-day/rush ceiling while Rush/Express was selected, fall back to Standard
   useEffect(() => {
     if (overSamedayLimit && turnaround !== 'standard') setTurnaround('standard');

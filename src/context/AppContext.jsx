@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { DEFAULT_CATS, DEFAULT_PRODS, DEFAULT_STORE, DEFAULT_PRICING } from '../data/products';
+import { hasSession, authHeaders } from '../lib/adminSession';
 
 // ── IMAGE OPTIMISATION ────────────────────────────────────────────────────────
 // Supabase storage supports on-the-fly resize + WebP conversion
@@ -79,9 +80,11 @@ async function supaGet(table, filter) {
 async function supaUpsert(table, payload) {
   if (!isSupaReady()) return;
   try {
+    // Writes need the admin sign-in token (the public key alone is read-only once security is on)
+    const headers = await authHeaders(cfg.supaUrl(), cfg.supaKey(), { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' });
     await fetch(`${cfg.supaUrl()}/rest/v1/${table}`, {
       method: 'POST',
-      headers: { apikey: cfg.supaKey(), Authorization: `Bearer ${cfg.supaKey()}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+      headers,
       body: JSON.stringify(payload),
     });
   } catch {}
@@ -157,8 +160,9 @@ export function AppProvider({ children }) {
   const [builtinPages, setBuiltinPagesState] = useState(() => ({ ...DEFAULT_BUILTIN_PAGES, ...ls.get('nxt_builtin_pages', {}) }));
   const [curProd, setCurProd]      = useState(null);
   const [toast,   setToast]        = useState(null);
-  const [adminAuthed, setAdminAuthed] = useState(() => ls.raw('nxt_admin_auth','') === 'true');
+  const [adminAuthed, setAdminAuthed] = useState(() => hasSession());
   const [syncing, setSyncing] = useState(false);
+  const [dbSynced, setDbSynced] = useState(false);   // true once live product data has loaded from Supabase
 
   useEffect(() => {
     async function syncAll() {
@@ -207,6 +211,7 @@ export function AppProvider({ children }) {
         const d = typeof cpr[0].data === 'string' ? JSON.parse(cpr[0].data) : cpr[0].data;
         if (Array.isArray(d)) { ls.set('nxt_custom_pages', d); setPages(d); }
       }
+      if (Array.isArray(pr)) setDbSynced(true);
       setSyncing(false);
     }
     syncAll();
@@ -332,7 +337,7 @@ export function AppProvider({ children }) {
     if (!prod) return { total: 0, unit: 0, sqft: 0 };
 
     // Helper: apply option add-ons to a base price
-    function applyOpts(base, opts, selOpts, skipKey, sqftW, sqftH, qty) {
+    function applyOpts(base, opts, selOpts, skipKey, sqftW, sqftH, qty, pieces, perPieceMode) {
       let total = base;
       (opts||[]).filter(g => g.key !== skipKey).forEach(g => {
         const o = g.opts?.find(o => o.id === selOpts?.[g.key]);
@@ -342,6 +347,14 @@ export function AppProvider({ children }) {
         if      (t === 'multiplier') total *= v;
         else if (t === 'percent')    total += base * (v / 100);
         else if (t === 'fixed')      total += v;
+        else if (t === 'per_unit') {
+          // Price PER PIECE (e.g. a stake for every sign). Optional price breaks: "1:2.00, 25:1.50, 100:1.20"
+          let rate = v;
+          const brk = String(o.unit_tiers || '').split(',').map(x => x.split(':').map(n => parseFloat(n))).filter(a => a.length === 2 && a[0] > 0 && a[1] >= 0).sort((a, b) => a[0] - b[0]);
+          brk.forEach(([bq, bp]) => { if ((pieces || 1) >= bq) rate = bp; });
+          // Tiered products price the whole order, so multiply by pieces; sqft products price one piece (multiplied later)
+          total += perPieceMode ? rate : rate * (pieces || 1);
+        }
         else if (t === 'linear_ft') {
           // Linear footage = perimeter of the banner/sign: 2×(W+H)
           const custW = parseFloat(selOpts?._custW) || 0;
@@ -383,7 +396,7 @@ export function AppProvider({ children }) {
         }
       }
       const baseUnit = Math.max(sqftVal, prod.sqft.min||1) * (prod.sqft.rate||6.5);
-      const unitCost = applyOpts(baseUnit, prod.opts, selOpts, 'size', sqftW, sqftH, sqftW);
+      const unitCost = applyOpts(baseUnit, prod.opts, selOpts, 'size', sqftW, sqftH, sqftW, Math.max(qty||1, 1), true);
       const pieces = Math.max(qty||1, 1);
       // Bulk discount: find the highest qty threshold this order qualifies for
       const bulkTiers = [...(prod.sqft.bulk_discounts || [])].sort((a, b) => a.qty - b.qty);
@@ -416,17 +429,17 @@ export function AppProvider({ children }) {
     if (sizePrice > 0) {
       // Use direct size price, then apply non-size option multipliers
       const base = sizePrice;
-      const total = +applyOpts(base, prod.opts, selOpts, 'size', 0, 0, qty).toFixed(2);
+      const total = +applyOpts(base, prod.opts, selOpts, 'size', 0, 0, qty, qty || 1, false).toFixed(2);
       return { total, unit: +(total/(qty||1)).toFixed(4), sqft: 0 };
     }
-    const total = +applyOpts(interpolatedBase ?? tier.p, prod.opts, selOpts, null, 0, 0, qty).toFixed(2);
+    const total = +applyOpts(interpolatedBase ?? tier.p, prod.opts, selOpts, null, 0, 0, qty, qty || 1, false).toFixed(2);
     return { total, unit: +(total/(qty||1)).toFixed(4), sqft: 0 };
   }, []);
 
   const cartSubtotal = cart.reduce((s, i) => s + (i.price || 0), 0);
 
   return (
-    <AppContext.Provider value={{ page, go, syncing, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages: setPagesSynced, builtinPages, setBuiltinPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
+    <AppContext.Provider value={{ page, go, syncing, dbSynced, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages: setPagesSynced, builtinPages, setBuiltinPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
       {children}
     </AppContext.Provider>
   );
@@ -440,7 +453,7 @@ export const DEFAULT_BUILTIN_PAGES = {
     body: `Nexa Customs Inc. is a full-service commercial print shop proudly serving the Greater Toronto Area (GTA) and all of Canada. We are located in Mississauga, Ontario — centrally positioned to serve clients across the entire GTA with free same-day pickup.
 
 Our Locations We Serve (Local Pickup Available)
-We are based in Mississauga and offer free same-day pickup for clients throughout the GTA including Toronto, Brampton, Oakville, Burlington, Milton, Vaughan, Woodbridge, Etobicoke, North York, Scarborough, Markham, Richmond Hill, Pickering, Ajax, and Hamilton. Most orders placed before 10:30 AM are available for same-day pickup.
+We are based in Mississauga and offer free same-day pickup for clients throughout the GTA including Toronto, Brampton, Oakville, Burlington, Milton, Vaughan, Woodbridge, Etobicoke, North York, Scarborough, Markham, Richmond Hill, Pickering, Ajax, and Hamilton. Express orders placed by 12 PM (noon) are ready for same-day pickup by 6 PM.
 
 Canada-Wide Shipping
 Can't make it in person? No problem. We ship to every province and territory across Canada including British Columbia, Alberta, Saskatchewan, Manitoba, Quebec, Nova Scotia, New Brunswick, Newfoundland, Prince Edward Island, and the Territories. We use Canada Post and FedEx/UPS to ensure fast, reliable delivery nationwide.
@@ -475,7 +488,7 @@ Hours: Monday to Friday 10AM-8PM, Saturday by appointment`,
       { q: 'How do I send my artwork?', a: 'After placing your order, email files to info@nexacustoms.ca with your order number in the subject line.' },
     ],
   },
-  turnaround: { title: 'Turnaround Times', slug: 'turnaround', nav: true, body: '>>> Turnaround time starts after proof approval — not from when you place your order. All times are business days (Monday–Friday, excluding holidays).\n\n## Production Options\n\n| Option | Time | Surcharge |\n|---|---|---|\n| Standard | 5–7 business days | Included |\n| Rush | 2–3 business days | +25% |\n| Express | Same / Next business day | +50% |\n\nRush and Express availability varies by product and current workload. Call (437) 997-9921 to confirm before ordering.\n\n## Turnaround by Product Category\n\n| Product | Standard | Rush | Express |\n|---|---|---|---|\n| Business Cards | 5–7 days | 2–3 days | Next day |\n| Flyers & Postcards | 5–7 days | 2–3 days | Next day |\n| Vinyl Banners | 5–7 days | 2–3 days | Same/Next day |\n| Stickers & Labels | 5–7 days | 2–3 days | Next day |\n| Vehicle Wraps | 7–10 days | 3–5 days | Call us |\n| Foam Boards & Signs | 5–7 days | 2–3 days | Next day |\n| Real Estate Signs | 3–5 days | 1–2 days | Same day |\n| Canvas & Posters | 5–7 days | 2–3 days | Next day |\n| Calendars | 7–10 days | 5 days | Not available |\n\n## Same-Day Pickup\n\nSame-day pickup is available for Express orders placed by 12 PM (noon). We will call or email you when your order is ready.\n\nPickup location: 6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 10AM–8PM\n\n## Important Notes\n\nTurnaround time does not include shipping time. If you are shipping via Canada Post (3–7 days) or Courier (1–3 days), add the shipping time to the production time for your total estimated delivery date.\n\nComplex projects such as large vehicle wraps, multi-piece trade show displays, or orders requiring extensive pre-press work may require additional time. We will advise you during the quote or proof stage.' },
+  turnaround: { title: 'Turnaround Times', slug: 'turnaround', nav: true, body: '>>> Turnaround time starts after proof approval — not from when you place your order. All times are business days (Monday–Friday, excluding holidays).\n\n## Production Options\n\n| Option | Time | Surcharge |\n|---|---|---|\n| Standard | 5–7 business days | Included |\n| Rush | 2–3 business days | +25% |\n| Express | Same / Next business day | +50% |\n\nRush and Express availability varies by product and current workload. Call (437) 997-9921 to confirm before ordering.\n\n## Turnaround by Product Category\n\n| Product | Standard | Rush | Express |\n|---|---|---|---|\n| Business Cards | 5–7 days | 2–3 days | Next day |\n| Flyers & Postcards | 5–7 days | 2–3 days | Next day |\n| Vinyl Banners | 5–7 days | 2–3 days | Same/Next day |\n| Stickers & Labels | 5–7 days | 2–3 days | Next day |\n| Vehicle Wraps | 7–10 days | 3–5 days | Call us |\n| Foam Boards & Signs | 5–7 days | 2–3 days | Next day |\n| Real Estate Signs | 3–5 days | 1–2 days | Same day |\n| Canvas & Posters | 5–7 days | 2–3 days | Next day |\n| Calendars | 7–10 days | 5 days | Not available |\n\n## Same-Day Pickup\n\nSame-day pickup is available for Express orders placed by 12 PM (noon), ready for pickup by 6 PM. We will call or email you when your order is ready.\n\nPickup location: 6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 10AM–8PM\n\n## Important Notes\n\nTurnaround time does not include shipping time. If you are shipping via Canada Post (3–7 days) or Courier (1–3 days), add the shipping time to the production time for your total estimated delivery date.\n\nComplex projects such as large vehicle wraps, multi-piece trade show displays, or orders requiring extensive pre-press work may require additional time. We will advise you during the quote or proof stage.' },
   shipping: { title: 'Shipping Policy', slug: 'shipping', nav: true, body: '>>> Nexa Customs ships Canada-wide. Free local pickup always available at our Mississauga location. All prices in CAD + applicable taxes.\n\n## Delivery Options\n\n| Method | Cost | Estimated Delivery |\n|---|---|---|\n| Free Pickup | $0.00 | Ready same or next day (after proof approval) |\n| Canada Post | $18.00 flat | 3–7 business days |\n| Courier (FedEx/UPS) | $45.00 flat | 1–3 business days |\n\n## Free Local Pickup\n\nPickup is available at no charge at our Mississauga location:\n\n6033 Shawson Dr, Unit 40, Mississauga, ON L5T 1J6\nMonday – Friday: 10:00 AM – 8:00 PM\nSaturday: By appointment only\nPhone: (437) 997-9921\n\nWe will notify you by email when your order is ready for pickup.\n\n## Canada-Wide Shipping\n\nWe ship to all provinces and territories across Canada via Canada Post and FedEx/UPS. Flat-rate shipping applies regardless of order size or weight.\n\nOrders are shipped after proof approval and production completion. Tracking information will be emailed to you once the order ships.\n\n## Production Time vs. Shipping Time\n\nShipping time is separate from production time. Your total wait time = Production Time + Shipping Time.\n\nExample: Standard 5–7 day production + Canada Post 3–7 days = 8–14 business days total.\n\nFor fastest delivery, choose Express production + Courier shipping.\n\n## Damaged or Lost Shipments\n\nIf your order arrives damaged, contact us within 5 business days of delivery at info@nexacustoms.ca with photos of the damaged packaging and products. We will file a claim with the carrier and arrange a reprint or refund.\n\nNexa Customs is not responsible for carrier delays, lost packages after handoff to the carrier, or incorrect addresses provided by the customer. Please double-check your shipping address at checkout.' },
   returns: { title: 'Return Policy', slug: 'returns', nav: true, body: '>>> All our products are custom-printed to order. Please review your digital proof carefully before approving — production begins only after your approval.\n\n## Our Policy\n\nDue to the custom-printed nature of our products, we do not accept returns or exchanges for buyer\'s remorse, incorrect quantity ordered, or customer-supplied artwork errors.\n\nHowever, we stand 100% behind our print quality. If there is a manufacturing defect or error on our part, we will reprint your order at no charge.\n\n## When We Will Reprint or Refund\n\n| Situation | Our Response |\n|---|---|\n| Print defect (colour, banding, miscut) | Free reprint |\n| Wrong product shipped | Free reprint + return shipping |\n| Order lost in transit | Free reprint or full refund |\n| Our file/setup error | Free reprint |\n| Customer artwork error (approved proof) | Not eligible |\n| Change of mind | Not eligible |\n| Incorrect qty ordered | Not eligible |\n\n## How to Submit a Claim\n\n1. Email info@nexacustoms.ca within 5 business days of receiving your order\n2. Include your order number (NCX-XXXXX) in the subject line\n3. Attach clear photos of the defect and the packaging\n4. We will respond within 1 business day\n\n## The Proof Process\n\nEvery order includes a free digital PDF proof before printing. This is your opportunity to:\n\n- Check spelling, layout, and colours\n- Verify all artwork is correct\n- Confirm sizes and quantities\n\nProduction begins only after you approve the proof in writing (by email or website). By approving your proof, you confirm the artwork is correct and accept responsibility for any errors in the approved file.\n\n## Contact\n\nFor any concerns about your order, please contact us:\nEmail: info@nexacustoms.ca\nPhone: (437) 997-9921\nHours: Monday–Friday 10AM–8PM' },
   privacy: { title: 'Privacy Policy', slug: 'privacy', nav: false, body: '>>> Nexa Customs Inc. is committed to protecting your privacy. This policy explains how we collect, use, and protect your personal information. Last updated: June 2026.\n\n## What We Collect\n\n| Information | Why We Collect It |\n|---|---|\n| Name, email, phone | Order processing and communication |\n| Shipping address | Delivery of your order |\n| Payment info | Processed securely via Stripe (we never store card numbers) |\n| IP address & browser | Website analytics and security |\n| Order history | Customer support and reorders |\n\n## How We Use Your Information\n\nWe use your information to:\n- Process and fulfill your orders\n- Send order confirmations, proofs, and shipping notifications\n- Respond to your questions and support requests\n- Improve our products and services\n- Comply with legal obligations\n\nWe do not sell, rent, or share your personal information with third parties for marketing purposes.\n\n## Payment Security\n\nAll payments are processed by Stripe, a PCI DSS Level 1 certified payment processor. Nexa Customs never stores your full credit card number. All transactions are encrypted using SSL/TLS technology.\n\n## Cookies & Analytics\n\nOur website uses Google Analytics to understand how visitors use our site. This data is anonymous and aggregated. You can opt out of Google Analytics by installing the Google Analytics Opt-out Browser Add-on.\n\n## Data Retention\n\nWe retain your order information for 7 years as required by Canadian tax law. You may request deletion of your personal data at any time (subject to legal retention requirements) by emailing info@nexacustoms.ca.\n\n## Your Rights (PIPEDA)\n\nUnder Canada\'s Personal Information Protection and Electronic Documents Act (PIPEDA), you have the right to:\n- Access your personal information\n- Correct inaccurate information\n- Withdraw consent (may affect service delivery)\n- File a complaint with the Office of the Privacy Commissioner of Canada\n\n## Contact\n\nFor privacy questions or to exercise your rights:\nEmail: info@nexacustoms.ca\nPhone: (437) 997-9921\nAddress: 6033 Shawson Dr, Unit 40, Mississauga, ON L5T 1J6' },

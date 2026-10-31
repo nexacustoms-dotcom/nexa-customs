@@ -154,10 +154,12 @@ export function CheckoutPage() {
   });
   // Order number is created as soon as checkout opens (not when the order is
   // placed) so uploaded artwork can be filed under it right away.
-  const [orderNo] = useState(() => 'NCX-' + Math.floor(10000 + Math.random() * 90000));
+  const [orderNo] = useState(() => 'NCX-' + Math.floor(1000000 + Math.random() * 9000000));
   const artworkNamesRef = useRef(new Set());
   const artworkRef = useRef(null);
   const stripeRef = useRef(null);
+  const placingRef = useRef(false);        // synchronous lock: React state alone lets a fast double/triple click through
+  const retryPmRef = useRef(null);         // { id, amount } of a payment whose outcome we never heard back about
   const cardRef = useRef(null);
 
   // Cart items don't carry the full product record (just id/name/price/qty),
@@ -281,11 +283,11 @@ export function CheckoutPage() {
     const safeName = `artwork/${torontoDate()}/${orderNo}/${uniqueFileName(file.name, artworkNamesRef.current)}`;
     try {
       const res = await fetch(`${supaUrl}/storage/v1/object/nexa-media/${safeName}`, {
-        method: 'POST', headers: { apikey: supaKey, Authorization: `Bearer ${supaKey}`, 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' }, body: file,
+        method: 'POST', headers: { apikey: supaKey, Authorization: `Bearer ${supaKey}`, 'Content-Type': file.type || 'application/octet-stream' }, body: file,
       });
       if (res.ok) return `${supaUrl}/storage/v1/object/public/nexa-media/${safeName}`;
       const res2 = await fetch(`${supaUrl}/storage/v1/object/nexa-media/${safeName}`, {
-        method: 'POST', headers: { 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' }, body: file,
+        method: 'POST', headers: { 'Content-Type': file.type || 'application/octet-stream' }, body: file,
       });
       if (res2.ok) return `${supaUrl}/storage/v1/object/public/nexa-media/${safeName}`;
       return null;
@@ -366,31 +368,45 @@ export function CheckoutPage() {
         notes: form.notes || '',
         created_at: new Date().toISOString(),
       };
-      // Try full save first (with new columns)
+      // Save with retries — the customer has already paid at this point, so a
+      // brief network drop or 5xx must not lose the order. A repeat attempt that
+      // returns 409 (duplicate id) means an earlier attempt actually went through.
+      const postOrder = async (body) => {
+        let lastErr = '';
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 20000);
+            const res = await fetch(supaUrl + '/rest/v1/orders', {
+              method: 'POST',
+              signal: ctrl.signal,
+              headers: { 'Content-Type': 'application/json', apikey: supaKey, Authorization: 'Bearer ' + supaKey, Prefer: 'return=minimal' },
+              body: JSON.stringify(body),
+            });
+            clearTimeout(timer);
+            if (res.ok) return { ok: true };
+            if (res.status === 409 && attempt > 1) return { ok: true };
+            lastErr = await res.text();
+            if (res.status < 500 && res.status !== 408 && res.status !== 429) return { ok: false, err: lastErr };
+          } catch (e) { lastErr = e.message; }
+          await new Promise(r => setTimeout(r, 800 * attempt));
+        }
+        return { ok: false, err: lastErr };
+      };
       try {
-        const res = await fetch(supaUrl + '/rest/v1/orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', apikey: supaKey, Authorization: 'Bearer ' + supaKey, Prefer: 'return=minimal' },
-          body: JSON.stringify({
-            ...orderData,
-            billing_name: billing.sameAsContact ? (form.fn + ' ' + form.ln).trim() : (billing.fn + ' ' + billing.ln).trim(),
-            billing_address: billing.sameAsContact ? '' : `${billing.address}, ${billing.city}, ${billing.province} ${billing.postal}`,
-            shipping_address: delivery !== 'pickup' ? `${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : 'Pickup',
-          }),
+        const full = await postOrder({
+          ...orderData,
+          billing_name: billing.sameAsContact ? (form.fn + ' ' + form.ln).trim() : (billing.fn + ' ' + billing.ln).trim(),
+          billing_address: billing.sameAsContact ? '' : `${billing.address}, ${billing.city}, ${billing.province} ${billing.postal}`,
+          shipping_address: delivery !== 'pickup' ? `${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : 'Pickup',
         });
-        if (!res.ok) {
-          const err = await res.text();
-          console.error('Supabase order save error:', err);
-          // Fallback: save without new columns in case they don't exist yet
-          const res2 = await fetch(supaUrl + '/rest/v1/orders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', apikey: supaKey, Authorization: 'Bearer ' + supaKey, Prefer: 'return=minimal' },
-            body: JSON.stringify(orderData),
-          });
-          if (!res2.ok) {
-            const err2 = await res2.text();
-            console.error('Supabase fallback save error:', err2);
-            showToast('Order placed! Note: database save failed — ' + err2.slice(0, 80));
+        if (!full.ok) {
+          console.error('Supabase order save error:', full.err);
+          // Fallback: save without the newer columns in case they don't exist yet
+          const basic = await postOrder(orderData);
+          if (!basic.ok) {
+            console.error('Supabase fallback save error:', basic.err);
+            showToast('Order placed! Note: database save failed — ' + String(basic.err).slice(0, 80));
           }
         }
       } catch (e) {
@@ -527,6 +543,9 @@ export function CheckoutPage() {
   async function handlePlace() {
     if (cart.length === 0) { showToast('Your cart is empty'); return; }
     if (cartHasPickupOnlyItem && delivery !== 'pickup') { showToast('This order contains a pickup-only item — please select pickup'); return; }
+    if (placingRef.current) return;          // ignore 2nd/3rd click while a payment is in flight
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) { showToast('You appear to be offline — check your connection and try again. You have not been charged.'); return; }
+    placingRef.current = true;
     const no = orderNo;
     setPlacing(true);
     setStripeErr('');
@@ -545,7 +564,9 @@ export function CheckoutPage() {
             postal_code: billing.postal,
             country: billing.country === 'Canada' ? 'CA' : 'US',
           };
-          const { error: pmError, paymentMethod } = await stripeRef.current.createPaymentMethod({
+          const amountNow = Math.round(total * 100);
+          const reuse = retryPmRef.current && retryPmRef.current.amount === amountNow ? retryPmRef.current : null;
+          const { error: pmError, paymentMethod } = reuse ? { error: null, paymentMethod: { id: reuse.id } } : await stripeRef.current.createPaymentMethod({
             type: 'card',
             card: cardRef.current,
             billing_details: {
@@ -563,8 +584,11 @@ export function CheckoutPage() {
           const edgeUrl = `${cfg.supaUrl()}/functions/v1/process-stripe-payment`;
           let chargeData = {};
           try {
+            const ctrl = new AbortController();
+            const chargeTimer = setTimeout(() => ctrl.abort(), 45000);
             const res = await fetch(edgeUrl, {
               method: 'POST',
+              signal: ctrl.signal,
               headers: {
                 'Content-Type': 'application/json',
                 'apikey': cfg.supaKey(),
@@ -572,6 +596,7 @@ export function CheckoutPage() {
               },
               body: JSON.stringify({
                 payment_method_id: paymentMethod.id,
+                idempotency_key: `${no}:${amountInCents}:${paymentMethod.id}`,
                 amount: amountInCents,
                 currency: 'cad',
                 customer_name: (form.fn + ' ' + form.ln).trim(),
@@ -587,10 +612,17 @@ export function CheckoutPage() {
                 },
               }),
             });
+            clearTimeout(chargeTimer);
             chargeData = await res.json();
+            retryPmRef.current = null;           // we heard a definite answer
           } catch (fetchErr) {
             console.error('Edge function unreachable:', fetchErr);
-            showToast('Payment server error — please call us at (437) 997-9921');
+            // We do not know whether the card was charged. Remember this payment so a retry
+            // reuses it (the server de-duplicates), instead of risking a second charge.
+            retryPmRef.current = { id: paymentMethod.id, amount: amountInCents };
+            setStripeErr('We could not confirm your payment (slow or lost connection). Please do not enter your card again — click Place Order once more to safely retry, or call us at (437) 997-9921.');
+            showToast('Connection problem — please click Place Order again to retry safely.');
+            placingRef.current = false;
             setPlacing(false);
             return;
           }
@@ -649,7 +681,7 @@ export function CheckoutPage() {
     } catch (err) {
       console.error('Checkout error:', err);
       showToast('Something went wrong — please try again or call us at (437) 997-9921');
-    } finally { setPlacing(false); }
+    } finally { placingRef.current = false; setPlacing(false); }
   }
 
   const STEPS = ['Contact', 'Delivery', 'Artwork', 'Payment'];
@@ -1208,7 +1240,7 @@ export function QuotePage() {
     try {
       const res = await fetch(supaUrl + '/storage/v1/object/nexa-media/' + fname, {
         method: 'POST',
-        headers: { apikey: supaKey, Authorization: 'Bearer ' + supaKey, 'Content-Type': file.type, 'x-upsert': 'true' },
+        headers: { apikey: supaKey, Authorization: 'Bearer ' + supaKey, 'Content-Type': file.type },
         body: file,
       });
       setUploading(false);
@@ -1516,14 +1548,15 @@ export function OrderStatusPage() {
     const supaUrl = cfg.supaUrl(); const supaKey = cfg.supaKey();
     if (!supaUrl || !supaKey) { setError('Order tracking unavailable — store not configured.'); setLoading(false); return; }
     try {
-      const res = await fetch(
-        supaUrl + '/rest/v1/orders?order_number=eq.' + encodeURIComponent(no) + '&select=order_number,status,items,total,delivery,tracking_number,created_at,customer_name,customer_email',
-        { headers: { apikey: supaKey, Authorization: 'Bearer ' + supaKey } }
-      );
-      const data = await res.json();
-      if (!data || data.length === 0) { setError('No order found with that order number. Please double-check and try again.'); setLoading(false); return; }
-      const match = data.find(o => (o.customer_email||'').toLowerCase() === em);
-      if (!match) { setError('Email does not match our records for that order number.'); setLoading(false); return; }
+      // Server-side lookup: the database only returns an order when BOTH the order number and email match
+      const res = await fetch(supaUrl + '/rest/v1/rpc/track_order', {
+        method: 'POST',
+        headers: { apikey: supaKey, Authorization: 'Bearer ' + supaKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_order: no, p_email: em }),
+      });
+      if (!res.ok) throw new Error('lookup failed ' + res.status);
+      const match = await res.json();
+      if (!match || !match.order_number) { setError("We couldn't find an order with that number and email. Please double-check both and try again."); setLoading(false); return; }
       setOrder(match);
     } catch(e) { setError('Could not connect. Please try again.'); }
     setLoading(false);
@@ -1544,7 +1577,7 @@ export function OrderStatusPage() {
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <div className="badge-orange" style={{ marginBottom: 12 }}>Order Tracking</div>
           <h1 className="D" style={{ fontSize: 'clamp(28px,5vw,48px)', marginBottom: 10 }}>Track Your Order</h1>
-          <p style={{ fontSize: 13, color: 'var(--mu)' }}>Enter your order number (NCX-XXXXX) and email to check your production status.</p>
+          <p style={{ fontSize: 13, color: 'var(--mu)' }}>Enter your order number (like NCX-1234567) and email to check your production status.</p>
         </div>
 
         <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 14, padding: 24, marginBottom: 24 }}>
