@@ -79,8 +79,7 @@ function loadLocationSlugs() {
 
 // ── 3. Blog slugs — try Supabase first, fall back to the seed script ────
 async function loadBlogSlugs() {
-  const url = process.env.VITE_SUPA_URL || process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPA_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  const { url, key } = supaConfig();
   if (url && key) {
     try {
       const res = await fetch(`${url}/rest/v1/site_config?id=eq.custom_pages&select=data`, {
@@ -103,6 +102,43 @@ async function loadBlogSlugs() {
   return seedFiles.flatMap(f => [...readFileSync(join(ROOT, 'scripts', f), 'utf8').matchAll(/slug:\s*'([a-z0-9-]+)'/g)].map(m => m[1]));
 }
 
+// Supabase address + public (anon) key: from the build environment on Vercel, otherwise the same
+// public values scripts/generate-sitemap.mjs already uses (so `npm run sync:vercel` works on your PC).
+function supaConfig() {
+  let url = process.env.VITE_SUPA_URL || process.env.VITE_SUPABASE_URL;
+  let key = process.env.VITE_SUPA_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    try {
+      const t = readFileSync(join(ROOT, 'scripts/generate-sitemap.mjs'), 'utf8');
+      url = url || t.match(/const SUPA_URL\s*=\s*"([^"]+)"/)?.[1];
+      key = key || t.match(/const SUPA_KEY\s*=\s*"([^"]+)"/)?.[1];
+    } catch {}
+  }
+  return { url, key };
+}
+
+// Products created in Admin only exist in the database, not in src/data/products.js.
+// Without this they get no prerendered page and no sitemap entry.
+async function loadAdminProductRoutes(knownIds) {
+  const { url, key } = supaConfig();
+  if (!url || !key) return [];
+  try {
+    const res = await fetch(`${url}/rest/v1/site_config?id=eq.products&select=data`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+    const rows = await res.json();
+    let data = rows?.[0]?.data;
+    if (typeof data === 'string') data = JSON.parse(data);
+    const list = Array.isArray(data) ? data : Object.values(data || {});
+    const routes = list
+      .filter(p => p && p.id && p.cat && p.name && !knownIds.has(p.id) && !p.disabled && !/^new-product-/.test(p.id))
+      .map(p => `/products/${p.cat}/${p.id}`);
+    if (routes.length) console.log(`[prerender] found ${routes.length} product(s) created in Admin:\n` + routes.map(r => '  ' + r).join('\n'));
+    return routes;
+  } catch (e) {
+    console.warn('[prerender] could not load Admin-created products:', e.message);
+    return [];
+  }
+}
+
 // ── 4. Build the full route list ─────────────────────────────────────────
 async function buildRoutes() {
   const { DEFAULT_CATS, DEFAULT_PRODS } = loadProductData();
@@ -115,6 +151,7 @@ async function buildRoutes() {
   ];
   for (const cat of DEFAULT_CATS) routes.push(`/products/${cat.id}`);
   for (const prod of DEFAULT_PRODS.filter(p => !p.disabled)) routes.push(`/products/${prod.cat}/${prod.id}`);
+  routes.push(...await loadAdminProductRoutes(new Set(DEFAULT_PRODS.map(p => p.id))));
   for (const slug of locationSlugs) routes.push(`/${slug}`);
   for (const slug of blogSlugs) routes.push(`/blog/${slug}`);
 

@@ -78,6 +78,17 @@ prods.forEach(p => {
   urls.push(url(`${DOMAIN}/products/${p.cat}/${p.id}`, "0.7", "monthly"));
 });
 
+// Products created in Admin (they exist only in the database, not in src/data/products.js)
+let adminAdded = 0;
+const knownIds = new Set(prods.map(p => p.id));
+Object.values(overrides).forEach(p => {
+  if (!p?.id || knownIds.has(p.id) || !p.cat || !p.name || p.disabled) return;
+  if (/^new-product-/.test(p.id)) return;                 // unfinished drafts
+  urls.push(url(`${DOMAIN}/products/${p.cat}/${p.id}`, "0.7", "monthly"));
+  adminAdded++;
+});
+if (adminAdded) console.log(`   + ${adminAdded} product(s) you created in Admin included`);
+
 if (customPages.length) {
   urls.push(`  <!-- ═══ Custom pages ═══ -->`);
   customPages.forEach(p => urls.push(url(`${DOMAIN}/blog/${p.slug}`, "0.5", "monthly")));

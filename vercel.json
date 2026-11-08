@@ -891,6 +891,14 @@
       "destination": "/blog/business-cards-for-contractors-and-trades/index.html"
     },
     {
+      "source": "/blog/same-day-real-estate-signs-printing-mississauga",
+      "destination": "/blog/same-day-real-estate-signs-printing-mississauga/index.html"
+    },
+    {
+      "source": "/blog/real-estate-sign-regulations-gta-municipalities",
+      "destination": "/blog/real-estate-sign-regulations-gta-municipalities/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
