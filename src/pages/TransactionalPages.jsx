@@ -38,6 +38,17 @@ function torontoDate() {
 }
 
 // ── CART ──────────────────────────────────────────────────────────────────────
+// One receipt line per item, plus a "Price:" line that itemises the base price and each option's cost.
+function receiptItemLines(c) {
+  const head = `• ${c.qty}x ${c.name}${c.opts?.length ? ' (' + c.opts.join(' + ') + ')' : ''}${c.turnaround && c.turnaround !== 'standard' ? ' — ' + (c.turnaround === 'express' ? 'Express' : 'Rush') : ''}`;
+  const bd = c.breakdown;
+  if (!bd) return [head];
+  const m = n => `${n >= 0 ? '+' : '-'}$${Math.abs(n).toFixed(2)}`;
+  const parts = [`Base $${bd.base.toFixed(2)}`, ...bd.lines.map(l => `${l.label} ${m(l.amount)}`)];
+  if (c.taFee > 0) parts.push(`${c.turnaround === 'rush' ? 'Rush' : 'Express'} ${m(c.taFee)}`);
+  return parts.length > 1 ? [head, `   Price: ${parts.join(', ')}`] : [head];
+}
+
 export function CartPage() {
   const { cart, removeFromCart, pricing, cartSubtotal } = useApp();
   const navigate = useNavigate();
@@ -159,6 +170,7 @@ export function CheckoutPage() {
   const artworkRef = useRef(null);
   const stripeRef = useRef(null);
   const placingRef = useRef(false);        // synchronous lock: React state alone lets a fast double/triple click through
+  const cardInfoRef = useRef(null);        // { brand, last4 } of the card used — for the receipt (never the full number)
   const retryPmRef = useRef(null);         // { id, amount } of a payment whose outcome we never heard back about
   const cardRef = useRef(null);
 
@@ -186,6 +198,8 @@ export function CheckoutPage() {
   const shipCost = delivery === 'pickup' ? 0 : (delivery === 'post' ? pricing.shipping_post : pricing.shipping_courier) + shipSurcharge;
   // Rush/express fee is now baked into item prices at the product configurator — no global surcharge
   const rushFee = 0;
+  const taFeeTotal = +cart.reduce((s, i) => s + (i.taFee || 0), 0).toFixed(2);   // Express/Rush fees already inside item prices — for display only
+  const carrierName = delivery === 'post' ? (store?.shipping_carrier || 'Canada Post') : (store?.courier_carrier_name || 'Courier');
   const subtotal = +(cartSubtotal + shipCost).toFixed(2);
   // Pickup orders are always taxed at Ontario's rate (goods supplied/picked up
   // in Mississauga regardless of the customer's home province). Shipped orders
@@ -487,10 +501,18 @@ export function CheckoutPage() {
         const imgCell = thumb
           ? `<img src="${thumb}" width="56" height="56" alt="${i.name}" style="display:block; border-radius:8px; object-fit:cover; width:56px; height:56px;" />`
           : `<div style="width:56px; height:56px; border-radius:8px; background-color:#f4f4f5; border:1px solid #ececec;"></div>`;
+        // What the customer actually chose (paper, sides, size, coating, add-ons) and how fast
+        const taNames = { standard: 'Standard (5–7 business days)', rush: 'Rush (2–3 business days)', express: 'Express (same / next day)' };
+        const optLine = (i.opts && i.opts.length) ? `<br/><span style="color:#6b6b76; font-size:12px;">${i.opts.join(' &middot; ')}</span>` : '';
+        const money = n => `${n >= 0 ? '+' : '&minus;'}$${Math.abs(n).toFixed(2)}`;
+        const bdParts = i.breakdown ? [`Base $${i.breakdown.base.toFixed(2)}`, ...i.breakdown.lines.map(l => `${l.label} ${money(l.amount)}`)] : [];
+        if (i.taFee > 0) bdParts.push(`${i.turnaround === 'rush' ? 'Rush' : 'Express'} ${money(i.taFee)}`);
+        const bdLine = bdParts.length > 1 ? `<br/><span style="color:#6b6b76; font-size:12px;">Price: ${bdParts.join(' &middot; ')}</span>` : '';
+        const taLine = `<br/><span style="color:#6b6b76; font-size:12px;">Turnaround: ${taNames[i.turnaround || 'standard'] || i.turnaround}${i.taFee > 0 ? ` (+$${i.taFee.toFixed(2)})` : ''}</span>`;
         return `<tr>
           <td style="padding:10px 10px 10px 0; width:56px;">${imgCell}</td>
           <td style="padding:10px; font-family:Arial, Helvetica, sans-serif; font-size:13px;">
-            ${nameCell}<br/>
+            ${nameCell}${optLine}${taLine}${bdLine}<br/>
             <span style="color:#9a9aa5; font-size:12px;">Qty ${i.qty} &middot; $${unit.toFixed(2)} each</span>
           </td>
           <td style="padding:10px 0; text-align:right; font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:700; color:#0c0c0e; white-space:nowrap;">$${i.price.toFixed(2)}</td>
@@ -500,8 +522,9 @@ export function CheckoutPage() {
 
       // Bottom price breakdown — only the rows that actually apply.
       const breakdownRows = [
-        [`Subtotal (${cart.reduce((s,i)=>s+i.qty,0)} items)`, `$${cartSubtotal.toFixed(2)}`, false],
-        shipCost > 0 ? ['Shipping', `$${shipCost.toFixed(2)}`, false] : null,
+        [`Items (${cart.reduce((s,i)=>s+i.qty,0)} pcs)`, `$${(cartSubtotal - taFeeTotal).toFixed(2)}`, false],
+        taFeeTotal > 0 ? ['Express / Rush turnaround', `$${taFeeTotal.toFixed(2)}`, false] : null,
+        shipCost > 0 ? [`Shipping (${carrierName})`, `$${shipCost.toFixed(2)}`, false] : ['Pickup (Mississauga)', '$0.00', false],
         rushFee > 0 ? ['Rush/Express fee', `$${rushFee.toFixed(2)}`, false] : null,
         [taxInfo.label, `$${hst.toFixed(2)}`, false],
         ['Order Total', `$${total.toFixed(2)}`, true],
@@ -515,6 +538,43 @@ export function CheckoutPage() {
         ? 'Free Pickup<br/>6033 Shawson Dr, Unit 40<br/>Mississauga, ON'
         : `${delivery === 'post' ? (store?.shipping_carrier || 'Canada Post') : (store?.courier_carrier_name || 'Courier')}<br/>${shipping.address}<br/>${shipping.city}, ${shipping.province} ${shipping.postal}`;
 
+      // ── Customer information block (addresses, payment, shipping method) — like a standard store receipt.
+      // Everything a customer typed is HTML-escaped before it goes into the email.
+      const esc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const brandNames = { visa: 'Visa', mastercard: 'Mastercard', amex: 'American Express', discover: 'Discover', diners: 'Diners Club', jcb: 'JCB', unionpay: 'UnionPay' };
+      const cardInfo = cardInfoRef.current;
+      const payText = (payMethod === 'stripe' && cardInfo?.last4)
+        ? `${brandNames[cardInfo.brand] || 'Card'} ending with ${esc(cardInfo.last4)}`
+        : (payMethod === 'stripe' ? 'Credit / debit card' : esc(payMethod));
+      const fullName = esc((form.fn + ' ' + form.ln).trim());
+      const shipLines = delivery === 'pickup'
+        ? ['Pickup order', 'Nexa Customs Inc.', '6033 Shawson Dr, Unit 40', 'Mississauga, ON L5T 1J6', 'Canada']
+        : [fullName, esc(shipping.address), esc(`${shipping.city}, ${shipping.province} ${shipping.postal}`), 'Canada'];
+      const billLines = billing.sameAsContact
+        ? (delivery === 'pickup' ? [fullName, esc(form.email)] : [fullName, esc(shipping.address), esc(`${shipping.city}, ${shipping.province} ${shipping.postal}`), 'Canada'])
+        : [esc((billing.fn + ' ' + billing.ln).trim()), esc(billing.address), esc(`${billing.city}, ${billing.province} ${billing.postal}`), esc(billing.country || 'Canada')];
+      const lbl = 'font-family:Arial, Helvetica, sans-serif; font-size:13px; font-weight:700; color:#0c0c0e; padding:0 0 6px 0;';
+      const txt = 'font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:1.6; color:#55555f; padding:0 16px 18px 0; vertical-align:top;';
+      const shipMethodText = delivery === 'pickup'
+        ? 'Free pickup — Mississauga'
+        : `${esc(carrierName)}${shipCost > 0 ? ` &middot; $${shipCost.toFixed(2)}` : ''}`;
+      const customerInfoHtml = `<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px; border-top:1px solid #e6e6ea;">
+        <tr><td colspan="2" style="font-family:Arial, Helvetica, sans-serif; font-size:17px; color:#0c0c0e; padding:22px 0 14px 0;">Customer information</td></tr>
+        <tr>
+          <td style="${lbl}" width="50%">${delivery === 'pickup' ? 'Pickup location' : 'Shipping address'}</td>
+          <td style="${lbl}" width="50%">Billing address</td>
+        </tr>
+        <tr>
+          <td style="${txt}">${shipLines.join('<br/>')}</td>
+          <td style="${txt}">${billLines.join('<br/>')}</td>
+        </tr>
+        <tr><td style="${lbl}">Payment</td><td style="${lbl}">${delivery === 'pickup' ? 'Pickup' : 'Shipping method'}</td></tr>
+        <tr>
+          <td style="${txt}">${payText}</td>
+          <td style="${txt}">${shipMethodText}<br/>${esc(estimateLabel)} ${esc(estimateDate)}</td>
+        </tr>
+      </table>`;
+
       sendEmailJS(ejsSvc, ejsStatusTpl, ejsKey, {
         to_email: form.email,
         from_name: 'Nexa Customs',
@@ -527,9 +587,12 @@ export function CheckoutPage() {
         order_date: orderDate,
         order_total: `$${total.toFixed(2)}`,
         delivery_value: deliveryValue,
-        items_html: itemsHtml,
-        breakdown_html: breakdownHtml,
-        payment_method: payMethod,
+        // Headings and divider lines live inside these blocks, so emails that send them empty
+        // (e.g. the "ready for pickup" status email) show no stray heading or line.
+        items_html: itemsHtml ? `<tr><td colspan="3" style="font-family:Arial, Helvetica, sans-serif; font-size:17px; color:#0c0c0e; padding:6px 0 10px 0; border-bottom:1px solid #e6e6ea;">Order summary</td></tr>${itemsHtml}` : '',
+        breakdown_html: breakdownHtml ? `<tr><td colspan="2" style="border-top:1px solid #e6e6ea; height:8px; line-height:8px; font-size:0;">&nbsp;</td></tr>${breakdownHtml}` : '',
+        customer_info_html: customerInfoHtml,
+        payment_method: payText,
         tracking_line: '',
         logo_url: store?.logo_img || '',
       })
@@ -577,6 +640,8 @@ export function CheckoutPage() {
             },
           });
           if (pmError) { setStripeErr(pmError.message); setPlacing(false); return; }
+          if (paymentMethod?.card) cardInfoRef.current = { brand: paymentMethod.card.brand, last4: paymentMethod.card.last4 };
+          else if (reuse?.card) cardInfoRef.current = reuse.card;
 
           // Step 2 — actually charge via Edge Function
           const amountInCents = Math.round(total * 100);
@@ -602,7 +667,7 @@ export function CheckoutPage() {
                 customer_name: (form.fn + ' ' + form.ln).trim(),
                 customer_email: form.email,
                 order_number: no,
-                description: `Nexa Customs ${no} — ${itemsStr.slice(0, 100)} | Subtotal: $${subtotal.toFixed(2)} + ${taxInfo.label}: $${hst.toFixed(2)} = $${total.toFixed(2)} CAD`,
+                description: [`Nexa Customs order ${no}`, ...cart.flatMap(receiptItemLines), `• Items $${(cartSubtotal - taFeeTotal).toFixed(2)}`, ...(taFeeTotal > 0 ? [`• Express/Rush turnaround $${taFeeTotal.toFixed(2)}`] : []), shipCost > 0 ? `• Shipping (${carrierName}) $${shipCost.toFixed(2)}` : '• Pickup (Mississauga) $0.00', `• ${taxInfo.label} $${hst.toFixed(2)}`, `• TOTAL $${total.toFixed(2)} CAD`].join('\n').slice(0, 900),
                 subtotal: Math.round(subtotal * 100),
                 tax_amount: Math.round(hst * 100),
                 billing_details: {
@@ -619,7 +684,7 @@ export function CheckoutPage() {
             console.error('Edge function unreachable:', fetchErr);
             // We do not know whether the card was charged. Remember this payment so a retry
             // reuses it (the server de-duplicates), instead of risking a second charge.
-            retryPmRef.current = { id: paymentMethod.id, amount: amountInCents };
+            retryPmRef.current = { id: paymentMethod.id, amount: amountInCents, card: cardInfoRef.current };
             setStripeErr('We could not confirm your payment (slow or lost connection). Please do not enter your card again — click Place Order once more to safely retry, or call us at (437) 997-9921.');
             showToast('Connection problem — please click Place Order again to retry safely.');
             placingRef.current = false;

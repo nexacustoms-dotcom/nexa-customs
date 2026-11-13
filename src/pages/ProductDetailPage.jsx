@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, imgUrl } from '../context/AppContext';
 import ICONS from '../components/Icons';
+import { optLabelFor, priceBreakdown } from '../lib/priceBreakdown';
 import ProductCard from '../components/ProductCard';
 import { CAT_BG } from '../data/products';
 import { getLocationPageSlugs, getLocationPageMeta } from './LocationServicePage';
@@ -85,12 +86,9 @@ export default function ProductDetailPage() {
 
   function handleAdd() {
     if (price === 0) { showToast('Please configure your order'); return; }
-    const optLabels = Object.entries(selOpts).map(([key, val]) => {
-      const g = prod.opts?.find(x => x.key === key);
-      return g?.opts?.find(o => o.id === val)?.l || val;
-    }).filter(Boolean);
+    const optLabels = Object.entries(selOpts).map(([key, val]) => optLabelFor(prod, key, val)).filter(Boolean);
     if (isCustomSize && custW && custH) optLabels.push(`${custW}′ × ${custH}′`);
-    addToCart({ id: prod.id, name: prod.name, cat: prod.cat, qty: selQty, opts: optLabels, price, unitPrice, turnaround, imgs: prod.imgs?.filter(x=>x?.length) || [] });
+    addToCart({ id: prod.id, name: prod.name, cat: prod.cat, qty: selQty, opts: optLabels, price, unitPrice, turnaround, taFee, breakdown: priceBreakdown(prod, selQty, priceOpts, calcPrice), imgs: prod.imgs?.filter(x=>x?.length) || [] });
     showToast(`Added to cart!`);
   }
 
@@ -113,10 +111,7 @@ export default function ProductDetailPage() {
   }
 
   function handleEmailQuote() {
-    const optLabels = Object.entries(selOpts).map(([key, val]) => {
-      const g = prod.opts?.find(x => x.key === key);
-      return g?.opts?.find(o => o.id === val)?.l || val;
-    }).filter(Boolean);
+    const optLabels = Object.entries(selOpts).map(([key, val]) => optLabelFor(prod, key, val)).filter(Boolean);
     const lines = [
       `${prod.name}`,
       `Quantity: ${selQty?.toLocaleString()}${isSqft ? ' pcs' : ' units'}`,

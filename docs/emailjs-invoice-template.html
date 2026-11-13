@@ -1,0 +1,40 @@
+<!-- EmailJS template for the customer order email (the template whose ID is VITE_EJS_STATUS_TPL).
+     In EmailJS: Email Templates -> open that template -> Content -> "Edit Content" -> code view -> paste this whole file.
+     Settings tab:  Subject = {{subject}}   To Email = {{to_email}}   From Name = {{from_name}}   Reply To = {{reply_to}}
+     Triple braces {{{ }}} insert ready-made HTML blocks; double braces {{ }} insert plain text. -->
+<div style="background:#f4f4f6; padding:24px 0; margin:0;">
+  <table align="center" width="600" cellpadding="0" cellspacing="0" style="width:600px; max-width:100%; background:#ffffff; border-radius:10px; font-family:Arial, Helvetica, sans-serif;">
+    <tr><td style="padding:28px 32px 8px 32px;">
+      <img src="{{logo_url}}" alt="Nexa Customs" height="54" style="height:54px; display:block; border:0;" />
+    </td></tr>
+    <tr><td style="padding:12px 32px 4px 32px;">
+      <div style="font-size:24px; font-weight:700; color:#0c0c0e;">{{status_headline}}</div>
+      <div style="font-size:14px; line-height:1.6; color:#55555f; padding-top:8px;">{{status_message}}</div>
+    </td></tr>
+    <tr><td style="padding:16px 32px 4px 32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7f7f9; border-radius:8px;">
+        <tr>
+          <td style="padding:14px 16px; font-size:12px; color:#6b6b76;">ORDER NUMBER<br/><span style="font-size:15px; font-weight:700; color:#0c0c0e;">{{order_number}}</span></td>
+          <td style="padding:14px 16px; font-size:12px; color:#6b6b76;">ORDER DATE<br/><span style="font-size:15px; font-weight:700; color:#0c0c0e;">{{order_date}}</span></td>
+          <td style="padding:14px 16px; font-size:12px; color:#6b6b76; text-align:right;">TOTAL<br/><span style="font-size:15px; font-weight:700; color:#f97316;">{{order_total}} CAD</span></td>
+        </tr>
+      </table>
+    </td></tr>
+    <tr><td style="padding:20px 32px 0 32px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        {{{items_html}}}
+      </table>
+    </td></tr>
+    <tr><td style="padding:8px 32px 0 32px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        {{{breakdown_html}}}
+      </table>
+    </td></tr>
+    <tr><td style="padding:8px 32px 0 32px;">{{{customer_info_html}}}</td></tr>
+    <tr><td style="padding:6px 32px 0 32px; font-size:13px; line-height:1.6; color:#55555f;">{{{tracking_line}}}</td></tr>
+    <tr><td style="padding:18px 32px 30px 32px; font-size:13px; line-height:1.6; color:#6b6b76; border-top:1px solid #e6e6ea;">
+      Questions about your order? Reply to this email, call (437) 997-9921 or write info@nexacustoms.ca.<br/>
+      Nexa Customs Inc. &middot; 6033 Shawson Dr, Unit 40, Mississauga, ON &middot; <a href="https://nexacustoms.ca/order-status" style="color:#f97316;">Track your order</a>
+    </td></tr>
+  </table>
+</div>
