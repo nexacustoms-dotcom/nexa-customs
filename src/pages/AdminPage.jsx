@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useApp, sendEmailJS } from '../context/AppContext';
 import { signIn, signOut, getAccessToken, authHeaders, sessionEmail } from '../lib/adminSession';
+import { buildEmail, notificationKeyFor } from '../lib/emailBuilder';
+import NotificationsTab from './NotificationsTab';
 
 const TABS = [
   { id: 'orders',     label: '📦 Orders' },
@@ -11,6 +13,7 @@ const TABS = [
   { id: 'settings',   label: '⚙️ Settings' },
   { id: 'pages',      label: '📄 Pages' },
   { id: 'emails',     label: '📬 Emails' },
+  { id: 'notify',     label: '🔔 Notifications' },
   { id: 'pricing',    label: '💰 Pricing' },
 ];
 
@@ -214,6 +217,7 @@ export default function AdminPage() {
         {tab === 'settings'   && <SettingsTab />}
         {tab === 'pages'      && <PagesTab />}
         {tab === 'emails'     && <EmailsTab />}
+        {tab === 'notify'     && <NotificationsTab />}
         {tab === 'pricing'    && <PricingTab />}
       </div>
     </div>
@@ -1903,7 +1907,7 @@ function printOrderSheet(o) {
 
 // ── ORDERS TAB ─────────────────────────────────────────────────────────────────
 function OrdersTab() {
-  const { ls, showToast, cfg, store } = useApp();
+  const { ls, showToast, cfg, store, notify } = useApp();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -1934,63 +1938,6 @@ function OrdersTab() {
       showToast('❌ Network error: ' + e.message);
     }
     setLoading(false);
-  }
-
-  // The actual customer-facing copy for each stage. Composed here in code
-  // rather than as separate EmailJS templates, since the free EmailJS plan
-  // only allows 2 templates total — this reuses one flexible template.
-  function getStatusEmail(status, order, trackingNumber) {
-    const name = (order.customer_name || '').split(' ')[0] || 'there';
-    const no = order.order_number || order.id;
-    const isPickup = order.delivery === 'pickup';
-    const trackLine = trackingNumber ? ` Your tracking number is ${trackingNumber}.` : '';
-
-    const COPY = {
-      'Order Received': {
-        subject: `We've got your order, ${name}! (${no})`,
-        headline: 'Order Received ✅',
-        body: `Thanks for ordering with Nexa Customs! We've received order ${no} and our team is reviewing it now. We'll email you again once a proof is ready for approval, or once we move to printing if no proof is needed.\n\nYou can check your order status anytime at nexacustoms.ca/order-status.`,
-      },
-      'Proof Sent': {
-        subject: `Your proof is ready for approval — ${no}`,
-        headline: 'Proof Sent 🖼️',
-        body: `A design proof for order ${no} is ready for your review. If you don't see it attached or in a separate email shortly, just reply here and we'll resend it.\n\nPlease reply with your approval or any changes as soon as you can — we won't start printing until we hear back from you, so a quick reply keeps your order on schedule.`,
-      },
-      'Printing': {
-        subject: `Your order is on the press! — ${no}`,
-        headline: 'Printing 🖨️',
-        body: `Good news — order ${no} is being printed right now. We'll email you again as soon as it's done.`,
-      },
-      'Printed': {
-        subject: `Printing complete — ${no}`,
-        headline: 'Printed 📦',
-        body: `Order ${no} has finished printing and is now being finished and packed${isPickup ? ' for pickup' : ' for shipping'}. ${isPickup ? "We'll let you know the moment it's ready to grab." : "We'll send tracking details as soon as it ships."}`,
-      },
-      'Shipped': isPickup ? {
-        subject: `Your order is ready for pickup! — ${no}`,
-        headline: 'Ready for Pickup 🏪',
-        body: `Order ${no} is ready! Come pick it up at 6033 Shawson Dr, Unit 40, Mississauga, ON L5T 1J6.\n\nHours: Mon–Fri 10AM–8PM, Sat by appointment.`,
-      } : {
-        subject: `Your order has shipped! — ${no}`,
-        headline: 'Shipped 🚚',
-        body: `Order ${no} is on its way.${trackLine}`,
-      },
-      'Delivered': isPickup ? {
-        subject: `Thanks for picking up your order! — ${no}`,
-        headline: 'Picked Up 🎉',
-        body: `Thanks for picking up order ${no}! We'd love to hear how it turned out — and if anything isn't right, just reply to this email.`,
-      } : {
-        subject: `Delivered — thanks for choosing Nexa Customs!`,
-        headline: 'Delivered 🎉',
-        body: `Order ${no} has been delivered. Thank you for choosing Nexa Customs — we'd love to hear how it turned out! If anything isn't right, just reply to this email.`,
-      },
-      'Cancelled': {
-        subject: `Order ${no} has been cancelled`,
-        headline: 'Cancelled ❌',
-        body: `Order ${no} has been cancelled. If this wasn't expected or you have questions, just reply to this email or call us at (437) 997-9921.`,
-      },
-    };
-    return COPY[status] || null;
   }
 
   async function updateStatus(id, status, order) {
@@ -2024,18 +1971,28 @@ function OrdersTab() {
         showToast('⚠️ Status saved, but customer email not sent — set VITE_EJS_STATUS_TPL to enable auto-emails');
         return;
       }
-      const content = getStatusEmail(status, { ...order, tracking_number: trackingNumber }, trackingNumber);
-      if (!content) return;
+      // Wording, layout and on/off switches come from Admin → Notifications
+      const notifKey = notificationKeyFor(status, order.delivery === 'pickup');
+      if (!notifKey) return;
+      if (notify.messages[notifKey]?.enabled === false) { showToast('Status saved. The "' + notifKey + '" email is switched off in Notifications.'); return; }
+      const built = buildEmail(notify, notifKey, {
+        order_number: order.order_number || order.id,
+        order_date: order.created_at ? new Date(order.created_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
+        customer_name: order.customer_name || '', customer_email: order.customer_email,
+        delivery: order.delivery, total: parseFloat(order.total) || 0, tracking_number: trackingNumber,
+        logoUrl: store?.logo_img || '',
+      });
       try {
         await sendEmailJS(ejsSvc, ejsStatusTpl, ejsKey, {
           to_email: order.customer_email,
-          from_name: 'Nexa Customs',
-          reply_to: 'info@nexacustoms.ca',
+          from_name: notify.brand.senderName || 'Nexa Customs',
+          reply_to: notify.brand.replyTo || 'info@nexacustoms.ca',
           customer_name: order.customer_name || 'there',
           order_number: order.order_number || order.id,
-          subject: content.subject,
-          status_headline: content.headline,
-          status_message: content.body,
+          subject: built.subject,
+          email_html: built.html,
+          status_headline: built.headline,
+          status_message: built.message,
           tracking_line: trackingNumber ? `Tracking number: ${trackingNumber}` : '',
           logo_url: store?.logo_img || '',
           order_date: order.created_at ? new Date(order.created_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) : '',

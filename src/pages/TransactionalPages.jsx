@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, sendEmailJS, sendTelegram, imgUrl } from '../context/AppContext';
+import { buildEmail, buildAlertEmail, alertRecipients } from '../lib/emailBuilder';
 import { getTaxInfo, DEFAULT_TAX } from '../data/products';
 import ICONS from '../components/Icons';
 
@@ -120,7 +121,7 @@ export function CartPage() {
 
 // ── CHECKOUT ──────────────────────────────────────────────────────────────────
 export function CheckoutPage() {
-  const { cart, cartSubtotal, pricing, clearCart, showToast, ls, cfg, store, prods } = useApp();
+  const { cart, cartSubtotal, pricing, clearCart, showToast, ls, cfg, store, prods, notify } = useApp();
   const navigate = useNavigate();
 
   useEffect(() => { if (cart.length === 0) navigate('/products'); }, [cart.length]);
@@ -428,7 +429,7 @@ export function CheckoutPage() {
       }
     }
     const tok = cfg.tgToken(); const cid = cfg.tgChat();
-    if (tok && cid) {
+    if (tok && cid && notify.alerts.onOrder !== false) {
       const artInfo = artworkFiles.length > 0
         ? '\n\nFILES:\n' + artworkFiles.map(f => f.url ? `${f.name}: ${f.url}` : `${f.name} (upload failed — customer may email this separately)`).join('\n')
         : '';
@@ -436,9 +437,9 @@ export function CheckoutPage() {
       sendTelegram(tok, cid, `NEW ORDER ${no} | ${(form.fn + ' ' + form.ln).trim()} | ${form.email} | ${form.phone} | ${itemsStr2} | $${total.toFixed(2)} | ${payMethod}${artInfo}`);
     }
     const ejsSvc = cfg.ejsSvc(); const ejsTpl = cfg.ejsTpl(); const ejsKey = cfg.ejsKey(); const ejsTo = cfg.ejsTo();
-    if (ejsSvc && ejsTpl && ejsKey) {
+    if (ejsSvc && ejsTpl && ejsKey && notify.alerts.onOrder !== false) {
       const p = {
-        to_email:       ejsTo || 'info@nexacustoms.ca',
+        to_email:       alertRecipients(notify, ejsTo),
         from_name:      'Nexa Customs Website',
         reply_to:       form.email,
         order_number:   no,
@@ -456,6 +457,7 @@ export function CheckoutPage() {
         subject:        `New Order ${no} — ${(form.fn + ' ' + form.ln).trim()}`,
         message:        `New order!\n\nOrder: ${no}\nCustomer: ${(form.fn + ' ' + form.ln).trim()}\nEmail: ${form.email}\nPhone: ${form.phone}\nItems: ${buildItemsStr()}\nTotal: $${total.toFixed(2)}\nDelivery: ${delivery}${delivery !== 'pickup' ? `\nShip To: ${shipping.address}, ${shipping.city}, ${shipping.province} ${shipping.postal}` : ' (Pickup at 6033 Shawson Dr)'}\nPayment: ${payMethod}`,
       };
+      p.email_html = buildAlertEmail(`New order ${no} — ${(form.fn + ' ' + form.ln).trim()}`, p, notify);
       sendEmailJS(ejsSvc, ejsTpl, ejsKey, p)
         .then(() => console.log('Order email sent'))
         .catch(err => { console.error('Order email failed:', err.message); showToast('Order saved! Email error: ' + err.message); });
@@ -575,15 +577,40 @@ export function CheckoutPage() {
         </tr>
       </table>`;
 
+      // The customer email is built from Admin → Notifications (wording, layout, sections).
+      // `email_html` is the finished email; the older field names below keep the previous EmailJS template working.
+      const rawBrandName = (billing.fn + ' ' + billing.ln).trim();
+      const emailData = {
+        order_number: no, order_date: orderDate, customer_name: custName, customer_email: form.email,
+        delivery, total, logoUrl: store?.logo_img || '', estimateLabel, estimateDate,
+        items: cart.map(i => ({
+          name: i.name, cat: i.cat, qty: i.qty, unit: i.unitPrice != null ? i.unitPrice : i.price / (i.qty || 1), price: i.price,
+          img: i.imgs?.[0] ? imgUrl(i.imgs[0], 120) : '', opts: i.opts || [], turnaround: i.turnaround || 'standard', taFee: i.taFee || 0, breakdown: i.breakdown || null,
+        })),
+        totals: { pieces: cart.reduce((n, i) => n + i.qty, 0), items: cartSubtotal - taFeeTotal, express: taFeeTotal, shipping: shipCost, shippingLabel: carrierName, taxLabel: taxInfo.label, tax: hst, total },
+        shipLines: delivery === 'pickup'
+          ? ['Pickup order', 'Nexa Customs Inc.', '6033 Shawson Dr, Unit 40', 'Mississauga, ON L5T 1J6', 'Canada']
+          : [custName, shipping.address, `${shipping.city}, ${shipping.province} ${shipping.postal}`, 'Canada'],
+        billLines: billing.sameAsContact
+          ? (delivery === 'pickup' ? [custName, form.email] : [custName, shipping.address, `${shipping.city}, ${shipping.province} ${shipping.postal}`, 'Canada'])
+          : [rawBrandName, billing.address, `${billing.city}, ${billing.province} ${billing.postal}`, billing.country || 'Canada'],
+        paymentText: (payMethod === 'stripe' && cardInfo?.last4) ? `${brandNames[cardInfo.brand] || 'Card'} ending with ${cardInfo.last4}` : (payMethod === 'stripe' ? 'Credit / debit card' : String(payMethod || '')),
+        shipMethodText: delivery === 'pickup' ? 'Free pickup — Mississauga' : `${carrierName}${shipCost > 0 ? ` · $${shipCost.toFixed(2)}` : ''}`,
+      };
+      const built = buildEmail(notify, 'confirmation', emailData);
+      if (notify.messages.confirmation.enabled === false) {
+        console.log('Order confirmation email is switched off in Admin → Notifications');
+      } else
       sendEmailJS(ejsSvc, ejsStatusTpl, ejsKey, {
         to_email: form.email,
-        from_name: 'Nexa Customs',
-        reply_to: 'info@nexacustoms.ca',
+        from_name: notify.brand.senderName || 'Nexa Customs',
+        reply_to: notify.brand.replyTo || 'info@nexacustoms.ca',
         customer_name: custName || 'there',
         order_number: no,
-        subject: `Thanks for your order, ${firstName}! (${no})`,
-        status_headline: `Thanks for your order, ${firstName}!`,
-        status_message: `We're already reviewing your artwork. ${estimateLabel.toLowerCase()} ${estimateDate}.`,
+        subject: built.subject,
+        email_html: built.html,
+        status_headline: built.headline,
+        status_message: built.message,
         order_date: orderDate,
         order_total: `$${total.toFixed(2)}`,
         delivery_value: deliveryValue,
@@ -1285,7 +1312,7 @@ export function SuccessPage() {
 
 // ── QUOTE ─────────────────────────────────────────────────────────────────────
 export function QuotePage() {
-  const { showToast, cats, cfg, store } = useApp();
+  const { showToast, cats, cfg, store, notify } = useApp();
   const navigate = useNavigate();
   const [form, setForm] = useState({ fname: '', lname: '', email: '', phone: '', company: '', cat: 'Business Cards', qty: '', deadline: '', desc: '' });
   const [sending, setSending] = useState(false);
@@ -1333,16 +1360,16 @@ export function QuotePage() {
 
     // Telegram
     const tok = cfg.tgToken(); const cid = cfg.tgChat();
-    if (tok && cid) {
+    if (tok && cid && notify.alerts.onQuote !== false) {
       sendTelegram(tok, cid, `📋 QUOTE REQUEST\n\nName: ${form.fname} ${form.lname}\nCompany: ${form.company || 'N/A'}\nEmail: ${form.email}\nPhone: ${form.phone || 'N/A'}\nCategory: ${form.cat}\nQty: ${form.qty || 'N/A'}\nDeadline: ${form.deadline || 'N/A'}\nFile: ${fileUrl || 'None'}\n\n${form.desc.slice(0, 200)}`);
     }
 
     // EmailJS
     const ejsSvc = cfg.ejsSvc(); const ejsKey = cfg.ejsKey(); const ejsTo = cfg.ejsTo();
     const ejsTpl = cfg.ejsCtTpl() || cfg.ejsTpl();
-    if (ejsSvc && ejsTpl && ejsKey) {
+    if (ejsSvc && ejsTpl && ejsKey && notify.alerts.onQuote !== false) {
       const params = {
-        to_email:       ejsTo || 'info@nexacustoms.ca',
+        to_email:       alertRecipients(notify, ejsTo),
         from_name:      form.fname + ' ' + form.lname,
         from_email:     form.email,
         reply_to:       form.email,
@@ -1362,6 +1389,7 @@ export function QuotePage() {
         delivery:       'N/A',
         turnaround:     'N/A',
       };
+      params.email_html = buildAlertEmail(`Quote request — ${form.fname} ${form.lname}`, params, notify);
       try {
         const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1476,7 +1504,7 @@ export function QuotePage() {
 
 // ── CONTACT ───────────────────────────────────────────────────────────────────
 export function ContactPage() {
-  const { store, showToast, cfg } = useApp();
+  const { store, showToast, cfg, notify } = useApp();
   const [form, setForm] = useState({ name: '', email: '', phone: '', msg: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -1494,9 +1522,9 @@ export function ContactPage() {
     // Use dedicated contact template if set, otherwise fall back to order template
     const ejsTpl = cfg.ejsCtTpl() || cfg.ejsTpl();
 
-    if (ejsSvc && ejsTpl && ejsKey) {
+    if (ejsSvc && ejsTpl && ejsKey && notify.alerts.onContact !== false) {
       const params = {
-        to_email:    ejsTo || 'info@nexacustoms.ca',
+        to_email:    alertRecipients(notify, ejsTo),
         from_name:   form.name,
         from_email:  form.email,
         reply_to:    form.email,
@@ -1512,6 +1540,7 @@ export function ContactPage() {
         payment_method: 'N/A',
         notes:          form.msg,
       };
+      params.email_html = buildAlertEmail(`New message from ${form.name}`, params, notify);
       try {
         await sendEmailJS(ejsSvc, ejsTpl, ejsKey, params);
         console.log('Contact email sent');

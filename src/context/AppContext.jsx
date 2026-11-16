@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { DEFAULT_CATS, DEFAULT_PRODS, DEFAULT_STORE, DEFAULT_PRICING } from '../data/products';
 import { hasSession, authHeaders } from '../lib/adminSession';
+import { mergeNotify } from '../lib/emailBuilder';
 
 // ── IMAGE OPTIMISATION ────────────────────────────────────────────────────────
 // Supabase storage supports on-the-fly resize + WebP conversion
@@ -157,6 +158,7 @@ export function AppProvider({ children }) {
   const [pricing, setPricingState] = useState(() => ({ ...DEFAULT_PRICING, ...ls.get('nxt_pricing_cfg', {}) }));
   const [cart,  setCart]           = useState(() => ls.get('nxt_cart', []));
   const [pages, setPages]          = useState(() => ls.get('nxt_custom_pages', []));
+  const [notify, setNotifyState]   = useState(() => mergeNotify(ls.get('nxt_notify', null)));   // email wording / layout / alert settings (Admin → Notifications)
   const [builtinPages, setBuiltinPagesState] = useState(() => ({ ...DEFAULT_BUILTIN_PAGES, ...ls.get('nxt_builtin_pages', {}) }));
   const [curProd, setCurProd]      = useState(null);
   const [toast,   setToast]        = useState(null);
@@ -169,13 +171,14 @@ export function AppProvider({ children }) {
       if (!isSupaReady()) return;
       setSyncing(true);
       // Fetch all 6 config rows in parallel — saves ~1s vs sequential awaits
-      const [cr, catr, pr, pager, pcr, cpr] = await Promise.all([
+      const [cr, catr, pr, pager, pcr, cpr, nfr] = await Promise.all([
         supaGet('site_config', 'id=eq.main&limit=1'),
         supaGet('site_config', 'id=eq.categories&limit=1'),
         supaGet('site_config', 'id=eq.products&limit=1'),
         supaGet('site_config', 'id=eq.builtin_pages&limit=1'),
         supaGet('site_config', 'id=eq.pricing_cfg&limit=1'),
         supaGet('site_config', 'id=eq.custom_pages&limit=1'),
+        supaGet('site_config', 'id=eq.notifications&limit=1'),
       ]);
       // store config
       if (cr?.length > 0 && cr[0].data) {
@@ -210,6 +213,11 @@ export function AppProvider({ children }) {
       if (cpr?.length > 0 && cpr[0].data) {
         const d = typeof cpr[0].data === 'string' ? JSON.parse(cpr[0].data) : cpr[0].data;
         if (Array.isArray(d)) { ls.set('nxt_custom_pages', d); setPages(d); }
+      }
+      // notification settings (email wording / layout / alert switches)
+      if (nfr?.length > 0 && nfr[0].data) {
+        const d = typeof nfr[0].data === 'string' ? JSON.parse(nfr[0].data) : nfr[0].data;
+        ls.set('nxt_notify', d); setNotifyState(mergeNotify(d));
       }
       if (Array.isArray(pr)) setDbSynced(true);
       setSyncing(false);
@@ -299,6 +307,12 @@ export function AppProvider({ children }) {
       supaUpsert('site_config', { id: 'products', data: overrides, updated_at: new Date().toISOString() });
       return next;
     });
+  }, []);
+
+  const setNotify = useCallback((n) => {
+    const m = mergeNotify(n);
+    setNotifyState(m); ls.set('nxt_notify', m);
+    supaUpsert('site_config', { id: 'notifications', data: m, updated_at: new Date().toISOString() });
   }, []);
 
   const setPricing = useCallback((p) => {
@@ -439,7 +453,7 @@ export function AppProvider({ children }) {
   const cartSubtotal = cart.reduce((s, i) => s + (i.price || 0), 0);
 
   return (
-    <AppContext.Provider value={{ page, go, syncing, dbSynced, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages: setPagesSynced, builtinPages, setBuiltinPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls }}>
+    <AppContext.Provider value={{ page, go, syncing, dbSynced, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages: setPagesSynced, builtinPages, setBuiltinPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls, notify, setNotify }}>
       {children}
     </AppContext.Provider>
   );
