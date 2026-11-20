@@ -4,16 +4,16 @@
 // ── Which notifications exist ────────────────────────────────────────────────
 export const NOTIFICATIONS = [
   { key: 'confirmation',     label: 'Order confirmation',        when: 'Sent automatically when a customer pays.' },
-  { key: 'Order Received',   label: 'Order received',            when: 'Sent when you set the order to "Order Received".' },
-  { key: 'Proof Sent',       label: 'Proof ready',               when: 'Sent when you set the order to "Proof Sent".' },
-  { key: 'Printing',         label: 'In production',             when: 'Sent when you set the order to "Printing".' },
-  { key: 'Printed',          label: 'Printing complete (shipping)', when: 'Sent for "Printed" on orders that will be shipped.' },
-  { key: 'Printed (pickup)', label: 'Printing complete (pickup)',   when: 'Sent for "Printed" on pickup orders.' },
-  { key: 'Shipped',          label: 'Shipped',                   when: 'Sent for "Shipped" on shipped orders.' },
-  { key: 'Ready for Pickup', label: 'Ready for pickup',          when: 'Sent for "Shipped" on pickup orders.' },
-  { key: 'Delivered',        label: 'Delivered',                 when: 'Sent for "Delivered" on shipped orders.' },
-  { key: 'Picked Up',        label: 'Picked up',                 when: 'Sent for "Delivered" on pickup orders.' },
-  { key: 'Cancelled',        label: 'Cancelled',                 when: 'Sent when you set the order to "Cancelled".' },
+  { key: 'Order Received',   label: 'Order received',            when: 'Sent when you click "Order Received".' },
+  { key: 'Proof Sent',       label: 'Proof ready',               when: 'Sent when you click "Proof Sent" (attach the proof file first).' },
+  { key: 'Printing',         label: 'In production',             when: 'Sent when you click "Printing".' },
+  { key: 'Printed',          label: 'Printing complete (shipping)', when: 'Sent when you click "Printed" on an order that will be shipped.' },
+  { key: 'Printed (pickup)', label: 'Printing complete (pickup)',   when: 'Sent when you click "Printed" on a pickup order.' },
+  { key: 'Shipped',          label: 'Shipped',                   when: 'Sent when you click "Shipped" on an order that is being shipped.' },
+  { key: 'Ready for Pickup', label: 'Ready for pickup',          when: 'Sent when you click "Ready for Pickup" on a pickup order.' },
+  { key: 'Delivered',        label: 'Delivered',                 when: 'Sent when you click "Delivered" on an order that was shipped.' },
+  { key: 'Picked Up',        label: 'Picked up',                 when: 'Sent when you click "Picked Up" on a pickup order.' },
+  { key: 'Cancelled',        label: 'Cancelled',                 when: 'Sent when you click "Cancelled".' },
 ];
 
 // Admin order status + pickup/ship → which notification to use
@@ -39,6 +39,7 @@ export const PLACEHOLDERS = [
   ['{total}', 'order total, e.g. $54.15'],
   ['{tracking_number}', 'tracking number (blank if none)'],
   ['{tracking_sentence}', '"Your tracking number is …" (blank if none)'],
+  ['{proof_link}', 'link to the proof file (Proof ready email)'],
   ['{estimate}', 'estimated delivery / pickup date'],
   ['{pickup_address}', 'your shop address'],
   ['{hours}', 'your opening hours'],
@@ -76,7 +77,7 @@ export const DEFAULT_NOTIFY = {
       enabled: true,
       subject: 'Proof ready for your approval — {order_number}',
       headline: 'Your proof is ready',
-      message: "A proof for order {order_number} is ready for your review. If you can't find it attached to this email, reply and we'll resend it.\n\nPlease reply with your approval or any changes. Production starts once we have your approval.",
+      message: "A proof for order {order_number} is ready for your review.{proof_sentence}\n\nPlease check spelling, colours, sizes and layout carefully, then reply to this email with your approval or any changes. Production starts once we have your approval.",
     },
     'Printing': {
       enabled: true,
@@ -166,6 +167,8 @@ function varsFor(settings, data) {
     total: money(data.total),
     tracking_number: tn,
     tracking_sentence: tn ? ` Your tracking number is ${tn}.` : '',
+    proof_link: data.proofUrl || '',
+    proof_sentence: data.proofUrl ? ' Use the button below to view it.' : " We'll send it to you separately if you haven't received it yet.",
     estimate: data.estimateDate || '',
     pickup_address: settings.brand.address,
     hours: settings.brand.hours,
@@ -291,6 +294,12 @@ export function buildEmail(settings, key, data) {
   const trackLink = st.show.trackLink
     ? `<tr><td style="padding:18px 36px 0 36px; font-family:${FONT}; font-size:14px; line-height:1.6;"><a href="${esc(st.brand.website)}/order-status" style="color:${esc(color)}; font-weight:600; text-decoration:underline;">Check your order status online</a></td></tr>` : '';
 
+  const proofUrl = (key === 'Proof Sent') ? safeUrl(data.proofUrl) : '';
+  const proofBlock = proofUrl ? `<tr><td style="padding:2px 36px 8px 36px;">
+      <a href="${esc(proofUrl)}" style="display:inline-block; background:${INK}; color:#ffffff; font-family:${FONT}; font-size:14px; font-weight:600; text-decoration:none; padding:12px 24px; border-radius:4px;">View your proof</a>
+      <div style="font-family:${FONT}; font-size:12px; line-height:1.6; color:${MUTED}; padding-top:10px; word-break:break-all;">If the button doesn't open, copy this link into your browser:<br/>${esc(proofUrl)}</div>
+    </td></tr>` : '';
+
   const html = `<div style="margin:0; padding:28px 12px; background:#f3f3f1;">
   <div style="display:none; max-height:0; overflow:hidden; font-size:1px; line-height:1px; color:#f3f3f1;">${esc(headline)} ${esc(message).slice(0, 110)}</div>
   <table align="center" width="600" cellpadding="0" cellspacing="0" role="presentation" style="width:600px; max-width:100%; background:#ffffff; border:1px solid ${LINE};">
@@ -300,6 +309,7 @@ export function buildEmail(settings, key, data) {
       <h1 style="margin:0 0 14px 0; font-family:${FONT}; font-size:23px; line-height:1.3; font-weight:600; color:${INK};">${esc(headline)}</h1>
       ${paragraphs(message)}
     </td></tr>
+    ${proofBlock}
     ${meta}
     ${tracking}
     ${showItems ? itemsBlock(data) : ''}

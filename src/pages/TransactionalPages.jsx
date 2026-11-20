@@ -133,7 +133,7 @@ export function CheckoutPage() {
   // joined with ' + ' (not ', ') since Admin's print view does a naive
   // split(',') on this field to separate different cart items.
   function buildItemsStr() {
-    return cart.map(i => `${i.qty}x ${i.name}${i.opts?.length ? ' (' + i.opts.join(' + ') + ')' : ''}`).join(', ');
+    return cart.map(i => `${i.qty}x ${i.name}${i.opts?.length ? ' (' + i.opts.join(' + ') + ')' : ''}${i.turnaround === 'express' ? ' — Express' : i.turnaround === 'rush' ? ' — Rush' : ''}`).join(', ');
   }
 
   useEffect(() => {
@@ -373,7 +373,7 @@ export function CheckoutPage() {
         items: itemsStr,
         total,
         delivery,
-        turnaround,
+        turnaround: [...new Set(cart.map(i => i.turnaround || 'standard'))].join(', '),   // per-item values (the old single value was always "standard")
         status: 'Order Received',
         source: 'Website',
         payment_method: payMethod,

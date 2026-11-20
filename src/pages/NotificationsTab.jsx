@@ -49,6 +49,7 @@ export default function NotificationsTab() {
       if (PICKUP_KEYS.includes(sel)) o.delivery = 'pickup';
     }
     o.logoUrl = store?.logo_img || '';
+    o.proofUrl = 'https://nexacustoms.ca/sample-proof.pdf';   // preview only
     return o;
   }, [sel, store?.logo_img]);
 

@@ -12,6 +12,9 @@
     "sync:vercel": "node scripts/prerender.mjs --sync-vercel"
   },
   "dependencies": {
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "@fontsource/dm-mono": "^5.3.0",
+    "@fontsource/dm-sans": "^5.3.0",
     "@supabase/supabase-js": "^2.39.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

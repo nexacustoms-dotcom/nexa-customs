@@ -7,6 +7,7 @@ import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import ProductCard from './components/ProductCard';
 import AdminPage from './pages/AdminPage';
+import CookieBanner from './components/CookieBanner';
 import BlogIndexPage from './pages/BlogIndexPage';
 import LocationServicePage, { getLocationPageSlugs } from './pages/LocationServicePage';
 import ICONS from './components/Icons';
@@ -268,6 +269,7 @@ function AppRoutes() {
   return (
     <>
       <ScrollToTop />
+      <CookieBanner />
       <Routes>
         {/* Admin — no nav */}
         <Route path="/admin" element={<Layout noNav><AdminPage /></Layout>} />

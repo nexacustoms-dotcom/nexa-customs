@@ -241,6 +241,10 @@ export function Footer() {
                 onMouseLeave={e => e.currentTarget.style.color = 'var(--mu)'}
               >{l}</span>
             ))}
+            <span onClick={() => window.dispatchEvent(new Event('nxt-open-consent'))} style={{ cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--tx)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--mu)'}
+            >Cookie settings</span>
           </div>
         </div>
       </div>

@@ -1842,6 +1842,20 @@ function FullProductEditor({ prod, onSave, onCancel }) {
   );
 }
 
+// Pickup orders use pickup wording: the stored status stays "Shipped"/"Delivered" (so filters and tracking keep working),
+// but the buttons, list and detail show what it means for a pickup.
+function statusLabel(status, delivery) {
+  if (delivery === 'pickup') {
+    if (status === 'Shipped') return 'Ready for Pickup';
+    if (status === 'Delivered') return 'Picked Up';
+  }
+  return status;
+}
+function taLabel(v) {
+  const names = { standard: 'Standard (5–7 days)', rush: 'Rush (2–3 days)', express: 'Express (same / next day)' };
+  return String(v || 'standard').split(',').map(x => x.trim()).filter(Boolean).map(x => names[x.toLowerCase()] || x).join(', ');
+}
+
 function printOrderSheet(o) {
   const win = window.open('', '_blank');
   const no = o.order_number || o.id;
@@ -1880,7 +1894,7 @@ function printOrderSheet(o) {
     + '<div class="row"><span style="color:#666">Phone</span><strong>' + (o.customer_phone || '') + '</strong></div>'
     + '</div><div><div class="sec-title">Order Details</div>'
     + '<div class="row"><span style="color:#666">Delivery</span><strong>' + (o.delivery || o.shipping_address || '') + '</strong></div>'
-    + '<div class="row"><span style="color:#666">Turnaround</span><strong>' + (o.turnaround || '') + '</strong></div>'
+    + '<div class="row"><span style="color:#666">Turnaround</span><strong>' + taLabel(o.turnaround) + '</strong></div>'
     + '<div class="row"><span style="color:#666">Payment</span><strong>' + (o.payment_method || '') + '</strong></div>'
     + (o.shipping_address && o.shipping_address !== 'Pickup' ? '<div class="row"><span style="color:#666">Ship To</span><strong style="font-size:11px">' + o.shipping_address + '</strong></div>' : '')
     + '</div></div>'
@@ -1911,6 +1925,8 @@ function OrdersTab() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [proofBusy, setProofBusy] = useState(false);
+  const [proofTick, setProofTick] = useState(0);   // forces a redraw after a proof is attached/removed
   const [filter, setFilter] = useState('all');
 
   async function loadOrders() {
@@ -1938,6 +1954,30 @@ function OrdersTab() {
       showToast('❌ Network error: ' + e.message);
     }
     setLoading(false);
+  }
+
+  // Upload the proof (PDF or image) so the "Proof ready" email can include a link to it.
+  async function uploadProof(file) {
+    if (!file || !selected) return;
+    if (file.size > 20 * 1024 * 1024) { showToast('That file is over 20 MB. Please use a smaller proof.'); return; }
+    if (!/^(application\/pdf|image\/(png|jpe?g|webp|gif))$/i.test(file.type)) { showToast('Proof must be a PDF, PNG, JPG or WebP file.'); return; }
+    const url = import.meta.env.VITE_SUPA_URL || ls.raw('nxt_supa_url', '');
+    const key = import.meta.env.VITE_SUPA_KEY || ls.raw('nxt_supa_key', '');
+    if (!url || !key) { showToast('Supabase is not configured'); return; }
+    setProofBusy(true);
+    try {
+      const rand = Array.from(crypto.getRandomValues(new Uint8Array(12))).map(b => b.toString(16).padStart(2, '0')).join('');
+      const safe = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(-80);
+      const path = `proofs/${selected.order_number || selected.id}/${rand}/${safe}`;
+      const res = await fetch(`${url}/storage/v1/object/nexa-media/${path}`, {
+        method: 'POST', headers: await authHeaders(url, key, { 'Content-Type': file.type }), body: file,
+      });
+      if (!res.ok) throw new Error(res.status === 401 || res.status === 403 ? 'please sign in again' : 'upload failed (' + res.status + ')');
+      ls.setRaw('nxt_proof_' + selected.id, `${url}/storage/v1/object/public/nexa-media/${path}`);
+      setProofTick(t => t + 1);
+      showToast('✅ Proof uploaded. Now click "Proof Sent" to email it to the customer.');
+    } catch (e) { showToast('❌ Proof upload: ' + e.message); }
+    setProofBusy(false);
   }
 
   async function updateStatus(id, status, order) {
@@ -1976,6 +2016,7 @@ function OrdersTab() {
       if (!notifKey) return;
       if (notify.messages[notifKey]?.enabled === false) { showToast('Status saved. The "' + notifKey + '" email is switched off in Notifications.'); return; }
       const built = buildEmail(notify, notifKey, {
+        proofUrl: notifKey === 'Proof Sent' ? ls.raw('nxt_proof_' + id, '') : '',
         order_number: order.order_number || order.id,
         order_date: order.created_at ? new Date(order.created_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
         customer_name: order.customer_name || '', customer_email: order.customer_email,
@@ -2057,7 +2098,7 @@ function OrdersTab() {
         <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
           {['all', 'Order Received', 'Proof Sent', 'Printing', 'Printed', 'Shipped', 'Delivered', 'Cancelled'].map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{ padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", border: `1px solid ${filter === f ? 'var(--o)' : 'var(--bd)'}`, background: filter === f ? 'rgba(249,115,22,.12)' : 'var(--s2)', color: filter === f ? 'var(--o)' : 'var(--mu)' }}>
-              {f === 'all' ? `All (${orders.length})` : `${f} (${orders.filter(o => o.status === f).length})`}
+              {f === 'all' ? `All (${orders.length})` : `${f === 'Shipped' ? 'Shipped / Ready for pickup' : f === 'Delivered' ? 'Delivered / Picked up' : f} (${orders.filter(o => o.status === f).length})`}
             </button>
           ))}
         </div>
@@ -2102,7 +2143,7 @@ function OrdersTab() {
                         </td>
                         <td style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--o)' }}>${parseFloat(o.total || 0).toFixed(2)}</td>
                         <td><span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 6, background: o.payment_method === 'stripe' ? 'rgba(99,102,241,.15)' : 'rgba(34,197,94,.1)', color: o.payment_method === 'stripe' ? '#818cf8' : 'var(--gr)', border: `1px solid ${o.payment_method === 'stripe' ? 'rgba(99,102,241,.3)' : 'rgba(34,197,94,.2)'}`, fontWeight: 700 }}>{o.payment_method === 'stripe' ? '💳 Card' : '🏪 Pickup'}</span></td>
-                        <td><span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 700, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>{o.status || 'Order Received'}</span></td>
+                        <td><span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 700, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>{statusLabel(o.status || 'Order Received', o.delivery)}</span></td>
                         <td style={{ fontSize: 11, color: 'var(--mu)', whiteSpace: 'nowrap' }}>{date}</td>
                         <td><button className="abtn" onClick={e => { e.stopPropagation(); setSelected(selected?.id === o.id ? null : o); }}>View</button></td>
                       </tr>
@@ -2141,7 +2182,7 @@ function OrdersTab() {
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>Order Info</div>
                 <div style={{ fontSize: 12, color: 'var(--mu)', marginBottom: 8, lineHeight: 1.6 }}><strong style={{ color: 'var(--tx)' }}>Items:</strong> {selected.items}</div>
-                {[['Delivery', selected.delivery], ['Tracking #', selected.tracking_number], ['Turnaround', selected.turnaround], ['Payment', selected.payment_method], ['Source', selected.source]].filter(([,v]) => v).map(([l, v]) => (
+                {[['Delivery', selected.delivery], ['Tracking #', selected.tracking_number], ['Turnaround', taLabel(selected.turnaround)], ['Payment', selected.payment_method], ['Source', selected.source]].filter(([,v]) => v).map(([l, v]) => (
                   <div key={l} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
                     <span style={{ color: 'var(--mu)' }}>{l}</span>
                     <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{v}</span>
@@ -2155,6 +2196,25 @@ function OrdersTab() {
 
               <div style={{ height: 1, background: 'var(--bd)', margin: '12px 0' }} />
 
+              {/* Proof file (optional) — attach BEFORE clicking "Proof Sent" */}
+              <div style={{ marginBottom: 16 }} data-proof={proofTick}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>Proof file (optional)</div>
+                {ls.raw('nxt_proof_' + selected.id, '') ? (
+                  <div style={{ fontSize: 12, lineHeight: 1.7, padding: '8px 10px', border: '1px solid var(--bd)', borderRadius: 8, background: 'var(--s2)' }}>
+                    ✓ Proof attached — <a href={ls.raw('nxt_proof_' + selected.id, '')} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--o)' }}>open</a>
+                    {' · '}<span style={{ color: 'var(--mu)', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { ls.setRaw('nxt_proof_' + selected.id, ''); setProofTick(t => t + 1); }}>remove</span>
+                    <div style={{ color: 'var(--mu)', fontSize: 11 }}>It will be included as a button when you click “Proof Sent”.</div>
+                  </div>
+                ) : (
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--mu)', lineHeight: 1.6 }}>
+                    Attach the proof (PDF or image, up to 20 MB), then click “Proof Sent”.
+                    <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,application/pdf,image/*" disabled={proofBusy}
+                      onChange={e => { uploadProof(e.target.files?.[0]); e.target.value = ''; }} style={{ display: 'block', marginTop: 6, fontSize: 12, width: '100%' }} />
+                    {proofBusy && <span>Uploading…</span>}
+                  </label>
+                )}
+              </div>
+
               {/* Update status */}
               <div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}>Update Status</div>
@@ -2164,7 +2224,7 @@ function OrdersTab() {
                     const isActive = selected.status === s;
                     return (
                       <button key={s} onClick={() => updateStatus(selected.id, s, selected)} style={{ padding: '10px 14px', borderRadius: 8, border: `1px solid ${isActive ? sc.border : 'var(--bd)'}`, background: isActive ? sc.bg : 'var(--s2)', color: isActive ? sc.color : 'var(--mu)', fontWeight: isActive ? 700 : 500, fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans',sans-serif", textAlign: 'left', transition: 'all .15s' }}>
-                        {isActive ? '● ' : '○ '}{s}
+                        {isActive ? '● ' : '○ '}{statusLabel(s, selected.delivery)}
                       </button>
                     );
                   })}
