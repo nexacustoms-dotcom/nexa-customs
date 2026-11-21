@@ -6,6 +6,8 @@ export const NOTIFICATIONS = [
   { key: 'confirmation',     label: 'Order confirmation',        when: 'Sent automatically when a customer pays.' },
   { key: 'Order Received',   label: 'Order received',            when: 'Sent when you click "Order Received".' },
   { key: 'Proof Sent',       label: 'Proof ready',               when: 'Sent when you click "Proof Sent" (attach the proof file first).' },
+  { key: 'Proof Approved',   label: 'Proof approved (thank-you)', when: 'Sent automatically when the customer approves their proof online.' },
+  { key: 'Changes Requested', label: 'Changes received',          when: 'Sent automatically when the customer asks for changes to their proof.' },
   { key: 'Printing',         label: 'In production',             when: 'Sent when you click "Printing".' },
   { key: 'Printed',          label: 'Printing complete (shipping)', when: 'Sent when you click "Printed" on an order that will be shipped.' },
   { key: 'Printed (pickup)', label: 'Printing complete (pickup)',   when: 'Sent when you click "Printed" on a pickup order.' },
@@ -39,7 +41,8 @@ export const PLACEHOLDERS = [
   ['{total}', 'order total, e.g. $54.15'],
   ['{tracking_number}', 'tracking number (blank if none)'],
   ['{tracking_sentence}', '"Your tracking number is …" (blank if none)'],
-  ['{proof_link}', 'link to the proof file (Proof ready email)'],
+  ['{proof_link}', 'link to the proof page (Proof ready email)'],
+  ['{note}', "customer's change request (Changes received email)"],
   ['{estimate}', 'estimated delivery / pickup date'],
   ['{pickup_address}', 'your shop address'],
   ['{hours}', 'your opening hours'],
@@ -78,6 +81,18 @@ export const DEFAULT_NOTIFY = {
       subject: 'Proof ready for your approval — {order_number}',
       headline: 'Your proof is ready',
       message: "A proof for order {order_number} is ready for your review.{proof_sentence}\n\nPlease check spelling, colours, sizes and layout carefully, then reply to this email with your approval or any changes. Production starts once we have your approval.",
+    },
+    'Proof Approved': {
+      enabled: true,
+      subject: 'Proof approved — {order_number}',
+      headline: 'Thank you, your proof is approved',
+      message: "We've recorded your approval for order {order_number} and will move it into production. We'll email you when it's finished.\n\nIf you need to change anything, reply to this email right away.",
+    },
+    'Changes Requested': {
+      enabled: true,
+      subject: 'We received your changes — {order_number}',
+      headline: "We've received your changes",
+      message: "Thanks for telling us what to change on order {order_number}. We'll update your proof and send a new one for your approval.\n\nYour note:\n{note}",
     },
     'Printing': {
       enabled: true,
@@ -128,7 +143,7 @@ export const DEFAULT_NOTIFY = {
       message: "Order {order_number} has been cancelled. If this wasn't expected, reply to this email or call {phone}.",
     },
   },
-  alerts: { onOrder: true, onQuote: true, onContact: true, extraEmails: '' },
+  alerts: { onOrder: true, onQuote: true, onContact: true, onProof: true, extraEmails: '' },
 };
 
 // Saved settings + defaults. Anything missing (or a new field added later) falls back to the default.
@@ -168,6 +183,7 @@ function varsFor(settings, data) {
     tracking_number: tn,
     tracking_sentence: tn ? ` Your tracking number is ${tn}.` : '',
     proof_link: data.proofUrl || '',
+    note: (data.note || '').trim(),
     proof_sentence: data.proofUrl ? ' Use the button below to view it.' : " We'll send it to you separately if you haven't received it yet.",
     estimate: data.estimateDate || '',
     pickup_address: settings.brand.address,
@@ -282,11 +298,12 @@ export function buildEmail(settings, key, data) {
     ? `<img src="${esc(logo)}" alt="${esc(st.brand.senderName)}" height="40" style="display:block; height:40px; width:auto; border:0;" />`
     : `<div style="font-family:${FONT}; font-size:18px; font-weight:700; color:${INK};">${esc(st.brand.senderName)}</div>`;
 
+  const hasTotal = data.total !== null && data.total !== undefined;
   const meta = st.show.orderBox ? `<tr><td style="padding:6px 36px 0 36px;">
     <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-top:1px solid ${LINE}; border-bottom:1px solid ${LINE};"><tr>
       <td style="padding:14px 0; font-family:${FONT};">${label('Order number')}<div style="font-size:15px; font-weight:600; color:${INK}; white-space:nowrap;">${esc(data.order_number)}</div></td>
       <td style="padding:14px 0; font-family:${FONT};">${label('Date')}<div style="font-size:15px; font-weight:600; color:${INK};">${esc(data.order_date)}</div></td>
-      <td style="padding:14px 0; font-family:${FONT}; text-align:right;">${label('Total')}<div style="font-size:15px; font-weight:600; color:${INK};">${money(data.total)} CAD</div></td>
+      ${hasTotal ? `<td style="padding:14px 0; font-family:${FONT}; text-align:right;">${label('Total')}<div style="font-size:15px; font-weight:600; color:${INK};">${money(data.total)} CAD</div></td>` : ''}
     </tr></table></td></tr>` : '';
 
   const tracking = (data.tracking_number && (key === 'Shipped' || key === 'Delivered'))
@@ -296,8 +313,9 @@ export function buildEmail(settings, key, data) {
 
   const proofUrl = (key === 'Proof Sent') ? safeUrl(data.proofUrl) : '';
   const proofBlock = proofUrl ? `<tr><td style="padding:2px 36px 8px 36px;">
-      <a href="${esc(proofUrl)}" style="display:inline-block; background:${INK}; color:#ffffff; font-family:${FONT}; font-size:14px; font-weight:600; text-decoration:none; padding:12px 24px; border-radius:4px;">View your proof</a>
-      <div style="font-family:${FONT}; font-size:12px; line-height:1.6; color:${MUTED}; padding-top:10px; word-break:break-all;">If the button doesn't open, copy this link into your browser:<br/>${esc(proofUrl)}</div>
+      <a href="${esc(proofUrl)}" style="display:inline-block; background:${INK}; color:#ffffff; font-family:${FONT}; font-size:14px; font-weight:600; text-decoration:none; padding:12px 24px; border-radius:4px;">Review and approve your proof</a>
+      <div style="font-family:${FONT}; font-size:13px; line-height:1.6; color:${BODY}; padding-top:12px;">On that page you can approve it, or tell us exactly what to change.</div>
+      <div style="font-family:${FONT}; font-size:12px; line-height:1.6; color:${MUTED}; padding-top:8px; word-break:break-all;">If the button doesn't open, copy this link into your browser:<br/>${esc(proofUrl)}</div>
     </td></tr>` : '';
 
   const html = `<div style="margin:0; padding:28px 12px; background:#f3f3f1;">
@@ -368,7 +386,7 @@ export function alertRecipients(settings, primary) {
 const ALERT_ROWS = [
   ['Order', 'order_number'], ['Customer', 'customer_name'], ['From', 'from_name'], ['Email', 'customer_email'], ['Email', 'from_email'],
   ['Phone', 'customer_phone'], ['Phone', 'phone'], ['Company', 'company'], ['Items', 'order_items'], ['Total', 'total'],
-  ['Delivery', 'delivery'], ['Turnaround', 'turnaround'], ['Payment', 'payment_method'], ['Notes', 'notes'],
+  ['Decision', 'decision'], ['Delivery', 'delivery'], ['Turnaround', 'turnaround'], ['Payment', 'payment_method'], ['Notes', 'notes'],
 ];
 export function buildAlertEmail(title, params, settings) {
   const st = mergeNotify(settings);

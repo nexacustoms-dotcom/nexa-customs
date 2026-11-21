@@ -49,7 +49,8 @@ export default function NotificationsTab() {
       if (PICKUP_KEYS.includes(sel)) o.delivery = 'pickup';
     }
     o.logoUrl = store?.logo_img || '';
-    o.proofUrl = 'https://nexacustoms.ca/sample-proof.pdf';   // preview only
+    o.proofUrl = 'https://nexacustoms.ca/proof/sample';   // preview only
+    if (sel === 'Proof Approved' || sel === 'Changes Requested') { o.total = null; o.note = 'Please make the logo a little bigger and change the phone number to 416-555-0100.'; }
     return o;
   }, [sel, store?.logo_img]);
 
@@ -94,7 +95,7 @@ export default function NotificationsTab() {
         status_headline: built.headline,
         status_message: built.message,
         order_date: previewData.order_date,
-        order_total: '$' + previewData.total.toFixed(2),
+        order_total: previewData.total != null ? '$' + previewData.total.toFixed(2) : '',
         items_html: '', breakdown_html: '', customer_info_html: '', tracking_line: '', logo_url: store?.logo_img || '',
       });
       showToast('📧 Test email sent to ' + testTo + ' — check your inbox (and spam)');
@@ -213,6 +214,7 @@ export default function NotificationsTab() {
                 <Toggle on={draft.alerts.onOrder} onChange={v => setAlert('onOrder', v)} label="Alert me about new orders" />
                 <Toggle on={draft.alerts.onQuote} onChange={v => setAlert('onQuote', v)} label="Alert me about quote requests" />
                 <Toggle on={draft.alerts.onContact} onChange={v => setAlert('onContact', v)} label="Alert me about contact-form messages" />
+                <Toggle on={draft.alerts.onProof} onChange={v => setAlert('onProof', v)} label="Alert me when a customer approves or asks for changes to a proof" />
               </div>
               <Field label="Also send alert emails to (optional)" hint="Separate several addresses with commas. These are in addition to the address set under Admin → Emails. Telegram chat IDs are managed under Admin → Emails.">
                 <input className="ainp" style={inp} placeholder="name@example.com, other@example.com" value={draft.alerts.extraEmails} onChange={e => setAlert('extraEmails', e.target.value)} />

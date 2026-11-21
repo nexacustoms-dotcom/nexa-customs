@@ -4,6 +4,7 @@ import { useApp, sendEmailJS } from '../context/AppContext';
 import { signIn, signOut, getAccessToken, authHeaders, sessionEmail } from '../lib/adminSession';
 import { buildEmail, notificationKeyFor } from '../lib/emailBuilder';
 import NotificationsTab from './NotificationsTab';
+import RichTextEditor from '../components/RichTextEditor';
 
 const TABS = [
   { id: 'orders',     label: '📦 Orders' },
@@ -986,10 +987,9 @@ function PagesTab() {
           ) : (
             <div className="afg">
               <label className="aflbl">Page Content</label>
-              <p style={{ fontSize:11, color:'var(--mu)', marginBottom:8 }}>Use blank lines to separate paragraphs.</p>
-              <div style={{ marginBottom: 8 }}><InsertImageButton onInsert={snippet => setForm(f => ({ ...f, body: f.body + snippet }))} /></div>
-              <textarea className="ainp" rows="14" style={{ resize:'vertical', lineHeight:1.6 }} value={form.body} onChange={upd('body')} />
-              <MediaSyntaxHelp />
+              <p style={{ fontSize:11, color:'var(--mu)', marginBottom:8 }}>Use the toolbar for bold, headings, lists and links. Leave a blank line between paragraphs.</p>
+              <RichTextEditor value={form.body} onChange={v => setForm(f => ({ ...f, body: v }))} rows={16}
+                extra={<InsertImageButton onInsert={snippet => setForm(f => ({ ...f, body: f.body + snippet }))} />} />
             </div>
           )}
           <div style={{ display:'flex', gap:10, marginTop:14 }}>
@@ -1028,10 +1028,9 @@ function PagesTab() {
           <input className="ainp" maxLength={200} value={form.metaDesc || ''} onChange={upd('metaDesc')} placeholder="e.g. Real estate sign rules in Mississauga & the GTA — sizes, placement, and when signs must come down." />
           <div style={{ fontSize:11, color: (form.metaDesc||'').length > 158 ? '#ef4444' : 'var(--mu)', marginTop:4 }}>{(form.metaDesc||'').length} / 158 chars</div>
         </div>
-        <div className="afg"><label className="aflbl">Content (plain text, blank lines = paragraphs)</label>
-          <div style={{ marginBottom: 8 }}><InsertImageButton onInsert={snippet => setForm(f => ({ ...f, content: f.content + snippet }))} /></div>
-          <textarea className="ainp" rows="12" style={{ resize:'vertical', lineHeight:1.6 }} value={form.content} onChange={upd('content')} />
-          <MediaSyntaxHelp />
+        <div className="afg"><label className="aflbl">Content (use the toolbar; blank line = new paragraph)</label>
+          <RichTextEditor value={form.content} onChange={v => setForm(f => ({ ...f, content: v }))} rows={14}
+            extra={<InsertImageButton onInsert={snippet => setForm(f => ({ ...f, content: f.content + snippet }))} />} />
         </div>
         <div style={{ display:'flex', gap:10, marginTop:14 }}>
           <button className="abtn abtn-add" onClick={saveCustom}>💾 Save Page</button>
@@ -1926,6 +1925,7 @@ function OrdersTab() {
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(null);
   const [proofBusy, setProofBusy] = useState(false);
+  const [proofs, setProofs] = useState([]);       // customer proof approvals (needs supabase/security/04_proofs.sql)
   const [proofTick, setProofTick] = useState(0);   // forces a redraw after a proof is attached/removed
   const [filter, setFilter] = useState('all');
 
@@ -1950,10 +1950,45 @@ function OrdersTab() {
       }
       const data = await res.json();
       setOrders(data);
+      loadProofs(url, key);
     } catch (e) {
       showToast('❌ Network error: ' + e.message);
     }
     setLoading(false);
+  }
+
+  async function loadProofs(url, key) {
+    try {
+      const r = await fetch(`${url}/rest/v1/proofs?select=*&order=created_at.desc&limit=500`, { headers: await authHeaders(url, key) });
+      if (r.ok) { const rows = await r.json(); if (Array.isArray(rows)) setProofs(rows); }
+    } catch { /* the proofs table is optional until 04_proofs.sql has been run */ }
+  }
+  const proofsFor = o => proofs.filter(p => p.order_number === (o.order_number || o.id));
+  const latestProof = o => { const l = proofsFor(o); return l.find(p => p.status !== 'superseded') || null; };
+
+  // Make the customer's approval page: one private link per proof, older pending proofs are replaced.
+  async function createProofLink(order, fileUrl, url, key) {
+    const orderNo = order.order_number || order.id;
+    const token = Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b => b.toString(16).padStart(2, '0')).join('');
+    const site = String(notify.brand.website || 'https://nexacustoms.ca').replace(/\/$/, '');
+    try {
+      const headers = await authHeaders(url, key, { 'Content-Type': 'application/json', Prefer: 'return=minimal' });
+      const prev = await fetch(`${url}/rest/v1/proofs?order_number=eq.${encodeURIComponent(orderNo)}&select=version&order=version.desc&limit=1`, { headers });
+      if (!prev.ok) throw new Error('proofs table not available');
+      const rows = await prev.json();
+      const version = (rows[0]?.version || 0) + 1;
+      await fetch(`${url}/rest/v1/proofs?order_number=eq.${encodeURIComponent(orderNo)}&status=eq.pending`, { method: 'PATCH', headers, body: JSON.stringify({ status: 'superseded' }) });
+      const res = await fetch(`${url}/rest/v1/proofs`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ token, order_number: orderNo, customer_name: order.customer_name || '', customer_email: order.customer_email || '', file_url: fileUrl, file_name: decodeURIComponent(String(fileUrl).split('/').pop() || ''), version }),
+      });
+      if (!res.ok) throw new Error('could not save proof');
+      loadProofs(url, key);
+      return { link: `${site}/proof/${token}`, approvalPage: true };
+    } catch (e) {
+      console.error('Proof page not created:', e.message);
+      return { link: fileUrl, approvalPage: false };
+    }
   }
 
   // Upload the proof (PDF or image) so the "Proof ready" email can include a link to it.
@@ -2015,8 +2050,18 @@ function OrdersTab() {
       const notifKey = notificationKeyFor(status, order.delivery === 'pickup');
       if (!notifKey) return;
       if (notify.messages[notifKey]?.enabled === false) { showToast('Status saved. The "' + notifKey + '" email is switched off in Notifications.'); return; }
+      let proofLink = '';
+      if (notifKey === 'Proof Sent') {
+        const fileUrl = ls.raw('nxt_proof_' + id, '');
+        if (fileUrl) {
+          const made = await createProofLink(order, fileUrl, url, key);
+          proofLink = made.link;
+          if (!made.approvalPage) showToast('⚠️ The approval page is not set up yet (run 04_proofs.sql in Supabase). The email links straight to the file instead.');
+          ls.setRaw('nxt_proof_' + id, ''); setProofTick(t => t + 1);
+        }
+      }
       const built = buildEmail(notify, notifKey, {
-        proofUrl: notifKey === 'Proof Sent' ? ls.raw('nxt_proof_' + id, '') : '',
+        proofUrl: proofLink,
         order_number: order.order_number || order.id,
         order_date: order.created_at ? new Date(order.created_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
         customer_name: order.customer_name || '', customer_email: order.customer_email,
@@ -2143,7 +2188,7 @@ function OrdersTab() {
                         </td>
                         <td style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--o)' }}>${parseFloat(o.total || 0).toFixed(2)}</td>
                         <td><span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 6, background: o.payment_method === 'stripe' ? 'rgba(99,102,241,.15)' : 'rgba(34,197,94,.1)', color: o.payment_method === 'stripe' ? '#818cf8' : 'var(--gr)', border: `1px solid ${o.payment_method === 'stripe' ? 'rgba(99,102,241,.3)' : 'rgba(34,197,94,.2)'}`, fontWeight: 700 }}>{o.payment_method === 'stripe' ? '💳 Card' : '🏪 Pickup'}</span></td>
-                        <td><span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 700, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>{statusLabel(o.status || 'Order Received', o.delivery)}</span></td>
+                        <td><span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, fontWeight: 700, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>{statusLabel(o.status || 'Order Received', o.delivery)}</span>{(() => { const lp = latestProof(o); if (!lp) return null; const m = { approved: ['✓ Proof approved', '#22c55e'], changes_requested: ['✎ Changes requested', '#f97316'], pending: ['⏳ Awaiting approval', 'var(--mu)'] }[lp.status]; return m ? <div style={{ fontSize: 10, marginTop: 4, color: m[1], fontWeight: 700 }}>{m[0]}</div> : null; })()}</td>
                         <td style={{ fontSize: 11, color: 'var(--mu)', whiteSpace: 'nowrap' }}>{date}</td>
                         <td><button className="abtn" onClick={e => { e.stopPropagation(); setSelected(selected?.id === o.id ? null : o); }}>View</button></td>
                       </tr>
@@ -2214,6 +2259,20 @@ function OrdersTab() {
                   </label>
                 )}
               </div>
+
+              {proofsFor(selected).length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--mu)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>Proof approval</div>
+                  {proofsFor(selected).map(p => (
+                    <div key={p.id} style={{ fontSize: 12, lineHeight: 1.6, padding: '8px 10px', border: '1px solid var(--bd)', borderRadius: 8, marginBottom: 6, background: 'var(--s2)' }}>
+                      <div><strong>Version {p.version}</strong> · {{ approved: '✓ Approved', changes_requested: '✎ Changes requested', pending: '⏳ Waiting for the customer', superseded: 'Replaced by a newer proof' }[p.status] || p.status}</div>
+                      {p.decided_at && <div style={{ color: 'var(--mu)' }}>{p.decided_name ? p.decided_name + ' · ' : ''}{new Date(p.decided_at).toLocaleString('en-CA', { dateStyle: 'medium', timeStyle: 'short' })}</div>}
+                      {p.note && <div style={{ marginTop: 4, padding: '6px 8px', borderLeft: '3px solid var(--o)', background: 'rgba(249,115,22,.07)', whiteSpace: 'pre-wrap' }}>{p.note}</div>}
+                      <a href={p.file_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--o)' }}>open proof file</a>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Update status */}
               <div>

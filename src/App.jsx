@@ -8,6 +8,8 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import ProductCard from './components/ProductCard';
 import AdminPage from './pages/AdminPage';
 import CookieBanner from './components/CookieBanner';
+import { renderBody } from './lib/richText';
+import ProofPage from './pages/ProofPage';
 import BlogIndexPage from './pages/BlogIndexPage';
 import LocationServicePage, { getLocationPageSlugs } from './pages/LocationServicePage';
 import ICONS from './components/Icons';
@@ -15,21 +17,6 @@ import { CartPage, CheckoutPage, SuccessPage, QuotePage, ContactPage, OrderStatu
 import { usePageSEO } from './hooks/usePageSEO';
 
 // ── COMPONENTS ────────────────────────────────────────────────────────────────
-// Parses [text](url) into a real clickable link inside paragraph text.
-// Everything else in the paragraph is left as plain text.
-function renderInlineLinks(text) {
-  const re = /\[([^\]]+)\]\((\S+?)\)/g;
-  const parts = [];
-  let last = 0, m, i = 0;
-  while ((m = re.exec(text)) !== null) {
-    if (m.index > last) parts.push(text.slice(last, m.index));
-    parts.push(<a key={i++} href={m[2]} target={m[2].startsWith('mailto:') || m[2].startsWith('tel:') || m[2].startsWith('/') ? undefined : '_blank'} rel="noopener noreferrer" style={{ color: 'var(--o)', textDecoration: 'underline' }}>{m[1]}</a>);
-    last = m.index + m[0].length;
-  }
-  if (last < text.length) parts.push(text.slice(last));
-  return parts;
-}
-
 function FAQItem({ q, a }) {
   const [open, setOpen] = useState(false);
   return (
@@ -63,49 +50,10 @@ function PolicyPage({ slug }) {
           {slug === 'shipping' ? 'Shipping & Delivery' : slug === 'returns' ? 'Returns & Refunds' : slug === 'faq' ? 'Help Center' : slug === 'terms' ? 'Legal' : slug === 'turnaround' ? 'Production Times' : 'Nexa Customs'}
         </div>
         <h1 className="D" style={{ fontSize: 'clamp(30px,4.4vw,52px)', marginBottom: 10, lineHeight: 1.1 }}>{p.title}</h1>
-        <p style={{ fontSize: 13, color: 'var(--mu)' }}>Last updated: June 2026 · Nexa Customs Inc. · Mississauga, Ontario</p>
+
       </div>
       {/* Body */}
-      {(p.body || p.content) && (p.body || p.content).split('\n\n').map((para, i) => {
-        // Section header: lines starting with ##
-        if (para.startsWith('## ')) {
-          return <h2 key={i} style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 24, marginTop: 36, marginBottom: 14, color: 'var(--tx)', paddingBottom: 8, borderBottom: '1px solid var(--bd)' }}>{para.slice(3)}</h2>;
-        }
-        // Image: a paragraph that is just ![alt text](image url)
-        const imgMatch = para.trim().match(/^!\[([^\]]*)\]\((\S+)\)$/);
-        if (imgMatch) {
-          return <img key={i} src={imgMatch[2]} alt={imgMatch[1]} style={{ width: '100%', maxHeight: 480, objectFit: 'cover', borderRadius: 14, border: '1px solid var(--bd)', boxShadow: '0 8px 24px rgba(0,0,0,.18)', marginBottom: 24, marginTop: 4 }} />;
-        }
-        // Info box: lines starting with >>>
-        if (para.startsWith('>>> ')) {
-          return <div key={i} style={{ padding: '14px 18px', background: 'rgba(249,115,22,.06)', borderLeft: '3px solid var(--o)', borderRadius: '0 8px 8px 0', marginBottom: 16, fontSize: 13, color: 'var(--mu)', lineHeight: 1.8 }}>{renderInlineLinks(para.slice(4))}</div>;
-        }
-        // Table rows: lines starting with |
-        if (para.includes('\n') && para.split('\n').every(l => l.trim().startsWith('|'))) {
-          const rows = para.split('\n').filter(l => l.trim() && !l.includes('---'));
-          return (
-            <div key={i} style={{ overflowX: 'auto', marginBottom: 20 }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                {rows.map((row, ri) => {
-                  const cells = row.split('|').filter(c => c.trim());
-                  const isHeader = ri === 0;
-                  return (
-                    <tr key={ri} style={{ borderBottom: '1px solid var(--bd)', background: isHeader ? 'var(--s2)' : 'transparent' }}>
-                      {cells.map((cell, ci) => isHeader
-                        ? <th key={ci} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--mu)' }}>{cell.trim()}</th>
-                        : <td key={ci} style={{ padding: '10px 14px', color: ci === 0 ? 'var(--tx)' : 'var(--mu)' }}>{cell.trim()}</td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </table>
-            </div>
-          );
-        }
-        // First real paragraph gets a slightly larger "lede" treatment, like a proper article intro
-        const isLede = i === 0;
-        return <p key={i} style={{ fontSize: isLede ? 16 : 14, color: isLede ? 'var(--tx)' : 'var(--mu)', lineHeight: 1.85, marginBottom: 16, whiteSpace: 'pre-line', fontWeight: isLede ? 500 : 400 }}>{renderInlineLinks(para)}</p>;
-      })}
+      {(p.body || p.content) && renderBody(p.body || p.content)}
       {p.faqs && p.faqs.map((item, i) => <FAQItem key={i} q={item.q} a={item.a} />)}
       {/* Related products CTA — turns a blog reader into a buyer */}
       {relatedCat && (
@@ -283,6 +231,7 @@ function AppRoutes() {
         <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
         <Route path="/order-confirmed" element={<Layout><SuccessPage /></Layout>} />
         <Route path="/order-status" element={<Layout><OrderStatusPage /></Layout>} />
+        <Route path="/proof/:token" element={<Layout><ProofPage /></Layout>} />
         <Route path="/quote" element={<Layout><QuotePage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
         <Route path="/blog" element={<Layout><BlogIndexPage /></Layout>} />

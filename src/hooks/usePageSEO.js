@@ -147,7 +147,7 @@ export function usePageSEO() {
     // path that didn't match any real route (soft-404: Vercel's SPA rewrite
     // returns 200 for any unknown URL, so this is the only way to keep
     // genuinely broken/fake URLs out of the index).
-    const noIndexPaths = ['/cart', '/checkout', '/order-confirmed', '/order-status', '/admin'];
+    const noIndexPaths = ['/cart', '/checkout', '/order-confirmed', '/order-status', '/proof', '/admin'];
     const isDisabledProduct = path.startsWith('/products/') && curProd?.disabled;
     const dataStillLoading = (cats || []).length === 0 && (pages || []).length === 0;
     const shouldIndex = !noIndexPaths.some(p => path.startsWith(p)) && !isDisabledProduct && (matched || dataStillLoading);

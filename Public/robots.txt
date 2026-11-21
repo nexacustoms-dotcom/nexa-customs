@@ -9,6 +9,7 @@ Allow: /
 # Block low-value / duplicate WooCommerce pages from indexing
 Disallow: /cart
 Disallow: /checkout
+Disallow: /proof
 Disallow: /order-confirmed
 Disallow: /order-status
 Disallow: /admin
@@ -18,6 +19,7 @@ User-agent: Googlebot
 Allow: /
 Disallow: /cart
 Disallow: /checkout
+Disallow: /proof
 Disallow: /order-confirmed
 Disallow: /order-status
 Disallow: /admin
@@ -27,6 +29,7 @@ User-agent: Bingbot
 Allow: /
 Disallow: /cart
 Disallow: /checkout
+Disallow: /proof
 Disallow: /order-confirmed
 Disallow: /order-status
 Disallow: /admin

@@ -49,3 +49,9 @@ how it was (open). Then tell Claude what failed, and run step 7 again once it is
   listed anywhere public, but they are not secret. A private bucket is a possible next step.
 - Still to do: the Telegram bot token (`VITE_TG_TOKEN`) is built into the public website code. Move
   order notifications to a server-side function so the token is never exposed.
+
+## Proof approval page (added later)
+
+Run `supabase/security/04_proofs.sql` once in the Supabase SQL Editor. It creates the table and the two small
+functions behind the customer's "Review and approve your proof" page (`/proof/<private link>`).
+Until you run it, the "Proof ready" email still works but links straight to the proof file.
