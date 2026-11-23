@@ -56,7 +56,7 @@ export const DEFAULT_NOTIFY = {
     logoUrl: '',                       // blank = use the logo from Admin → Appearance
     color: '#f97316',
     phone: '(437) 997-9921',
-    address: 'Nexa Customs Inc., 6033 Shawson Dr, Unit 40, Mississauga, ON L5T 1J6',
+    address: 'Nexa Customs Inc., 6033 Shawson Dr, Unit 40, Mississauga, ON L5T 1H8',
     hours: 'Mon–Fri 10 AM–8 PM, Sat by appointment',
     website: 'https://nexacustoms.ca',
     contactLine: 'Questions about your order? Reply to this email or call {phone}.',
@@ -144,7 +144,19 @@ export const DEFAULT_NOTIFY = {
     },
   },
   alerts: { onOrder: true, onQuote: true, onContact: true, onProof: true, extraEmails: '' },
+  // Wording of the cookie notice on the website (edited under Admin → Notifications → Cookie notice)
+  cookie: {
+    text: "We'd like to use cookies to see how people use our site and how our ads perform. It's your choice, and the site works the same either way.",
+    accept: 'Accept',
+    reject: 'No thanks',
+  },
 };
+
+export const COOKIE_PRESETS = [
+  { name: 'Friendly', text: "We'd like to use cookies to see how people use our site and how our ads perform. It's your choice, and the site works the same either way.", accept: 'Accept', reject: 'No thanks' },
+  { name: 'Short', text: 'We use cookies to improve our site and measure our ads. Is that okay?', accept: 'Yes, that\'s fine', reject: 'No thanks' },
+  { name: 'Plain', text: 'This site uses cookies for analytics and advertising measurement. Choose Accept to allow them or Decline to continue without them.', accept: 'Accept', reject: 'Decline' },
+];
 
 // Saved settings + defaults. Anything missing (or a new field added later) falls back to the default.
 export function mergeNotify(saved) {
@@ -157,6 +169,7 @@ export function mergeNotify(saved) {
     show: { ...d.show, ...(s.show || {}) },
     messages,
     alerts: { ...d.alerts, ...(s.alerts || {}) },
+    cookie: { ...d.cookie, ...(s.cookie || {}) },
   };
 }
 

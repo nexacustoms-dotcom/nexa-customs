@@ -424,7 +424,7 @@ export default function LocationServicePage({ slug }) {
           <div style={{ flex: '1 1 240px' }}>
             <div className="D" style={{ fontSize: 18, marginBottom: 8 }}>Pick Up in Mississauga</div>
             <div style={{ fontSize: 13.5, lineHeight: 1.8 }}>
-              Nexa Customs Inc.<br />6033 Shawson Dr, Unit 40<br />Mississauga, ON L5T 1J6<br />
+              Nexa Customs Inc.<br />{store?.address || '6033 Shawson Dr, Unit 40'}<br />{store?.city || 'Mississauga, ON L5T 1H8'}<br />
               <a href="tel:+14379979921" style={{ color: 'var(--o)', textDecoration: 'none' }}>(437) 997-9921</a>
             </div>
           </div>

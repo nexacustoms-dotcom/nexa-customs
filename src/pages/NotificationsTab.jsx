@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react';
 import { useApp, sendEmailJS } from '../context/AppContext';
 import { sessionEmail } from '../lib/adminSession';
-import { NOTIFICATIONS, PLACEHOLDERS, DEFAULT_NOTIFY, mergeNotify, buildEmail, sampleOrder } from '../lib/emailBuilder';
+import { NOTIFICATIONS, PLACEHOLDERS, DEFAULT_NOTIFY, COOKIE_PRESETS, mergeNotify, buildEmail, sampleOrder } from '../lib/emailBuilder';
 
 const PICKUP_KEYS = ['Ready for Pickup', 'Picked Up', 'Printed (pickup)'];
 
@@ -40,6 +40,7 @@ export default function NotificationsTab() {
   const setBrand = (k, v) => setDraft(d => ({ ...d, brand: { ...d.brand, [k]: v } }));
   const setShow = (k, v) => setDraft(d => ({ ...d, show: { ...d.show, [k]: v } }));
   const setAlert = (k, v) => setDraft(d => ({ ...d, alerts: { ...d.alerts, [k]: v } }));
+  const setCookie = (k, v) => setDraft(d => ({ ...d, cookie: { ...d.cookie, [k]: v } }));
   const setMsg = (key, k, v) => setDraft(d => ({ ...d, messages: { ...d.messages, [key]: { ...d.messages[key], [k]: v } } }));
 
   const previewData = useMemo(() => {
@@ -219,6 +220,31 @@ export default function NotificationsTab() {
               <Field label="Also send alert emails to (optional)" hint="Separate several addresses with commas. These are in addition to the address set under Admin → Emails. Telegram chat IDs are managed under Admin → Emails.">
                 <input className="ainp" style={inp} placeholder="name@example.com, other@example.com" value={draft.alerts.extraEmails} onChange={e => setAlert('extraEmails', e.target.value)} />
               </Field>
+            </div>
+          </div>
+
+          <div className="acard" style={{ marginBottom: 16 }}>
+            <div className="acard-head"><span style={{ fontWeight: 700 }}>Cookie notice (shown on the website)</span></div>
+            <div className="acard-body">
+              <div style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 8 }}>Pick a ready-made wording, or write your own:</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                {COOKIE_PRESETS.map(pr => (
+                  <button key={pr.name} type="button" className="abtn" style={{ fontSize: 12, padding: '5px 12px' }} onClick={() => setDraft(d => ({ ...d, cookie: { text: pr.text, accept: pr.accept, reject: pr.reject } }))}>{pr.name}</button>
+                ))}
+              </div>
+              <Field label="Message"><textarea className="ainp" rows={3} style={{ ...inp, resize: 'vertical' }} value={draft.cookie.text} onChange={e => setCookie('text', e.target.value)} /></Field>
+              <div className="aform-row">
+                <Field label="Accept button"><input className="ainp" style={inp} maxLength={30} value={draft.cookie.accept} onChange={e => setCookie('accept', e.target.value)} /></Field>
+                <Field label="Decline button"><input className="ainp" style={inp} maxLength={30} value={draft.cookie.reject} onChange={e => setCookie('reject', e.target.value)} /></Field>
+              </div>
+              <div data-testid="cookie-preview" style={{ background: '#17171b', color: '#d4d4d8', border: '1px solid #2c2c33', borderRadius: 12, padding: '14px 16px', fontSize: 13, lineHeight: 1.6 }}>
+                {draft.cookie.text} <span style={{ color: '#f97316', whiteSpace: 'nowrap' }}>Privacy Policy</span>
+                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                  <span style={{ padding: '7px 14px', border: '1px solid #52525b', borderRadius: 8, color: '#f4f4f5', fontWeight: 700 }}>{draft.cookie.reject}</span>
+                  <span style={{ padding: '7px 14px', background: '#f97316', borderRadius: 8, color: '#000', fontWeight: 700 }}>{draft.cookie.accept}</span>
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 8 }}>The notice has a "Privacy Policy" link added automatically. Visitors can reopen their choice from "Cookie settings" in the footer.</div>
             </div>
           </div>
 

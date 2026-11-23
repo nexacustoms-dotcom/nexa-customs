@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, sendEmailJS, sendTelegram, imgUrl } from '../context/AppContext';
 import { buildEmail, buildAlertEmail, alertRecipients } from '../lib/emailBuilder';
+import { SHOP } from '../data/shop';
 import { getTaxInfo, DEFAULT_TAX } from '../data/products';
 import ICONS from '../components/Icons';
 
@@ -275,7 +276,7 @@ export function CheckoutPage() {
     if (!shipping.address.trim()) errs.ship_address = 'Street address is required';
     if (!shipping.city.trim()) errs.ship_city = 'City is required';
     if (!shipping.postal.trim()) errs.ship_postal = 'Postal code is required';
-    else if (!/^[A-Za-z]\d[A-Za-z][\s]?\d[A-Za-z]\d$/.test(shipping.postal.trim())) errs.ship_postal = 'Enter a valid Canadian postal code (e.g. L5T 1J6)';
+    else if (!/^[A-Za-z]\d[A-Za-z][\s]?\d[A-Za-z]\d$/.test(shipping.postal.trim())) errs.ship_postal = 'Enter a valid Canadian postal code (e.g. A1A 1A1)';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -537,7 +538,7 @@ export function CheckoutPage() {
       </tr>`).join('');
 
       const deliveryValue = delivery === 'pickup'
-        ? 'Free Pickup<br/>6033 Shawson Dr, Unit 40<br/>Mississauga, ON'
+        ? `Free Pickup<br/>${store?.address || SHOP.street}<br/>${store?.city || SHOP.cityLine}`
         : `${delivery === 'post' ? (store?.shipping_carrier || 'Canada Post') : (store?.courier_carrier_name || 'Courier')}<br/>${shipping.address}<br/>${shipping.city}, ${shipping.province} ${shipping.postal}`;
 
       // ── Customer information block (addresses, payment, shipping method) — like a standard store receipt.
@@ -550,7 +551,7 @@ export function CheckoutPage() {
         : (payMethod === 'stripe' ? 'Credit / debit card' : esc(payMethod));
       const fullName = esc((form.fn + ' ' + form.ln).trim());
       const shipLines = delivery === 'pickup'
-        ? ['Pickup order', 'Nexa Customs Inc.', '6033 Shawson Dr, Unit 40', 'Mississauga, ON L5T 1J6', 'Canada']
+        ? ['Pickup order', 'Nexa Customs Inc.', store?.address || SHOP.street, store?.city || SHOP.cityLine, 'Canada']
         : [fullName, esc(shipping.address), esc(`${shipping.city}, ${shipping.province} ${shipping.postal}`), 'Canada'];
       const billLines = billing.sameAsContact
         ? (delivery === 'pickup' ? [fullName, esc(form.email)] : [fullName, esc(shipping.address), esc(`${shipping.city}, ${shipping.province} ${shipping.postal}`), 'Canada'])
@@ -589,7 +590,7 @@ export function CheckoutPage() {
         })),
         totals: { pieces: cart.reduce((n, i) => n + i.qty, 0), items: cartSubtotal - taFeeTotal, express: taFeeTotal, shipping: shipCost, shippingLabel: carrierName, taxLabel: taxInfo.label, tax: hst, total },
         shipLines: delivery === 'pickup'
-          ? ['Pickup order', 'Nexa Customs Inc.', '6033 Shawson Dr, Unit 40', 'Mississauga, ON L5T 1J6', 'Canada']
+          ? ['Pickup order', 'Nexa Customs Inc.', store?.address || SHOP.street, store?.city || SHOP.cityLine, 'Canada']
           : [custName, shipping.address, `${shipping.city}, ${shipping.province} ${shipping.postal}`, 'Canada'],
         billLines: billing.sameAsContact
           ? (delivery === 'pickup' ? [custName, form.email] : [custName, shipping.address, `${shipping.city}, ${shipping.province} ${shipping.postal}`, 'Canada'])
@@ -861,7 +862,7 @@ export function CheckoutPage() {
                     </div>
                   )}
                   {[
-                    { id: 'pickup', ico: ICONS.store(18), label: 'Free Local Pickup', sub: '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 10AM–8PM', price: 'Free', tag: 'Most Popular' },
+                    { id: 'pickup', ico: ICONS.store(18), label: 'Free Local Pickup', sub: `${store?.address || SHOP.street}, Mississauga · Mon–Fri 10AM–8PM`, price: 'Free', tag: 'Most Popular' },
                     { id: 'post',   ico: ICONS.mailbox(18), label: `${store?.shipping_carrier || 'Canada Post'} Standard`, sub: '3–7 business days · Tracking included', price: `$${(pricing.shipping_post + shipSurcharge).toFixed(2)}`, tag: '' },
                     { id: 'courier',ico: ICONS.rocket(18), label: `${store?.courier_carrier_name || 'Courier'} Express`, sub: '1–2 business days · Fastest option', price: `$${(pricing.shipping_courier + shipSurcharge).toFixed(2)}`, tag: 'Fastest' },
                   ].filter(opt => opt.id === 'pickup' || !cartHasPickupOnlyItem).map(opt => (
@@ -915,8 +916,8 @@ export function CheckoutPage() {
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                       <div className="fgrp">
-                        <label className="flbl">Postal Code * <span style={{ color: 'var(--mu)', fontSize: 10 }}>(e.g. L5T 1J6)</span></label>
-                        <input className="finp" placeholder="L5T 1J6" value={shipping.postal} maxLength={7}
+                        <label className="flbl">Postal Code * <span style={{ color: 'var(--mu)', fontSize: 10 }}>(e.g. A1A 1A1)</span></label>
+                        <input className="finp" placeholder="A1A 1A1" value={shipping.postal} maxLength={7}
                           onChange={e => { setShipping(s => ({...s, postal: e.target.value.toUpperCase()})); setErrors(er => ({...er, ship_postal: ''})); }}
                           style={{ borderColor: errors.ship_postal ? '#ef4444' : '', fontFamily: "'DM Mono',monospace", letterSpacing: '.1em' }} />
                         {errors.ship_postal && <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }} role="alert"><span style={{display:"inline-flex",verticalAlign:"middle",marginRight:4}}>{ICONS.warning(11)}</span>{errors.ship_postal}</div>}
@@ -1161,7 +1162,7 @@ export function CheckoutPage() {
                             <div className="frow">
                               <div className="fgrp">
                                 <label className="flbl" htmlFor="billing_postal">Postal Code</label>
-                                <input className="finp" id="billing_postal" value={billing.postal} onChange={e => setBilling(b => ({...b, postal: e.target.value.toUpperCase()}))} placeholder="L5T 1J6" maxLength={7} />
+                                <input className="finp" id="billing_postal" value={billing.postal} onChange={e => setBilling(b => ({...b, postal: e.target.value.toUpperCase()}))} placeholder="A1A 1A1" maxLength={7} />
                               </div>
                               <div className="fgrp">
                                 <label className="flbl" htmlFor="billing_country">Country</label>
@@ -1290,7 +1291,7 @@ export function SuccessPage() {
           {[
             [ICONS.paperclip(14), 'Artwork', 'Email files to info@nexacustoms.ca with your order number'],
             deliveryType === 'pickup'
-              ? [ICONS.pin(14), 'Pickup', '6033 Shawson Dr, Unit 40, Mississauga · Mon–Fri 10AM–8PM']
+              ? [ICONS.pin(14), 'Pickup', `${SHOP.street}, Mississauga · Mon–Fri 10AM–8PM`]
               : [ICONS.box(14), 'Shipping', shipAddr + ' · ' + (deliveryType === 'post' ? `${store?.shipping_carrier || 'Canada Post'} 3–7 days` : `${store?.courier_carrier_name || 'Courier'} 1–2 days`)],
             [ICONS.phone(14), 'Questions?', 'Call or text (437) 997-9921'],
           ].map(([icon, k, v]) => (
@@ -1489,7 +1490,7 @@ export function QuotePage() {
           </div>
           <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 20 }}>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--o)', marginBottom: 12 }}>Contact Directly</div>
-            {[[ICONS.phone(14),'(437) 997-9921','tel:+14379979921'],[ICONS.mail(14),'info@nexacustoms.ca','mailto:info@nexacustoms.ca'],[ICONS.pin(14),'6033 Shawson Dr, Unit 40',null]].map(([ico, val, href]) => (
+            {[[ICONS.phone(14),'(437) 997-9921','tel:+14379979921'],[ICONS.mail(14),'info@nexacustoms.ca','mailto:info@nexacustoms.ca'],[ICONS.pin(14), `${store.address}, ${store.city}`, null]].map(([ico, val, href]) => (
               <div key={val} style={{ fontSize: 12, color: 'var(--mu)', display: 'flex', gap: 9, marginBottom: 10 }}>
                 {ico} {href ? <a href={href} style={{ color: 'var(--o)' }}>{val}</a> : val}
               </div>
@@ -1659,7 +1660,7 @@ export function OrderStatusPage() {
   const isPickup = order?.delivery === 'pickup';
   const st = order ? (() => {
     const base = STATUS_INFO[order.status] || STATUS_INFO['Order Received'];
-    if (order.status === 'Shipped' && isPickup) return { ...base, label: 'Ready for Pickup', desc: 'Your order is ready — come pick it up at 6033 Shawson Dr, Unit 40, Mississauga.' };
+    if (order.status === 'Shipped' && isPickup) return { ...base, label: 'Ready for Pickup', desc: 'Your order is ready — come pick it up at ' + SHOP.street + ', Mississauga.' };
     if (order.status === 'Delivered' && isPickup) return { ...base, label: 'Picked Up', desc: 'Order picked up. Thank you for choosing Nexa Customs!' };
     return base;
   })() : null;

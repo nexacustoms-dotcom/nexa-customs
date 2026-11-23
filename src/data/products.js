@@ -6558,7 +6558,7 @@ export const DEFAULT_STORE = {
   phone_raw: '14379979921',
   email: 'info@nexacustoms.ca',
   address: '6033 Shawson Dr, Unit 40',
-  city: 'Mississauga, ON L5T 1J6',
+  city: 'Mississauga, ON L5T 1H8',
   hours: 'Mon–Fri: 10:00 AM – 8:00 PM\nSat: By Appointment\nSun: Closed',
   social_ig: 'https://instagram.com/nexacustoms',
   social_fb: 'https://facebook.com/nexacustoms',

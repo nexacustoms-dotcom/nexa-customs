@@ -5,6 +5,7 @@ import { signIn, signOut, getAccessToken, authHeaders, sessionEmail } from '../l
 import { buildEmail, notificationKeyFor } from '../lib/emailBuilder';
 import NotificationsTab from './NotificationsTab';
 import RichTextEditor from '../components/RichTextEditor';
+import { SHOP, SHOP_FULL } from '../data/shop';
 
 const TABS = [
   { id: 'orders',     label: '📦 Orders' },
@@ -1909,7 +1910,7 @@ function printOrderSheet(o) {
     + '</div>'
     + '<div class="sec-title">Notes</div>'
     + '<div class="notes">' + (o.notes || '—') + '</div>'
-    + '<div class="footer"><div>Nexa Customs Inc. · 6033 Shawson Dr, Unit 40, Mississauga, ON L5T 1J6</div>'
+    + '<div class="footer"><div>Nexa Customs Inc. · ' + SHOP_FULL + '</div>'
     + '<div>Printed: ' + new Date().toLocaleString('en-CA') + '</div></div>'
     + '</body></html>';
   win.document.write(html);
@@ -2084,7 +2085,7 @@ function OrdersTab() {
           order_date: order.created_at ? new Date(order.created_at).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
           order_total: order.total ? `$${parseFloat(order.total).toFixed(2)}` : '',
           delivery_value: order.delivery === 'pickup'
-            ? 'Free Pickup<br/>6033 Shawson Dr, Unit 40<br/>Mississauga, ON'
+            ? `Free Pickup<br/>${store?.address || SHOP.street}<br/>${store?.city || SHOP.cityLine}`
             : (order.delivery || ''),
           items_html: '',
           breakdown_html: '',
