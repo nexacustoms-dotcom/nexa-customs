@@ -4,6 +4,7 @@ import { useApp, sendEmailJS } from '../context/AppContext';
 import { signIn, signOut, getAccessToken, authHeaders, sessionEmail } from '../lib/adminSession';
 import { buildEmail, notificationKeyFor } from '../lib/emailBuilder';
 import NotificationsTab from './NotificationsTab';
+import SeoTab from './SeoTab';
 import RichTextEditor from '../components/RichTextEditor';
 import { SHOP, SHOP_FULL } from '../data/shop';
 
@@ -16,6 +17,7 @@ const TABS = [
   { id: 'pages',      label: '📄 Pages' },
   { id: 'emails',     label: '📬 Emails' },
   { id: 'notify',     label: '🔔 Notifications' },
+  { id: 'seo',        label: '🔎 SEO' },
   { id: 'pricing',    label: '💰 Pricing' },
 ];
 
@@ -220,6 +222,7 @@ export default function AdminPage() {
         {tab === 'pages'      && <PagesTab />}
         {tab === 'emails'     && <EmailsTab />}
         {tab === 'notify'     && <NotificationsTab />}
+        {tab === 'seo'        && <SeoTab />}
         {tab === 'pricing'    && <PricingTab />}
       </div>
     </div>
@@ -684,6 +687,19 @@ function AppearanceTab() {
           <div className="afg"><label className="aflbl">City / Province / Postal</label><input className="ainp" value={s.city} onChange={updE('city')} /></div>
           <div className="afg"><label className="aflbl">Business Hours</label><textarea className="ainp" rows="4" style={{ resize: 'vertical' }} value={s.hours} onChange={updE('hours')} /></div>
           <div className="afg"><label className="aflbl">Shipping Carrier Name</label><input className="ainp" placeholder="Canada Post" value={s.shipping_carrier || ''} onChange={updE('shipping_carrier')} /><div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4 }}>Shown at checkout, in order summaries, and in confirmation emails — update this if you switch carriers.</div></div>
+        </div>
+
+        {/* Contact page wording */}
+        <div className="aform-section">
+          <div className="aform-title">📞 Contact Page</div>
+          <p style={{ fontSize: 11, color: 'var(--mu)', marginBottom: 10, lineHeight: 1.6 }}>Your phone, email, address and hours above also appear on the Contact page. These boxes change the wording around them. Leave a box empty to keep the standard text.</p>
+          <div className="afg"><label className="aflbl">Page heading</label><input className="ainp" placeholder="Get In Touch" value={s.contact_title || ''} onChange={updE('contact_title')} /></div>
+          <div className="afg"><label className="aflbl">Intro line under the heading</label><input className="ainp" placeholder="We are here to help with any print project, big or small." value={s.contact_intro || ''} onChange={updE('contact_intro')} /></div>
+          <div className="afg"><label className="aflbl">“Call Us” small text</label><input className="ainp" placeholder="Mon–Fri 10AM–8PM · Sat By Appt" value={s.contact_call_sub || ''} onChange={updE('contact_call_sub')} /></div>
+          <div className="afg"><label className="aflbl">“Email Us” small text</label><input className="ainp" placeholder="Response within 1 business day" value={s.contact_email_sub || ''} onChange={updE('contact_email_sub')} /></div>
+          <div className="afg"><label className="aflbl">“Visit Us” small text (optional)</label><input className="ainp" placeholder="Pickup by appointment on Saturdays" value={s.contact_visit_sub || ''} onChange={updE('contact_visit_sub')} /></div>
+          <div className="afg"><label className="aflbl">“WhatsApp” small text</label><input className="ainp" placeholder="Send photos of your project" value={s.contact_wa_sub || ''} onChange={updE('contact_wa_sub')} /></div>
+          <div className="afg"><label className="aflbl">Message form heading</label><input className="ainp" placeholder="Send Us a Message" value={s.contact_form_title || ''} onChange={updE('contact_form_title')} /></div>
         </div>
 
         {/* Hero */}

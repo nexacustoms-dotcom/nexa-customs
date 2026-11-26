@@ -1563,15 +1563,15 @@ export function ContactPage() {
   return (
     <div className="W" style={{ padding: '40px 28px 76px' }}>
       <div style={{ textAlign: 'center', marginBottom: 36 }}>
-        <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,56px)', marginBottom: 8 }}>Get In Touch</h1>
-        <p style={{ fontSize: 13, color: 'var(--mu)' }}>We are here to help with any print project, big or small.</p>
+        <h1 className="D" style={{ fontSize: 'clamp(32px,5vw,56px)', marginBottom: 8 }}>{store.contact_title || 'Get In Touch'}</h1>
+        <p style={{ fontSize: 13, color: 'var(--mu)' }}>{store.contact_intro || 'We are here to help with any print project, big or small.'}</p>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 24 }} className="ct-grid">
         {[
-          { ico: ICONS.phone(28), t: 'Call Us', val: store.phone, href: `tel:+${store.phone_raw}`, sub: 'Mon–Fri 10AM–8PM · Sat By Appt' },
-          { ico: ICONS.mail(28), t: 'Email Us', val: store.email, href: `mailto:${store.email}`, sub: 'Response within 1 business day' },
-          { ico: ICONS.pin(28), t: 'Visit Us', val: `${store.address}\n${store.city}`, href: null, sub: null },
-          { ico: ICONS.chat(28), t: 'WhatsApp', val: store.phone, href: `https://wa.me/${store.phone_raw}`, sub: 'Send photos of your project' },
+          { ico: ICONS.phone(28), t: 'Call Us', val: store.phone, href: `tel:+${store.phone_raw}`, sub: store.contact_call_sub ?? 'Mon–Fri 10AM–8PM · Sat By Appt' },
+          { ico: ICONS.mail(28), t: 'Email Us', val: store.email, href: `mailto:${store.email}`, sub: store.contact_email_sub ?? 'Response within 1 business day' },
+          { ico: ICONS.pin(28), t: 'Visit Us', val: `${store.address}\n${store.city}`, href: null, sub: store.contact_visit_sub || null },
+          { ico: ICONS.chat(28), t: 'WhatsApp', val: store.phone, href: `https://wa.me/${store.phone_raw}`, sub: store.contact_wa_sub ?? 'Send photos of your project' },
         ].map(c => (
           <div key={c.t} className="card" style={{ padding: 24 }}>
             <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center', color: 'var(--o)' }}>{c.ico}</div>
@@ -1582,7 +1582,7 @@ export function ContactPage() {
         ))}
       </div>
       <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', padding: 24, maxWidth: 560, margin: '0 auto' }}>
-        <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>Send Us a Message</div>
+        <div className="D" style={{ fontSize: 18, marginBottom: 16 }}>{store.contact_form_title || 'Send Us a Message'}</div>
 
         {sent ? (
           <div style={{ textAlign: 'center', padding: '32px 16px' }}>

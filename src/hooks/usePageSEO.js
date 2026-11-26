@@ -84,9 +84,27 @@ function ensureTag(selector, tag, attrs) {
   return el;
 }
 
+// The title/description a product page gets when you have not written your own in Admin → SEO.
+function productDefaults(p) {
+  const title = `${p.name} \u2014 Nexa Customs \u2014 GTA Print Shop`;
+  // Product desc: keep under 158 chars. Never fall back to the homepage description (duplicate meta descriptions).
+  const rawDesc = p.desc
+    ? `${p.desc} Free proof, same-day pickup in Mississauga GTA or ships Canada-wide.`
+    : `${p.name} \u2014 custom printing in Mississauga & the GTA. Free proof, same-day pickup or ships Canada-wide. Call (437) 997-9921.`;
+  return { title, description: rawDesc.length > 158 ? rawDesc.slice(0, 155) + '...' : rawDesc };
+}
+
+// Used by Admin → SEO to show what each page uses today.
+export const SEO_STATIC_PAGES = [['/', 'Homepage'], ['/products', 'All products'], ['/blog', 'Blog'], ['/quote', 'Get a quote'], ['/contact', 'Contact'], ['/about', 'About'], ['/faq', 'FAQ'], ['/shipping', 'Shipping policy'], ['/returns', 'Returns policy'], ['/terms', 'Terms'], ['/privacy', 'Privacy policy'], ['/turnaround', 'Turnaround times']];
+export function defaultSeo(kind, key, prod) {
+  if (kind === 'pages') return { title: TITLES[key] || BASE, description: DESCRIPTIONS[key] || DESCRIPTIONS['/'] };
+  if (kind === 'categories') return { title: CAT_TITLES[key] || `${String(key).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} \u2014 Nexa Customs GTA`, description: CAT_DESCS[key] || DESCRIPTIONS['/products'] };
+  return prod ? productDefaults(prod) : { title: '', description: '' };
+}
+
 export function usePageSEO() {
   const location = useLocation();
-  const { curProd, pages, cats } = useApp();
+  const { curProd, pages, cats, seo } = useApp();
 
   useEffect(() => {
     const rawPath = location.pathname;
@@ -109,14 +127,8 @@ export function usePageSEO() {
       desc  = DESCRIPTIONS[path] || desc;
       matched = true;
     } else if (path.startsWith('/products/') && curProd) {
-      title = `${curProd.name} — Nexa Customs · GTA Print Shop`;
-      // Product desc: keep under 158 chars. Never fall back to the homepage
-      // description — that creates duplicate meta descriptions across every
-      // product missing its own text.
-      const rawDesc = curProd.desc
-        ? `${curProd.desc} Free proof, same-day pickup in Mississauga GTA or ships Canada-wide.`
-        : `${curProd.name} — custom printing in Mississauga & the GTA. Free proof, same-day pickup or ships Canada-wide. Call (437) 997-9921.`;
-      desc = rawDesc.length > 158 ? rawDesc.slice(0, 155) + '...' : rawDesc;
+      const pd = productDefaults(curProd);
+      title = pd.title; desc = pd.description;
       matched = true;
     } else if (path.startsWith('/products/')) {
       const catSlug = path.split('/')[2];
@@ -141,6 +153,15 @@ export function usePageSEO() {
         }
         matched = true;
       }
+    }
+
+    // Titles and descriptions you wrote in Admin → SEO win over the built-in ones
+    if (matched && seo && !locPage) {
+      const ov = TITLES[path] ? seo.pages?.[path]
+        : (path.startsWith('/products/') && curProd) ? seo.products?.[curProd.id]
+        : path.startsWith('/products/') ? seo.categories?.[path.split('/')[2]] : null;
+      if (ov?.title?.trim()) title = ov.title.trim();
+      if (ov?.description?.trim()) desc = ov.description.trim();
     }
 
     // Never index transactional / private / disabled-product pages — or a
@@ -173,5 +194,5 @@ export function usePageSEO() {
     set('meta[name="twitter:title"]',      'meta', { name:'twitter:title' },       'content', title);
     set('meta[name="twitter:description"]','meta', { name:'twitter:description' }, 'content', desc);
 
-  }, [location.pathname, curProd?.id, pages]);
+  }, [location.pathname, curProd?.id, pages, seo, cats]);
 }

@@ -158,6 +158,7 @@ export function AppProvider({ children }) {
   const [pricing, setPricingState] = useState(() => ({ ...DEFAULT_PRICING, ...ls.get('nxt_pricing_cfg', {}) }));
   const [cart,  setCart]           = useState(() => ls.get('nxt_cart', []));
   const [pages, setPages]          = useState(() => ls.get('nxt_custom_pages', []));
+  const [seo, setSeoState]         = useState(() => ls.get('nxt_seo', {}));   // Google titles/descriptions written in Admin → SEO
   const [notify, setNotifyState]   = useState(() => mergeNotify(ls.get('nxt_notify', null)));   // email wording / layout / alert settings (Admin → Notifications)
   const [builtinPages, setBuiltinPagesState] = useState(() => ({ ...DEFAULT_BUILTIN_PAGES, ...ls.get('nxt_builtin_pages', {}) }));
   const [curProd, setCurProd]      = useState(null);
@@ -171,7 +172,7 @@ export function AppProvider({ children }) {
       if (!isSupaReady()) return;
       setSyncing(true);
       // Fetch all 6 config rows in parallel — saves ~1s vs sequential awaits
-      const [cr, catr, pr, pager, pcr, cpr, nfr] = await Promise.all([
+      const [cr, catr, pr, pager, pcr, cpr, nfr, sor] = await Promise.all([
         supaGet('site_config', 'id=eq.main&limit=1'),
         supaGet('site_config', 'id=eq.categories&limit=1'),
         supaGet('site_config', 'id=eq.products&limit=1'),
@@ -179,6 +180,7 @@ export function AppProvider({ children }) {
         supaGet('site_config', 'id=eq.pricing_cfg&limit=1'),
         supaGet('site_config', 'id=eq.custom_pages&limit=1'),
         supaGet('site_config', 'id=eq.notifications&limit=1'),
+        supaGet('site_config', 'id=eq.seo&limit=1'),
       ]);
       // store config
       if (cr?.length > 0 && cr[0].data) {
@@ -218,6 +220,10 @@ export function AppProvider({ children }) {
       if (nfr?.length > 0 && nfr[0].data) {
         const d = typeof nfr[0].data === 'string' ? JSON.parse(nfr[0].data) : nfr[0].data;
         ls.set('nxt_notify', d); setNotifyState(mergeNotify(d));
+      }
+      if (sor?.length > 0 && sor[0].data) {
+        const d = typeof sor[0].data === 'string' ? JSON.parse(sor[0].data) : sor[0].data;
+        if (d && typeof d === 'object') { ls.set('nxt_seo', d); setSeoState(d); }
       }
       if (Array.isArray(pr)) setDbSynced(true);
       setSyncing(false);
@@ -307,6 +313,11 @@ export function AppProvider({ children }) {
       supaUpsert('site_config', { id: 'products', data: overrides, updated_at: new Date().toISOString() });
       return next;
     });
+  }, []);
+
+  const setSeo = useCallback((s) => {
+    setSeoState(s); ls.set('nxt_seo', s);
+    supaUpsert('site_config', { id: 'seo', data: s, updated_at: new Date().toISOString() });
   }, []);
 
   const setNotify = useCallback((n) => {
@@ -453,7 +464,7 @@ export function AppProvider({ children }) {
   const cartSubtotal = cart.reduce((s, i) => s + (i.price || 0), 0);
 
   return (
-    <AppContext.Provider value={{ page, go, syncing, dbSynced, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages: setPagesSynced, builtinPages, setBuiltinPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls, notify, setNotify }}>
+    <AppContext.Provider value={{ page, go, syncing, dbSynced, cart, addToCart, removeFromCart, clearCart, cartSubtotal, cats, setCats, prods, setProds, store, setStore, pricing, setPricing, pages, setPages: setPagesSynced, builtinPages, setBuiltinPages, curProd, setCurProd, showProduct, toast, showToast, adminAuthed, setAdminAuthed, calcPrice, cfg, ls, notify, setNotify, seo, setSeo }}>
       {children}
     </AppContext.Provider>
   );
