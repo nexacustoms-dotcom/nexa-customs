@@ -130,18 +130,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://nexacustoms.ca/products/calendars</loc>
-    <lastmod>2026-11-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://nexacustoms.ca/products/posters-canvas</loc>
     <lastmod>2026-11-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- ═══ Product pages (disabled products excluded) ═══ -->
+  <!-- ═══ Product pages (hidden and unfinished products excluded) ═══ -->
   <url>
     <loc>https://nexacustoms.ca/products/business-cards/best-value-business-cards</loc>
     <lastmod>2026-11-26</lastmod>
@@ -444,6 +438,12 @@
   </url>
   <url>
     <loc>https://nexacustoms.ca/products/posters-canvas/canvas-roll</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://nexacustoms.ca/products/business-cards/new-product-1788392368995</loc>
     <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

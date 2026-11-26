@@ -1,79 +1,69 @@
 # robots.txt — Nexa Customs Inc.
 # https://nexacustoms.ca
-# Last updated: 2026-06-02
+# Last updated: 2026-11-26
 
-# ─── Allow all well-behaved crawlers ─────────────────────────────────────────
+# ─── Regular search engines ──────────────────────────────────────────────────
 User-agent: *
-Allow: /
-
-# Block low-value / duplicate WooCommerce pages from indexing
-Disallow: /cart
-Disallow: /checkout
-Disallow: /proof
-Disallow: /order-confirmed
-Disallow: /order-status
-Disallow: /admin
-
-# ─── Google ──────────────────────────────────────────────────────────────────
 User-agent: Googlebot
-Allow: /
-Disallow: /cart
-Disallow: /checkout
-Disallow: /proof
-Disallow: /order-confirmed
-Disallow: /order-status
-Disallow: /admin
-
-# ─── Bing ────────────────────────────────────────────────────────────────────
 User-agent: Bingbot
-Allow: /
 Disallow: /cart
 Disallow: /checkout
 Disallow: /proof
 Disallow: /order-confirmed
 Disallow: /order-status
 Disallow: /admin
-
-# ─── AI assistants — allow (these refer customers to you) ────────────────────
-User-agent: anthropic-ai
 Allow: /
 
-User-agent: ClaudeBot
-Allow: /
+# ─── AI search, assistants and answer engines — ALLOWED ──────────────────────
+# These tools recommend businesses to people who ask about print shops, signs,
+# vinyl graphics, etc. Allowing them lets Nexa Customs be found and mentioned.
+# (A crawler that has its own group here ignores the "*" group above, so the
+#  private pages are blocked again inside this group.)
 
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: YouBot
-Allow: /
-
-User-agent: DuckAssistBot
-Allow: /
-
-User-agent: cohere-ai
-Allow: /
-
-# ─── AI training scrapers — block (no SEO or referral value) ─────────────────
+# OpenAI — ChatGPT search, ChatGPT browsing, training
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
 User-agent: GPTBot
-Disallow: /
-
+# Anthropic — Claude
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: Claude-Web
+User-agent: anthropic-ai
+# Perplexity
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+# Google — Gemini / AI Overviews training control
 User-agent: Google-Extended
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
+User-agent: Google-CloudVertexBot
+# Apple — Siri / Apple Intelligence
+User-agent: Applebot
 User-agent: Applebot-Extended
-Disallow: /
-
+# Meta — Meta AI
+User-agent: Meta-ExternalAgent
+User-agent: Meta-ExternalFetcher
 User-agent: FacebookBot
-Disallow: /
-
+# Microsoft / Amazon / others
+User-agent: Amazonbot
+User-agent: DuckAssistBot
+User-agent: YouBot
+User-agent: MistralAI-User
+User-agent: cohere-ai
+User-agent: cohere-training-data-crawler
+User-agent: CCBot
 User-agent: Bytespider
-Disallow: /
+User-agent: Diffbot
+Disallow: /cart
+Disallow: /checkout
+Disallow: /proof
+Disallow: /order-confirmed
+Disallow: /order-status
+Disallow: /admin
+Allow: /
 
+# ─── SEO data scrapers — blocked (not AI, no benefit to the shop) ────────────
 User-agent: DataForSeoBot
 Disallow: /
 
-# ─── Sitemap locations ───────────────────────────────────────────────────────
+# ─── Sitemap ─────────────────────────────────────────────────────────────────
 Sitemap: https://nexacustoms.ca/sitemap.xml

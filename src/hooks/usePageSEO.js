@@ -194,5 +194,5 @@ export function usePageSEO() {
     set('meta[name="twitter:title"]',      'meta', { name:'twitter:title' },       'content', title);
     set('meta[name="twitter:description"]','meta', { name:'twitter:description' }, 'content', desc);
 
-  }, [location.pathname, curProd?.id, pages, seo, cats]);
+  }, [location.pathname, curProd?.id, curProd?.disabled, pages, seo, cats]);
 }

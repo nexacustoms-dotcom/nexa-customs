@@ -4,10 +4,7 @@
 //   node scripts/generate-sitemap.mjs
 
 import { readFileSync, writeFileSync } from "fs";
-
-const DOMAIN   = "https://nexacustoms.ca";
-const SUPA_URL = "https://eogypbrsjfgurrobjomn.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvZ3lwYnJzamZndXJyb2Jqb21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjYyODMsImV4cCI6MjA5MjgwMjI4M30.ajlCEo-TKn6qyi4GCfYNOeEpLpp5-MoJoFCKkGuRAzg";
+import { DOMAIN, loadDefaults, fetchProductOverrides, fetchConfig, mergeProducts, isPublishable } from "./lib/live-data.mjs";
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -32,60 +29,38 @@ const url = (loc, priority, changefreq) => `  <url>
     <priority>${priority}</priority>
   </url>`;
 
-// Read local defaults
-const src = readFileSync("src/data/products.js", "utf8");
-const cs  = src.indexOf("export const DEFAULT_CATS = [");
-let cd = 0, cb = src.indexOf("[", cs), ce = cb;
-for (let j = cb; j < src.length; j++) { if (src[j] === "[") cd++; else if (src[j] === "]") { cd--; if (cd === 0) { ce = j + 1; break; } } }
-const cats = eval(src.slice(cb, ce));
-
-const ps = src.indexOf("export const DEFAULT_PRODS = [");
-let pd = 0, pb = src.indexOf("[", ps), pe = pb;
-for (let j = pb; j < src.length; j++) { if (src[j] === "[") pd++; else if (src[j] === "]") { pd--; if (pd === 0) { pe = j + 1; break; } } }
-const prods = eval(src.slice(pb, pe));
+const { cats, prods: defaultProds } = loadDefaults(".");
 
 console.log("📡 Fetching live product / page status from Supabase...");
-let overrides = {};
-let customPages = [];
+let overrides, customPages, hiddenCats = new Set();
 try {
-  const [pr, cpr] = await Promise.all([
-    fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.products&select=data`, { headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` } }),
-    fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.custom_pages&select=data`, { headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` } }),
-  ]);
-  const pdata = await pr.json();
-  const rawData = pdata[0]?.data || {};
-  Object.values(rawData).forEach(p => { if (p?.id) overrides[p.id] = p; });
-
-  const cpdata = await cpr.json();
-  customPages = Array.isArray(cpdata[0]?.data) ? cpdata[0].data : [];
+  overrides = await fetchProductOverrides();
+  const cp = await fetchConfig("custom_pages");
+  const catCfg = await fetchConfig("categories");
+  hiddenCats = new Set((Array.isArray(catCfg) ? catCfg : Object.values(catCfg || {})).filter(c => c?.hidden).map(c => c.id));
+  customPages = Array.isArray(cp) ? cp : [];
   console.log(`✅ Loaded ${Object.keys(overrides).length} product overrides, ${customPages.length} custom pages`);
 } catch (e) {
-  console.warn("⚠️  Could not fetch Supabase data — using local product list only, no custom pages included");
+  // Never replace a good sitemap with one built from outdated code defaults.
+  console.warn(`⚠️  Could not reach Supabase (${e.message}) — keeping the existing Public/sitemap.xml unchanged.`);
+  process.exit(0);
 }
+const prods = mergeProducts(defaultProds, overrides);
 
 const urls = [];
 urls.push(`  <!-- ═══ Core pages ═══ -->`);
 CORE_PAGES.forEach(([path, pr, cf]) => urls.push(url(`${DOMAIN}${path}`, pr, cf)));
 
 urls.push(`  <!-- ═══ Category pages ═══ -->`);
-cats.forEach(c => urls.push(url(`${DOMAIN}/products/${c.id}`, "0.8", "weekly")));
+cats.filter(c => !hiddenCats.has(c.id)).forEach(c => urls.push(url(`${DOMAIN}/products/${c.id}`, "0.8", "weekly")));
 
-urls.push(`  <!-- ═══ Product pages (disabled products excluded) ═══ -->`);
-let skipped = 0;
+urls.push(`  <!-- ═══ Product pages (hidden and unfinished products excluded) ═══ -->`);
+let skipped = 0, adminAdded = 0, listed = 0;
 prods.forEach(p => {
-  const merged = { ...p, ...(overrides[p.id] || {}) };
-  if (merged.disabled) { skipped++; return; }
+  if (!isPublishable(p)) { skipped++; return; }
   urls.push(url(`${DOMAIN}/products/${p.cat}/${p.id}`, "0.7", "monthly"));
-});
-
-// Products created in Admin (they exist only in the database, not in src/data/products.js)
-let adminAdded = 0;
-const knownIds = new Set(prods.map(p => p.id));
-Object.values(overrides).forEach(p => {
-  if (!p?.id || knownIds.has(p.id) || !p.cat || !p.name || p.disabled) return;
-  if (/^new-product-/.test(p.id)) return;                 // unfinished drafts
-  urls.push(url(`${DOMAIN}/products/${p.cat}/${p.id}`, "0.7", "monthly"));
-  adminAdded++;
+  listed++;
+  if (p._adminCreated) adminAdded++;
 });
 if (adminAdded) console.log(`   + ${adminAdded} product(s) you created in Admin included`);
 
@@ -112,5 +87,4 @@ ${urls.join("\n")}
 
 writeFileSync("Public/sitemap.xml", xml, "utf8");
 console.log(`\n✅ Generated sitemap.xml`);
-console.log(`   ${CORE_PAGES.length} core pages, ${cats.length} categories, ${prods.length - skipped} active products (${skipped} disabled products excluded), ${customPages.length} custom pages`);
-console.log(`\nNext: git add Public/sitemap.xml && git commit -m "update: regenerate sitemap, exclude disabled products" && git push`);
+console.log(`   ${CORE_PAGES.length} core pages, ${cats.length} categories, ${listed} active products (${skipped} hidden/unfinished products excluded), ${customPages.length} custom pages`);

@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "chmod +x ./node_modules/.bin/vite || true",
-    "build": "vite build",
+    "build": "(node scripts/generate-sitemap.mjs; node scripts/generate-feed.mjs; node scripts/generate-local-inventory.mjs; true) && vite build",
     "postbuild": "node scripts/prerender.mjs",
     "preview": "vite preview",
-    "sync:vercel": "node scripts/prerender.mjs --sync-vercel"
+    "sync:vercel": "node scripts/prerender.mjs --sync-vercel",
+    "feeds": "node scripts/generate-sitemap.mjs && node scripts/generate-feed.mjs && node scripts/generate-local-inventory.mjs"
   },
   "dependencies": {
     "@fontsource/barlow-condensed": "^5.3.0",

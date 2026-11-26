@@ -245,6 +245,13 @@ function ProductsTab() {
     if (updated._isNew) {
       // New product — add to list
       const { _isNew, ...clean } = updated;
+      // Give the product a clean web address from its name (e.g. "Custom Lanyards" -> custom-lanyards)
+      // instead of the temporary new-product-123456 id, so Google and customers get a proper URL.
+      let base = String(clean.name || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+      if (!base || base === 'new-product') base = clean.id;
+      let slug = base, n = 2;
+      while (prods.some(p => p.id === slug)) slug = `${base}-${n++}`;
+      clean.id = slug;
       setProds(prev => [...prev, clean]);
     } else {
       setProds(prev => prev.map(p => p.id === updated.id ? updated : p));
@@ -550,7 +557,16 @@ function CategoriesTab() {
   const { cats, setCats, showToast, ls } = useApp();
   const [editingCat, setEditingCat] = useState(null); // category id being edited
   const [uploading, setUploading] = useState(null);   // category id being uploaded
+  const [descCat, setDescCat] = useState(null);     // category id whose description is open
+  const [descDraft, setDescDraft] = useState('');
   const fileRefs = useRef({});
+
+  function openDesc(c) { setDescCat(c.id); setDescDraft(c.desc || ''); }
+  function saveDesc(catId) {
+    setCats(prev => prev.map(x => x.id === catId ? { ...x, desc: descDraft.trim() } : x));
+    setDescCat(null);
+    showToast('✅ Category description saved!');
+  }
 
   function move(i, dir) {
     const arr = [...cats]; const j = i + dir;
@@ -581,7 +597,7 @@ function CategoriesTab() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <h2 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 24 }}>Categories ({cats.length})</h2>
-        <div style={{ fontSize: 12, color: 'var(--mu)' }}>Use ↑↓ to reorder · Upload images for each category</div>
+        <div style={{ fontSize: 12, color: 'var(--mu)' }}>Use ↑↓ to reorder · Upload images and edit descriptions for each category</div>
       </div>
       <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: 'var(--rl)', overflow: 'hidden' }}>
         {cats.map((c, i) => (
@@ -613,10 +629,28 @@ function CategoriesTab() {
                 <button className="abtn" onClick={() => move(i, -1)}>↑</button>
                 <button className="abtn" onClick={() => move(i, 1)}>↓</button>
                 <button className="abtn" onClick={() => fileRefs.current[c.id]?.click()} style={{ color: 'var(--o)', borderColor: 'rgba(249,115,22,.3)' }} title="Upload image">📁</button>
+                <button className="abtn" onClick={() => (descCat === c.id ? setDescCat(null) : openDesc(c))} style={{ color: c.desc ? 'var(--gr)' : 'var(--o)', borderColor: 'rgba(249,115,22,.3)' }} title="Edit description">✏️ Description</button>
                 {c.img && <button className="abtn" onClick={() => removeCatImg(c.id)} style={{ color: '#f87171', borderColor: 'rgba(239,68,68,.3)' }} title="Remove image">✕</button>}
                 <button className="abtn" onClick={() => setCats(prev => prev.map(x => x.id === c.id ? { ...x, hidden: !x.hidden } : x))} style={{ color: c.hidden ? 'var(--gr)' : '#f87171', borderColor: c.hidden ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)' }}>{c.hidden ? 'Show' : 'Hide'}</button>
               </div>
             </div>
+            {/* Description editor (expanded) */}
+            {descCat === c.id && (
+              <div style={{ padding: '0 16px 14px' }}>
+                <label htmlFor={`cat-desc-${c.id}`} style={{ display: 'block', fontSize: 11, color: 'var(--mu)', marginBottom: 6 }}>
+                  Description shown under the "{c.l}" title on its category page. Leave empty to use the standard line.
+                </label>
+                <textarea id={`cat-desc-${c.id}`} className="ainp" rows={3} style={{ width: '100%', fontSize: 12, resize: 'vertical' }}
+                  maxLength={300}
+                  placeholder="Professional print, signs & graphics for businesses across Canada."
+                  value={descDraft} onChange={e => setDescDraft(e.target.value)} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                  <button className="abtn" onClick={() => saveDesc(c.id)} style={{ color: 'var(--gr)', borderColor: 'rgba(34,197,94,.3)' }}>Save description</button>
+                  <button className="abtn" onClick={() => setDescCat(null)}>Cancel</button>
+                  <span style={{ fontSize: 11, color: 'var(--mu)', marginLeft: 'auto' }}>{descDraft.length}/300</span>
+                </div>
+              </div>
+            )}
             {/* Image URL input (expanded) */}
             {editingCat === c.id && (
               <div style={{ padding: '0 16px 14px', display: 'flex', gap: 8 }}>

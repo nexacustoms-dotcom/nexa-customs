@@ -177,15 +177,40 @@ function ProductPageWrapper() {
   useEffect(() => {
     const prod = prods.find(p => p.id === productSlug);
     if (prod) {
-      setCurProd(prod);
+      // also refresh when Admin settings arrive and the product turns out to be hidden
+      if (!curProd || curProd.id !== prod.id || !!curProd.disabled !== !!prod.disabled) setCurProd(prod);
     } else if (waited) {
       navigate('/products', { replace: true });
     }
-  }, [productSlug, prods.length, waited]);
+  }, [productSlug, prods, waited]);
 
   if (!curProd && !waited) return <LoadingSpinner text="Loading product…" />;
 
+  // Hidden in Admin: nobody can order it and search engines are told not to index it
+  // (usePageSEO sets noindex for the same condition).
+  const hidden = prods.find(p => p.id === productSlug);
+  if (hidden?.disabled) return <ProductUnavailable prod={hidden} />;
+
   return <ProductDetailPage />;
+}
+
+function ProductUnavailable({ prod }) {
+  const { cats } = useApp();
+  const navigate = useNavigate();
+  const cat = cats.find(c => c.id === prod.cat);
+  return (
+    <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 14, padding: 40 }}>
+      <h1 className="D" style={{ fontSize: 'clamp(28px,4vw,44px)' }}>This product is no longer available</h1>
+      <p style={{ fontSize: 14, color: 'var(--mu)', maxWidth: 520, lineHeight: 1.6 }}>
+        We have moved on from this item, but we can still help. Browse our other products or send us a quote request for something custom.
+      </p>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {cat && !cat.hidden && <button className="btn btn-primary" onClick={() => navigate(`/products/${cat.id}`)}>Browse {cat.l}</button>}
+        <button className="btn btn-primary" onClick={() => navigate('/products')}>All Products</button>
+        <button className="btn btn-ghost" onClick={() => navigate("/quote")}>Get a Quote</button>
+      </div>
+    </div>
+  );
 }
 
 // ── SCROLL TO TOP ON ROUTE CHANGE ─────────────────────────────────────────────

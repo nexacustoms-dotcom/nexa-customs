@@ -13,10 +13,8 @@
 // Products → Local inventory, or host it and point Merchant Center's fetch
 // URL at https://nexacustoms.ca/local-inventory.tsv for automatic refresh.
 
-import { readFileSync, writeFileSync } from "fs";
-
-const SUPA_URL = "https://eogypbrsjfgurrobjomn.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvZ3lwYnJzamZndXJyb2Jqb21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjYyODMsImV4cCI6MjA5MjgwMjI4M30.ajlCEo-TKn6qyi4GCfYNOeEpLpp5-MoJoFCKkGuRAzg";
+import { writeFileSync } from "fs";
+import { loadDefaults, fetchProductOverrides, mergeProducts, isPublishable, fromPrice } from "./lib/live-data.mjs";
 
 // Your store code from Google Business Profile / Merchant Center linking
 const STORE_CODE = "NCI";
@@ -28,44 +26,24 @@ const PLACEHOLDER_QTY = 1000;
 
 const EXCLUDED = new Set([]);
 
-// Read local products
-const src = readFileSync("src/data/products.js", "utf8");
-const start = src.indexOf("export const DEFAULT_PRODS = [");
-let depth = 0, begin = src.indexOf("[", start), endIdx = begin;
-for (let j = begin; j < src.length; j++) {
-  if (src[j] === "[") depth++;
-  else if (src[j] === "]") { depth--; if (depth === 0) { endIdx = j + 1; break; } }
-}
-const prods = eval(src.slice(begin, endIdx));
-
-console.log("Fetching live pricing overrides from Supabase...");
-let overrides = {};
+const { prods: defaultProds } = loadDefaults(".");
+console.log("Fetching live products from Supabase...");
+let overrides;
 try {
-  const res = await fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.products&select=data`, {
-    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
-  });
-  const data = await res.json();
-  const rawData = data[0]?.data || {};
-  Object.values(rawData).forEach(p => { if (p?.id) overrides[p.id] = p; });
+  overrides = await fetchProductOverrides();
   console.log(`Loaded ${Object.keys(overrides).length} overrides`);
 } catch (e) {
-  console.warn("Could not fetch Supabase overrides — using local data only");
+  console.warn(`Could not reach Supabase (${e.message}) — keeping the existing Public/local-inventory.tsv unchanged.`);
+  process.exit(0);
 }
+const prods = mergeProducts(defaultProds, overrides);
 
 const rows = ["id\tstore_code\tquantity\tavailability\tprice\tpickup_method\tpickup_sla"];
 let count = 0;
 
 for (const prod of prods) {
-  if (prod.disabled || EXCLUDED.has(prod.id)) continue;
-  if (!prod.pricing?.length) continue;
-
-  const override = overrides[prod.id] || {};
-  const merged = { ...prod, ...override };
-  if (merged.disabled) continue;
-
-  const pricingSource = (merged.pricing?.length && Math.min(...merged.pricing.map(t => t.p)) > 0)
-    ? merged.pricing : prod.pricing;
-  const lowestPrice = Math.min(...pricingSource.map(t => t.p));
+  if (EXCLUDED.has(prod.id) || !isPublishable(prod)) continue;   // hidden in Admin, or unfinished
+  const lowestPrice = fromPrice(prod);          // same "from" price as the website and the main feed
 
   // Same ID format as product-feed.xml's <g:id> — this match is mandatory
   const id = `nexa-${prod.id}`;
@@ -88,4 +66,3 @@ console.log(`\nGenerated ${count} products → Public/local-inventory.tsv`);
 console.log(`Store code used: ${STORE_CODE}`);
 console.log(`\nTo upload manually: Merchant Center → Products → Local inventory → upload this file.`);
 console.log(`To auto-refresh instead: host at https://nexacustoms.ca/local-inventory.tsv and set that as the fetch URL in Merchant Center — no more manual re-uploads when prices change.`);
-console.log(`\nNext: git add Public/local-inventory.tsv && git commit -m "update: local inventory feed" && git push`);

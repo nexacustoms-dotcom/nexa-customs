@@ -2,11 +2,8 @@
 // Regenerate Google Merchant feed with LIVE images from Supabase:
 //   node scripts/generate-feed.mjs
 
-import { readFileSync, writeFileSync } from "fs";
-
-const DOMAIN   = "https://nexacustoms.ca";
-const SUPA_URL = "https://eogypbrsjfgurrobjomn.supabase.co";
-const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvZ3lwYnJzamZndXJyb2Jqb21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjYyODMsImV4cCI6MjA5MjgwMjI4M30.ajlCEo-TKn6qyi4GCfYNOeEpLpp5-MoJoFCKkGuRAzg";
+import { writeFileSync } from "fs";
+import { DOMAIN, loadDefaults, fetchProductOverrides, fetchConfig, mergeProducts, isPublishable, fromPrice } from "./lib/live-data.mjs";
 
 const GLOBAL_FALLBACK = 'https://eogypbrsjfgurrobjomn.supabase.co/storage/v1/object/public/nexa-media/branding/1781759339502-jf75i43zsws.png';
 
@@ -51,69 +48,33 @@ function cleanImgUrl(url) {
   return url.split("?")[0];
 }
 
-// Read local products
-const src = readFileSync("src/data/products.js", "utf8");
-const start = src.indexOf("export const DEFAULT_PRODS = [");
-let depth = 0, begin = src.indexOf("[", start), endIdx = begin;
-for (let j = begin; j < src.length; j++) {
-  if (src[j] === "[") depth++;
-  else if (src[j] === "]") { depth--; if (depth === 0) { endIdx = j + 1; break; } }
-}
-const prods = eval(src.slice(begin, endIdx));
-
-// Fetch live overrides from Supabase (has real images uploaded via Admin)
-console.log("📡 Fetching product images from Supabase...");
-let overrides = {};
+// Live data from Supabase (prices, images, hidden products, products created in Admin)
+const { prods: defaultProds } = loadDefaults(".");
+console.log("📡 Fetching live products from Supabase...");
+let overrides, shippingCarrier = "Canada Post", courierCarrier = "Courier";
 try {
-  const res = await fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.products&select=data`, {
-    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
-  });
-  const data = await res.json();
-  // data is stored as indexed object {0:{...}, 1:{...}} — always use Object.values
-  const rawData = data[0]?.data || {};
-  const overrideArr = Object.values(rawData);
-  overrideArr.forEach(p => { if (p?.id) overrides[p.id] = p; });
-  const withImgs = Object.values(overrides).filter(p => (p.imgs||[]).filter(x=>x?.length).length > 0).length;
-  console.log(`✅ Loaded ${Object.keys(overrides).length} overrides, ${withImgs} with real images`);
+  overrides = await fetchProductOverrides();
+  console.log(`✅ Loaded ${Object.keys(overrides).length} product overrides`);
+  const store = (await fetchConfig("main")) || {};
+  if (store.shipping_carrier) shippingCarrier = store.shipping_carrier;
+  if (store.courier_carrier_name) courierCarrier = store.courier_carrier_name;
 } catch (e) {
-  console.warn("⚠️  Could not fetch Supabase overrides — using local data only");
+  // Never replace a good feed with one built from old code-default prices.
+  console.warn(`⚠️  Could not reach Supabase (${e.message}) — keeping the existing Public/product-feed.xml unchanged.`);
+  process.exit(0);
 }
-
-// Fetch store config for the actual carrier names — was hardcoded before,
-// now matches whatever's set in Admin → Pricing & Options
-let shippingCarrier = "Canada Post", courierCarrier = "Courier";
-try {
-  const res = await fetch(`${SUPA_URL}/rest/v1/site_config?id=eq.main&select=data`, {
-    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
-  });
-  const data = await res.json();
-  const storeData = data[0]?.data || {};
-  if (storeData.shipping_carrier) shippingCarrier = storeData.shipping_carrier;
-  if (storeData.courier_carrier_name) courierCarrier = storeData.courier_carrier_name;
-  console.log(`✅ Carrier names: "${shippingCarrier}" / "${courierCarrier}"`);
-} catch (e) {
-  console.warn("⚠️  Could not fetch store config — using default carrier names");
-}
+const prods = mergeProducts(defaultProds, overrides);
 
 const items = [];
 let withImg = 0, withFallback = 0;
 
 for (const prod of prods) {
-  if (prod.disabled || EXCLUDED.has(prod.id)) continue;
-  if (!prod.pricing?.length) continue;
+  if (EXCLUDED.has(prod.id) || !isPublishable(prod)) continue;   // hidden in Admin, or unfinished
+  const merged = prod;
 
-  // Merge Supabase override
-  const override = overrides[prod.id] || {};
-  const merged = { ...prod, ...override };
-
-  // Skip if hidden/disabled in Admin panel (Supabase override wins)
-  if (merged.disabled) continue;
-
-  // Use Supabase pricing if valid, otherwise fall back to local products.js pricing
-  const pricingSource = (merged.pricing?.length && Math.min(...merged.pricing.map(t => t.p)) > 0)
-    ? merged.pricing : prod.pricing;
-  const lowestPrice = Math.min(...pricingSource.map(t => t.p));
-  const lowestQty   = pricingSource.find(t => t.p === lowestPrice)?.q || pricingSource[0].q;
+  // Same "from" price the website shows on the product card (first quantity tier)
+  const lowestPrice = fromPrice(prod);
+  const lowestQty   = prod.pricing[0].q;
   const descClean   = (merged.desc || "").replace(/\\"/g, '"').replace(/\\/g, "");
   const gcat        = CAT_MAP[prod.cat] || "Business Supplies > Office Stationery";
   const catName     = CAT_NAMES[prod.cat] || prod.cat.replace(/-/g," ");
@@ -168,4 +129,3 @@ console.log(`\n✅ Generated ${items.length} products → Public/product-feed.xm
 console.log(`   📸 ${withImg} products with real Supabase images`);
 console.log(`   🔄 ${withFallback} products using fallback image`);
 console.log(`   Feed size: ${(xml.length/1024).toFixed(1)}KB`);
-console.log(`\nNext: git add Public/product-feed.xml && git commit -m "update: merchant feed with real images" && git push`);

@@ -264,7 +264,7 @@ export function AppProvider({ children }) {
   const setCats = useCallback((updater) => {
     setCatsState(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
-      const overrides = next.map(c => ({ id: c.id, l: c.l, i: c.i, img: c.img || null, hidden: c.hidden || false }));
+      const overrides = next.map(c => ({ id: c.id, l: c.l, i: c.i, img: c.img || null, hidden: c.hidden || false, desc: c.desc || '' }));
       ls.set('nxt_cats_overrides', overrides);
       supaUpsert('site_config', { id: 'categories', data: overrides, updated_at: new Date().toISOString() });
       return next;

@@ -51,6 +51,7 @@ import { createRequire } from 'node:module';
 import { preview } from 'vite';
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
+import { fetchProductOverrides, mergeProducts, isDraft } from './lib/live-data.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -117,26 +118,36 @@ function supaConfig() {
   return { url, key };
 }
 
-// Products created in Admin only exist in the database, not in src/data/products.js.
-// Without this they get no prerendered page and no sitemap entry.
-async function loadAdminProductRoutes(knownIds) {
-  const { url, key } = supaConfig();
-  if (!url || !key) return [];
+// Routes of products that are hidden in Admin. They still get a (noindex) page so old links and
+// Google's recrawl see "no longer available" instead of a broken page or a live product.
+const disabledRoutes = new Set();
+
+// Products as the website really shows them: built-in list + everything saved in Admin
+// (hidden flags, prices, and products you created). Returns { routes, hidden }.
+async function loadProductRoutes(DEFAULT_PRODS) {
+  let overrides = null;
+  try { overrides = await fetchProductOverrides(); }
+  catch (e) { console.warn('[prerender] could not load live products from Supabase:', e.message); }
+
+  // Which product pages already have an explicit rewrite in vercel.json (i.e. were live before)
+  let rewriteSources = new Set();
   try {
-    const res = await fetch(`${url}/rest/v1/site_config?id=eq.products&select=data`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
-    const rows = await res.json();
-    let data = rows?.[0]?.data;
-    if (typeof data === 'string') data = JSON.parse(data);
-    const list = Array.isArray(data) ? data : Object.values(data || {});
-    const routes = list
-      .filter(p => p && p.id && p.cat && p.name && !knownIds.has(p.id) && !p.disabled && !/^new-product-/.test(p.id))
-      .map(p => `/products/${p.cat}/${p.id}`);
-    if (routes.length) console.log(`[prerender] found ${routes.length} product(s) created in Admin:\n` + routes.map(r => '  ' + r).join('\n'));
-    return routes;
-  } catch (e) {
-    console.warn('[prerender] could not load Admin-created products:', e.message);
-    return [];
+    rewriteSources = new Set((JSON.parse(readFileSync(join(ROOT, 'vercel.json'), 'utf8')).rewrites || []).map(r => r.source));
+  } catch {}
+
+  const merged = overrides ? mergeProducts(DEFAULT_PRODS, overrides) : DEFAULT_PRODS.map(p => ({ ...p, disabled: !!p.disabled }));
+  const routes = [];
+  for (const p of merged) {
+    if (!p.cat || isDraft(p) && p._adminCreated) continue;       // unfinished product made in Admin
+    const route = `/products/${p.cat}/${p.id}`;
+    if (!p.disabled) { routes.push(route); continue; }
+    // hidden: keep a noindex "unavailable" page only where a live page existed before
+    if (rewriteSources.has(route)) { routes.push(route); disabledRoutes.add(route); }
   }
+  const created = merged.filter(p => p._adminCreated && !p.disabled && !isDraft(p));
+  if (created.length) console.log(`[prerender] ${created.length} product(s) created in Admin:\n` + created.map(p => `  /products/${p.cat}/${p.id}`).join('\n'));
+  if (disabledRoutes.size) console.log(`[prerender] ${disabledRoutes.size} hidden product page(s) will be written as noindex:\n` + [...disabledRoutes].map(r => '  ' + r).join('\n'));
+  return routes;
 }
 
 // ── 4. Build the full route list ─────────────────────────────────────────
@@ -150,8 +161,7 @@ async function buildRoutes() {
     '/faq', '/shipping', '/returns', '/terms', '/privacy', '/turnaround',
   ];
   for (const cat of DEFAULT_CATS) routes.push(`/products/${cat.id}`);
-  for (const prod of DEFAULT_PRODS.filter(p => !p.disabled)) routes.push(`/products/${prod.cat}/${prod.id}`);
-  routes.push(...await loadAdminProductRoutes(new Set(DEFAULT_PRODS.map(p => p.id))));
+  routes.push(...await loadProductRoutes(DEFAULT_PRODS));
   for (const slug of locationSlugs) routes.push(`/${slug}`);
   for (const slug of blogSlugs) routes.push(`/blog/${slug}`);
 
@@ -204,6 +214,13 @@ function syncVercelJson(routes) {
   console.log(`[sync-vercel] added ${add.length} rewrite(s) to vercel.json:\n` + add.map(a => '  ' + a.source).join('\n'));
 }
 
+function forceNoindex(html) {
+  const tag = '<meta name="robots" content="noindex, nofollow">';
+  return /<meta[^>]+name=["']robots["'][^>]*>/i.test(html)
+    ? html.replace(/<meta[^>]+name=["']robots["'][^>]*>/i, tag)
+    : html.replace('</head>', tag + '</head>');
+}
+
 // ── 6. Serve the build, prerender each route, write it to disk ──────────
 async function main() {
   const routes = await buildRoutes();
@@ -236,7 +253,8 @@ async function main() {
           () => document.querySelector('h1, h2') && document.body.innerText.trim().length > 80,
           { timeout: 8000 }
         ).catch(() => {}); // best-effort — still write whatever rendered
-        const html = await page.content();
+        let html = await page.content();
+        if (disabledRoutes.has(route)) html = forceNoindex(html);     // hidden product: never indexable
 
         const outDir = route === '/' ? DIST : join(DIST, route.slice(1));
         if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
